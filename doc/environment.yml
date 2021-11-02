@@ -19,10 +19,12 @@ dependencies:
   - bottleneck=1.3.2=py38heb32a55_1
   - brotli=1.0.9=he6710b0_2
   - brotlipy=0.7.0=py38h497a2fe_1001
-  - ca-certificates=2021.10.8=ha878542_0
+  - c-ares=1.17.1=h27cfd23_0
+  - ca-certificates=2021.10.26=h06a4308_2
   - cartopy=0.18.0=py38h0d9ca2b_1
-  - certifi=2021.10.8=py38h578d9bd_0
+  - certifi=2021.10.8=py38h06a4308_0
   - cffi=1.14.6=py38ha65f79e_0
+  - cftime=1.5.0=py38h6323ea4_0
   - chardet=4.0.0=py38h578d9bd_1
   - charset-normalizer=2.0.0=pyhd8ed1ab_0
   - click=8.0.3=pyhd3eb1b0_0
@@ -30,6 +32,7 @@ dependencies:
   - cmocean=2.0=py_3
   - colorspacious=1.1.2=pyh24bf2e0_0
   - cryptography=35.0.0=py38ha5dfef3_0
+  - curl=7.78.0=h1ccaba5_0
   - cycler=0.10.0=py38_0
   - cytoolz=0.11.0=py38h7b6447c_0
   - dask=2021.9.1=pyhd3eb1b0_0
@@ -50,6 +53,8 @@ dependencies:
   - glib=2.69.1=h5202010_0
   - gst-plugins-base=1.14.0=h8213a91_2
   - gstreamer=1.14.0=h28cd5cc_2
+  - hdf4=4.2.13=h3ca952b_2
+  - hdf5=1.10.6=hb1b8bf9_0
   - heapdict=1.0.1=pyhd3eb1b0_0
   - icu=58.2=he6710b0_3
   - idna=3.1=pyhd3deb0d_0
@@ -70,16 +75,23 @@ dependencies:
   - jupyterlab_pygments=0.1.2=pyh9f0ad1d_0
   - jupyterlab_server=2.8.2=pyhd8ed1ab_0
   - kiwisolver=1.3.1=py38h2531618_0
+  - krb5=1.19.2=hac12032_0
   - lcms2=2.12=h3be6417_0
   - ld_impl_linux-64=2.35.1=h7274673_9
+  - libcurl=7.78.0=h0b77cf5_0
+  - libedit=3.1.20210714=h7f8727e_0
+  - libev=4.33=h7f8727e_1
   - libffi=3.3=he6710b0_2
   - libgcc-ng=9.3.0=h5101ec6_17
   - libgfortran-ng=7.5.0=ha8ba4b0_17
   - libgfortran4=7.5.0=ha8ba4b0_17
   - libgomp=9.3.0=h5101ec6_17
   - libllvm10=10.0.1=hbcb73fb_5
+  - libnetcdf=4.6.1=h2053bdc_4
+  - libnghttp2=1.41.0=hf8bcb03_2
   - libpng=1.6.37=hbc83047_0
   - libsodium=1.0.18=h36c2ea0_1
+  - libssh2=1.9.0=h1ba5d50_1
   - libstdcxx-ng=9.3.0=hd4cf53a_17
   - libtiff=4.2.0=h85742a9_0
   - libuuid=1.0.3=h7f8727e_2
@@ -107,6 +119,7 @@ dependencies:
   - nbformat=5.1.3=pyhd8ed1ab_0
   - ncurses=6.2=he6710b0_1
   - nest-asyncio=1.5.1=pyhd8ed1ab_0
+  - netcdf4=1.5.7=py38h0a24e14_0
   - notebook=6.4.5=pyha770c72_0
   - numba=0.53.1=py38ha9443f7_0
   - numexpr=2.7.3=py38h22e1b3c_1
