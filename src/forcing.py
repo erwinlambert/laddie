@@ -32,6 +32,10 @@ class Forcing(ModelConstants):
         nsm : smoothing factor
         
         """
+        assert startyear>=1956,'Need to choose a later startyear, 1956 earliest available'
+        assert endyear<=2019,'Need to choose an earlier endyear, 2019 latest available'
+        assert startyear<endyear,'Startyear must be earlier than endyear'
+        
         lon3 = self.ds.lon.values
         lat3 = self.ds.lat.values
         mask = self.ds.mask.values
@@ -98,7 +102,7 @@ class Forcing(ModelConstants):
         self.ds = self.ds.assign_coords({'z':depth})
         self.ds['Tz'] = (['z','y','x'],Tz)
         self.ds['Sz'] = (['z','y','x'],Sz)
-        self.ds.attrs['name_forcing'] = f"mitgcm_{startyear}_endyear"
+        self.ds.attrs['name_forcing'] = f"mitgcm_{startyear}_{endyear}"
         return self.ds
         
     def tanh(self, ztcl, Tdeep, drhodz=.6/720):

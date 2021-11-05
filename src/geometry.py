@@ -2,7 +2,9 @@ import numpy as np
 import xarray as xr
 import pyproj
 
-class Geometry(object):
+from constants import ModelConstants
+
+class Geometry(ModelConstants):
     """Create geometry input"""
     def __init__(self,name):
         if name=='Thwaites_e':
@@ -30,10 +32,13 @@ class Geometry(object):
         self.ds.mask[:] = xr.where(self.ds.mask==1,2,self.ds.mask)
         self.ds['draft'] = (self.ds.surface-self.ds.thickness).astype('float64')
         self.name = name
+        ModelConstants.__init__(self)
     
     def coarsen(self,N):
         """Coarsen grid resolution by a factor N"""
-        self.ds.coarsen(x=N,y=N)
+        self.ds = self.ds.coarsen(x=N,y=N,boundary='trim').mean()
+        self.res *= N
+        print(f'Resolution set to {self.res} km')
         
     def smoothen(self,N):
         """Smoothen geometry"""
@@ -43,7 +48,8 @@ class Geometry(object):
     def create(self):
         """Create geometry"""
         geom = self.ds[['mask','draft']]
-        geom['name_geo'] = self.name
+        geom['name_geo'] = f'{self.name}_{self.res:1.1f}'
+        print('Geometry',geom.name_geo.values,'created')
         
         #Add lon lat
         project = pyproj.Proj("epsg:3031")

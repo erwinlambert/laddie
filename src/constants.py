@@ -30,11 +30,12 @@ class ModelConstants(object):
         self.nu        = .8        # []          Factor for Robert Asselin time filter
         self.slip      = 1         # []          Factor free slip: 0, no slip: 2, partial no slip: [0..2]  
         self.dt        = 40        # [s]         Time step
-        self.boundop   = 2         # []          Option for boundary conditions D,T,S. [use 1 for isomip]
+        self.boundop   = 1         # []          Option for boundary conditions D,T,S. [use 1 for isomip]
         self.minD      = 1.        # [m]         Cutoff thickness
         self.maxD      = 3000.     # [m]         Cutoff maximum thickness
         self.vcut      = 1.414     # [m/s]       Cutoff velocity U and V
         self.Dinit     = 10.       # [m]         Initial uniform thickness
+        self.res       = 0.5       # [km]        Spatial resolution
         
         #Tunable physical parameters
         self.Cd        = 2.5e-3    # []          drag coefficient
