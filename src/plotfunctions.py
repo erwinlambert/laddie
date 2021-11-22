@@ -37,7 +37,7 @@ def prettyplot(dsav,figsize=(10,10)):
     melt = np.where(melt>1,melt,1)
     levs = np.power(10, np.arange(0,np.log10(200),.01))
     #IM = ax.contourf(xx,yy,np.where(mask==3,melt,np.nan),levs,cmap=cmap,norm=mpl.colors.LogNorm())
-    IM = ax.pcolormesh(xx,yy,np.where(mask==3,melt,np.nan),norm=mpl.colors.LogNorm(vmin=1,vmax=200),cmap=cmap,shading='nearest')
+    IM = ax.pcolormesh(xx,yy,np.where(mask==3,melt,np.nan),norm=mpl.colors.LogNorm(vmin=1,vmax=100),cmap=cmap,shading='nearest')
 
     the_divider = make_axes_locatable(ax)
     color_axis = the_divider.append_axes("right", size="5%", pad=0.1)

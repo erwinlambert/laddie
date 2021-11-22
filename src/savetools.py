@@ -63,26 +63,31 @@ def printdiags(object):
     if object.t in np.arange(object.diagint,object.nt+object.diagint,object.diagint):
         """Print diagnostics at given intervals as defined below"""
         #Maximum thickness
-        d0 = (object.D[1,:,:]*object.tmask).max()
-        #d0b = (np.where(object.tmask,object.D[1,:,:],100)).min()
+        d_Dmax = (object.D[1,:,:]*object.tmask).max()
+        d_Dmin = (np.where(object.tmask,object.D[1,:,:],100)).min()
         #Average thickness [m]
-        d1 = div0((object.D[1,:,:]*object.tmask*object.dx*object.dy).sum(),(object.tmask*object.dx*object.dy).sum())
+        d_Dav = div0((object.D[1,:,:]*object.tmask*object.dx*object.dy).sum(),(object.tmask*object.dx*object.dy).sum())
         #Maximum melt rate [m/yr]
-        d2 = 3600*24*365.25*object.melt.max()
+        d_Mmax = 3600*24*365.25*object.melt.max()
         #Average melt rate [m/yr]
-        d3 = 3600*24*365.25*div0((object.melt*object.dx*object.dy).sum(),(object.tmask*object.dx*object.dy).sum())
+        d_Mav = 3600*24*365.25*div0((object.melt*object.dx*object.dy).sum(),(object.tmask*object.dx*object.dy).sum())
         #Meltwater fraction [%]
-        d4 = 100.*(object.melt*object.tmask*object.dx*object.dy).sum()/((object.melt+object.entr)*object.tmask*object.dx*object.dy).sum()
+        d_MWF = 100.*(object.melt*object.tmask*object.dx*object.dy).sum()/((object.melt+object.entr)*object.tmask*object.dx*object.dy).sum()
         #Integrated entrainment [Sv]
-        d6 = 1e-6*(object.entr*object.tmask*object.dx*object.dy).sum()
-        d6b = 1e-6*(object.ent2*object.tmask*object.dx*object.dy).sum()
+        d_Etot = 1e-6*(object.entr*object.tmask*object.dx*object.dy).sum()
+        d_E2tot = 1e-6*(object.ent2*object.tmask*object.dx*object.dy).sum()
+        #Integrated detrainment [Sv]
+        d_DEtot = 1e-6*(object.detr*object.tmask*object.dx*object.dy).sum()
         #Integrated volume thickness convergence == net in/outflow [Sv]
-        d5 = -1e-6*(convT(object,object.D[1,:,:])*object.tmask*object.dx*object.dy).sum()
+        d_PSI = -1e-6*(convT(object,object.D[1,:,:])*object.tmask*object.dx*object.dy).sum()
         #Average temperature [degC]
-        d7 = div0((object.D[1,:,:]*object.T[1,:,:]*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())
+        d_Tav = div0((object.D[1,:,:]*object.T[1,:,:]*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())
         #Average salinity [psu]
-        d8 = div0((object.D[1,:,:]*object.S[1,:,:]*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())   
+        d_Sav = div0((object.D[1,:,:]*object.S[1,:,:]*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())   
         #Average speed [m/s]
-        d9 = div0((object.D[1,:,:]*(im(object.u[1,:,:])**2 + jm(object.v[1,:,:])**2)**.5*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())
+        #d_Vav = div0((object.D[1,:,:]*(im(object.u[1,:,:])**2 + jm(object.v[1,:,:])**2)**.5*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())
+        d_Vmax = ((im(object.u[1,:,:])**2 + jm(object.v[1,:,:])**2)**.5*object.tmask).max()
+        #TKE
+        d_TKE = 1e-9*((im(object.u[1,:,:])**2 + jm(object.v[1,:,:])**2)**.5*object.tmask*object.D[1,:,:]).sum()*object.dx*object.dy
 
-        print(f'{object.time[object.t]:8.03f} days || {d1:7.03f} | {d0:8.03f} m || {d3: 7.03f} | {d2: 8.03f} m/yr || {d4:6.03f} % || {d6:6.03f} {d6b:6.03f} | {d5: 6.03f} Sv || {d9: 6.03f} m/s || {d7: 8.03f} C || {d8: 8.03f} psu')
+        print(f'{object.time[object.t]:8.03f} days || {d_Dav:5.01f}  [{d_Dmin:4.02f} {d_Dmax:4.0f}] m || {d_Mav: 5.02f} | {d_Mmax: 3.0f} m/yr || {d_MWF:5.02f} % || {d_Etot:5.03f} + {d_E2tot:5.03f} - {d_DEtot:5.03f} | {d_PSI: 5.03f} Sv || {d_Vmax: 3.02f} m/s || {d_TKE: 5.02f} []')

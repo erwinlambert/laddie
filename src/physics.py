@@ -85,19 +85,23 @@ def convv(object):
     return (tN+tS+tE+tW) * object.vmask     
 
 def updatesecondary(object):
-    """Update a bunch of secondary variables"""
-    
+    """Update a bunch of secondary variables"""    
     if len(object.Tz.shape)==1:
         object.Ta   = np.interp(object.zb-object.D[1,:,:],object.z,object.Tz)
         object.Sa   = np.interp(object.zb-object.D[1,:,:],object.z,object.Sz)
     elif len(object.Tz.shape)==3:
+        #print(object.t)
+        #tempindex = np.int_(np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]
+        #print(np.where(object.tmask==1,-object.zb+object.D[1,:,:],0).min(),np.where(object.tmask==1,-object.zb+object.D[1,:,:],0).max())
+        #print((-object.zb+object.D[1,:,:]).min(),(-object.zb+object.D[1,:,:]).max())
+        #print(np.min(tempindex))#.min(),tempindex.max())
         object.Ta = object.Tz[np.int_(np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]]
         object.Sa = object.Sz[np.int_(np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]]
         
     object.Tf   = (object.l1*object.S[1,:,:]+object.l2+object.l3*object.zb).values
     
     object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
-    
+    object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
     #object.melt = object.cp/object.L*object.CG*(im(object.u[1,:,:])**2+jm(object.v[1,:,:])**2)**.5*(object.T[1,:,:]-object.Tf) * object.tmask
     
     object.ustar = (object.Cdtop*(im(object.u[1,:,:])**2+jm(object.v[1,:,:])**2+object.utide**2))**.5 * object.tmask
@@ -107,9 +111,17 @@ def updatesecondary(object):
     object.Chat = object.cp*object.gamT/object.L
     object.melt = .5*(object.Chat*object.That - object.gamS + (np.maximum((object.gamS+object.Chat*object.That)**2 - 4*object.gamS*object.Chat*object.l1*object.S[1,:,:],0))**.5) * object.tmask
     object.Tb   = object.T[1,:,:] - div0(object.melt*object.L,object.cp*object.gamT) * object.tmask
-
+    
     #object.entr = object.E0*np.maximum(0,(im(object.u[1,:,:])*object.dzdx + jm(object.v[1,:,:])*object.dzdy)) * object.tmask
-    object.entr = object.cl*object.Kh/object.Ah**2*(np.maximum(0,im(object.u[1,:,:])**2+jm(object.v[1,:,:])**2-object.g*object.drho*object.Kh/object.Ah*object.D[1,:,:]))**.5 * object.tmask
+    if object.entpar == 'Holland':
+        object.entr = object.cl*object.Kh/object.Ah**2*(np.maximum(0,im(object.u[1,:,:])**2+jm(object.v[1,:,:])**2-object.g*object.drho*object.Kh/object.Ah*object.D[1,:,:]))**.5 * object.tmask
+        object.detr = 0.*object.entr
+    elif object.entpar == 'Gaspar':
+        object.Sb = (object.Tb-object.l2-object.l3*object.zb).values/object.l1
+        object.drhob = (object.beta*(object.S[1,:,:]-object.Sb) - object.alpha*(object.T[1,:,:]-object.Tb)) * object.tmask
+        object.ent = 2*object.mu/object.g * div0(object.ustar**3,object.D[1,:,:]*np.maximum(0,object.drho)) - div0(object.drhob,np.maximum(0,object.drho))*object.melt * object.tmask
+        object.entr = np.maximum(object.ent,0)
+        object.detr = np.minimum(object.maxdetr,np.maximum(-object.ent,0))
     
     object.Dym1    = np.roll(        object.D[1,:,:]*object.tmask,-1,axis=0)
     object.Dyp1    = np.roll(        object.D[1,:,:]*object.tmask, 1,axis=0)
@@ -123,5 +135,8 @@ def updatesecondary(object):
     object.uxp1    = np.roll(object.u[1,:,:],1,axis=1)      
 
     #Additional entrainment to prevent D<minD
-    object.ent2 = np.maximum(0,object.minD-object.D[0,:,:]-(convT(object,object.D[1,:,:])-object.melt-object.entr)*2*object.dt)*object.tmask/(2*object.dt)
-    object.entr += object.ent2
+    object.ent2 = np.maximum(0,object.minD-object.D[0,:,:]-(convT(object,object.D[1,:,:])-object.melt-(object.entr-object.detr))*2*object.dt)*object.tmask/(2*object.dt)
+    
+    #print(object.detr.max(),object.entr.max())
+    #print(object.drhob.min(),object.drhob.max(),object.drho.min(),object.drho.max())
+    #print(object.detr.max(),(object.entr-object.detr).max(),object.ent2.max(),object.D[1,:,:].min())

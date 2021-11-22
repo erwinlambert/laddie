@@ -30,20 +30,24 @@ class ModelConstants(object):
         self.nu        = .8        # []          Factor for Robert Asselin time filter
         self.slip      = 1         # []          Factor free slip: 0, no slip: 2, partial no slip: [0..2]  
         self.dt        = 40        # [s]         Time step
-        self.boundop   = 1         # []          Option for boundary conditions D,T,S. [use 1 for isomip]
-        self.minD      = 1.        # [m]         Cutoff thickness
+        self.boundop   = 2         # []          Option for boundary conditions D,T,S. [use 1 for isomip]
+        self.minD      = .2        # [m]         Cutoff thickness
         self.maxD      = 3000.     # [m]         Cutoff maximum thickness
+        self.mindrho   = .05       # [kg/m^3]    Minimum density difference with ambient water
         self.vcut      = 1.414     # [m/s]       Cutoff velocity U and V
         self.Dinit     = 10.       # [m]         Initial uniform thickness
         self.res       = 0.5       # [km]        Spatial resolution
         
         #Tunable physical parameters
         self.Cd        = 2.5e-3    # []          drag coefficient
-        self.Cdtop     = .0008     # []          Drag coefficient in Ustar
+        self.Cdtop     = .00067    # []          Drag coefficient in Ustar
         self.Ah        = 6         # [m^2/s]     Laplacian viscosity
         self.Kh        = 1         # [m^2/s]     Diffusivity
-
-        #Some parameters for displaying output
+        self.entpar    = 'Gaspar'  #             Entrainment parameterisation, either 'Holland' or 'Gaspar'
+        self.mu        = 0.5       # []          Parameter in Gaspar entrainment. Gaspar: 0.5; Gladish: 2.5
+        self.maxdetr   = .5        # [m/s]       Cutoff detrainment rate
+        
+        #Some parameters for saving and displaying output
         self.diagday   = .1        # [days]      Timestep at which to print diagnostics
         self.verbose   = True      # Bool        Whether to print diagnostics
         self.saveday   = 10        # [days]      Interval at which to save time-average fields

@@ -73,6 +73,10 @@ def create_grid(object):
         object.slip = 0  
 
 def initialize_vars(object,days,restartfile):
+    
+    #Check whether entrainment parameterisation is valid
+    assert object.entpar in ['Holland','Gaspar']
+    
     #Major variables. Three arrays for storage of previous timestep, current timestep, and next timestep
     object.u = np.zeros((3,object.ny,object.nx)).astype('float64')
     object.v = np.zeros((3,object.ny,object.nx)).astype('float64')

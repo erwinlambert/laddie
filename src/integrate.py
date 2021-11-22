@@ -42,6 +42,8 @@ def intD(object,delt):
                     + (convT(object,object.D[1,:,:]) \
                     +  object.melt \
                     +  object.entr \
+                    +  object.ent2 \
+                    -  object.detr \
                     ) * object.tmask * delt    
     
 def intu(object,delt):
@@ -76,6 +78,8 @@ def intT(object,delt):
                     +div0((-object.T[1,:,:] * (object.D[2,:,:]-object.D[0,:,:])/(2*object.dt) \
                     +  convT(object,object.D[1,:,:]*object.T[1,:,:]) \
                     +  object.entr*object.Ta \
+                    +  object.ent2*object.T[1,:,:] \
+                    -  object.detr*object.T[1,:,:] \
                     #+  object.melt*(object.Tf - object.L/object.cp) \
                     +  object.melt*object.Tb - object.gamT*(object.T[1,:,:]-object.Tb) \
                     +  object.Kh*lapT(object,object.T[0,:,:]) \
@@ -87,5 +91,7 @@ def intS(object,delt):
                     +div0((-object.S[1,:,:] * (object.D[2,:,:]-object.D[0,:,:])/(2*object.dt) \
                     +  convT(object,object.D[1,:,:]*object.S[1,:,:]) \
                     +  object.entr*object.Sa \
+                    +  object.ent2*object.S[1,:,:] \
+                    -  object.detr*object.S[1,:,:] \
                     +  object.Kh*lapT(object,object.S[0,:,:]) \
                     ),object.D[1,:,:]) * object.tmask * delt

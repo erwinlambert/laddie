@@ -12,9 +12,9 @@ class Geometry(ModelConstants):
         elif name=='PineIsland':
             x0,x1,y0,y1 = 3290,3550,7170,7400
         elif name=='CrossDots':
-            x0,x1,y0,y1 = 3445,3700,7730,8060
+            x0,x1,y0,y1 = 3445,3705,7730,8065
         elif name=='Dotson':
-            x0,x1,y0,y1 = 3465,3700,7870,8060
+            x0,x1,y0,y1 = 3465,3705,7865,8065
         elif name=='Getz':
             x0,x1,y0,y1 = 3510,4330,8080,9050
         elif name=='Cosgrove':
@@ -26,9 +26,9 @@ class Geometry(ModelConstants):
         elif name=='FRIS':
             x0,x1,y0,y1 = 3600,5630,4560,6420    
     
-        self.ds = xr.open_dataset('../../data/BedMachineAntarctica_2020-07-15_v02.nc')
+        self.ds = xr.open_dataset('../../../data/BedMachineAntarctica_2020-07-15_v02.nc')
         self.ds = self.ds.isel(x=slice(x0,x1),y=slice(y0,y1))
-        self.mask = self.ds.mask
+        #self.mask = self.ds.mask
         self.ds.mask[:] = xr.where(self.ds.mask==1,2,self.ds.mask)
         self.ds['draft'] = (self.ds.surface-self.ds.thickness).astype('float64')
         self.name = name
@@ -36,7 +36,14 @@ class Geometry(ModelConstants):
     
     def coarsen(self,N):
         """Coarsen grid resolution by a factor N"""
+        self.ds['mask'] = xr.where(self.ds.mask==0,np.nan,self.ds.mask)
+        self.ds['draft'] = xr.where(np.isnan(self.ds.mask),np.nan,self.ds.draft)
         self.ds = self.ds.coarsen(x=N,y=N,boundary='trim').mean()
+
+        self.ds['mask'] = np.round(self.ds.mask)
+        self.ds['mask'] = xr.where(np.isnan(self.ds.mask),0,self.ds.mask)
+        self.ds['draft'] = xr.where(self.ds.mask==0,0,self.ds.draft)
+        self.ds['draft'] = xr.where(np.isnan(self.ds.draft),0,self.ds.draft)
         self.res *= N
         print(f'Resolution set to {self.res} km')
         

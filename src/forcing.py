@@ -25,7 +25,7 @@ class Forcing(ModelConstants):
         ModelConstants.__init__(self)
         return
 
-    def mitgcm(self,startyear,endyear,option='interp',kup=2,kdwn=1,nsm=1):
+    def mitgcm(self,startyear,endyear,option='interp',kup=0,kdwn=1,Slimit=34.2,nsm=1):
         """Forcing from MITgcm output
         kup : number of upper layers to remove
         kdwn: number of lower layers to remove
@@ -34,7 +34,7 @@ class Forcing(ModelConstants):
         """
         assert startyear>=1956,'Need to choose a later startyear, 1956 earliest available'
         assert endyear<=2019,'Need to choose an earlier endyear, 2019 latest available'
-        assert startyear<endyear,'Startyear must be earlier than endyear'
+        assert startyear<=endyear,'Startyear must be earlier than endyear'
         
         lon3 = self.ds.lon.values
         lat3 = self.ds.lat.values
@@ -42,7 +42,7 @@ class Forcing(ModelConstants):
         
         #Read MITgcm data for region corresponding to geometry
         timep= slice(f"{startyear}-1-1",f"{endyear}-12-31")
-        ds = xr.open_dataset('../../data/paulholland/PAS_851/stateTheta.nc')
+        ds = xr.open_dataset('../../../data/paulholland/PAS_851/stateTheta.nc')
         ds = ds.sel(LONGITUDE=slice(360+np.min(lon3),360+np.max(lon3)),LATITUDE=slice(np.min(lat3),np.max(lat3)),TIME=timep)
         ds = ds.mean(dim='TIME')
         lon   = (ds.LONGITUDE-360.).values
@@ -50,7 +50,7 @@ class Forcing(ModelConstants):
         dep   = ds.DEPTH.values
         theta = ds.THETA.values
         ds.close()
-        ds = xr.open_dataset('../../data/paulholland/PAS_851/stateSalt.nc')
+        ds = xr.open_dataset('../../../data/paulholland/PAS_851/stateSalt.nc')
         ds = ds.sel(LONGITUDE=slice(360+np.min(lon3),360+np.max(lon3)),LATITUDE=slice(np.min(lat3),np.max(lat3)),TIME=timep)
         ds = ds.mean(dim='TIME')
         salt  = ds.SALT.values
@@ -60,10 +60,14 @@ class Forcing(ModelConstants):
         llon,llat = np.meshgrid(lon,lat)
         Th = theta.copy()
         Sh = salt.copy()
+        Sh = np.where(Sh>Slimit,Sh,0)
+        weight = [.1,.8,.1]
+        nvsm = 10
         for j,jj in enumerate(lat):
             for i,ii in enumerate(lon):
                 if Sh[0,j,i] == 0:
-                    k0 = np.argmax(Sh[:,j,i]!=0)+kup
+                    #k0 = np.argmax(Sh[:,j,i]!=0)+kup
+                    k0 = np.argmax(Sh[:,j,i]>Slimit)+kup
                     Th[:k0,j,i] = Th[k0,j,i]
                     Sh[:k0,j,i] = Sh[k0,j,i]
                 if Sh[-1,j,i] == 0:
@@ -73,6 +77,10 @@ class Forcing(ModelConstants):
                 if sum(Sh[:,j,i]) == 0:
                     llon[j,i] = 1e36
                     llat[j,i] = 1e36
+                else:
+                    for n in range(nvsm):
+                        Th[1:-1,j,i] = np.convolve(Th[:,j,i],weight,'valid')
+                        Sh[1:-1,j,i] = np.convolve(Sh[:,j,i],weight,'valid')
 
         #Apply nearest neighbour onto model grid
         depth = np.arange(5000) #depth also used as index, so must be positive with steps of 1
@@ -87,8 +95,9 @@ class Forcing(ModelConstants):
                     if option=='interp':
                         #Distance squared
                         dist = np.cos(np.pi*lat3[j,i]/180.)*(np.pi*(lon3[j,i]-llon[j0-nsm:j0+2+nsm,i0-nsm:i0+2+nsm])/180.)**2+(np.pi*(lat3[j,i]-llat[j0-nsm:j0+2+nsm,i0-nsm:i0+2+nsm])/180.)**2
-               
-                        weight = 1./(dist+5e-8)
+                        #epsilon = 5e-8
+                        epsilon = 1e-6
+                        weight = 1./(dist+epsilon)
                         TT = np.sum(Th[:,j0-nsm:j0+2+nsm,i0-nsm:i0+2+nsm]*weight,axis=(1,2))/np.sum(weight)
                         SS = np.sum(Sh[:,j0-nsm:j0+2+nsm,i0-nsm:i0+2+nsm]*weight,axis=(1,2))/np.sum(weight)
                     elif option=='nn':
