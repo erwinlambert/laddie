@@ -25,7 +25,7 @@ class Forcing(ModelConstants):
         ModelConstants.__init__(self)
         return
 
-    def mitgcm(self,startyear,endyear,option='interp',kup=0,kdwn=1,Slimit=34.2,nsm=1):
+    def mitgcm(self,startyear,endyear,option='interp',kup=2,kdwn=1,Slimit=0,nsm=1):
         """Forcing from MITgcm output
         kup : number of upper layers to remove
         kdwn: number of lower layers to remove

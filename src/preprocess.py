@@ -72,7 +72,7 @@ def create_grid(object):
         print('1D run, using free slip')
         object.slip = 0  
 
-def initialize_vars(object,days,restartfile):
+def initialize_vars(object):
     
     #Check whether entrainment parameterisation is valid
     assert object.entpar in ['Holland','Gaspar']
@@ -90,7 +90,7 @@ def initialize_vars(object,days,restartfile):
 
     #Initial values
     try:
-        dsinit = xr.open_dataset(f"../../results/restart/{object.ds['name_geo'].values}_{restartfile}.nc")
+        dsinit = xr.open_dataset(f"../../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
         object.tstart = dsinit.tend.values
         object.u = dsinit.u.values
         object.v = dsinit.v.values
@@ -130,6 +130,8 @@ def initialize_vars(object,days,restartfile):
     object.restint = int(object.restday*3600*24/object.dt)
     
     object.dsav = object.ds
+    object.dsav = object.dsav.drop_vars(['Tz','Sz'])
+    object.dsav = object.dsav.drop_dims(['z'])
     object.dsav['U'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
     object.dsav['V'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
     object.dsav['D'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
@@ -141,12 +143,13 @@ def initialize_vars(object,days,restartfile):
     object.dsav['mask']  = (['y','x'], object.mask.data)
     object.dsav['name_model'] = 'Layer'
     object.dsav['tstart'] = object.tstart
-    
+
     #For storing restart file
     object.dsre = object.ds
+    object.dsre = object.dsre.drop_vars(['Tz','Sz'])
+    object.dsre = object.dsre.drop_dims(['z'])    
     object.dsre = object.dsre.assign_coords({'n':np.array([0,1,2])})
 
-    object.nt = int(days*24*3600/object.dt)+1    # Number of time steps
-    object.tend = object.tstart+days
-    object.time = np.linspace(object.tstart,object.tend,object.nt)  # Time in days
-        
+    #object.nt = int(object.days*24*3600/object.dt)+1    # Number of time steps
+    #object.tend = object.tstart+object.days
+    #object.time = np.linspace(object.tstart,object.tend,object.nt)  # Time in days

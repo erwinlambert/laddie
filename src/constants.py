@@ -40,12 +40,12 @@ class ModelConstants(object):
         
         #Tunable physical parameters
         self.Cd        = 2.5e-3    # []          drag coefficient
-        self.Cdtop     = .00067    # []          Drag coefficient in Ustar
+        self.Cdtop     = .0006     # []          Drag coefficient in Ustar
         self.Ah        = 6         # [m^2/s]     Laplacian viscosity
         self.Kh        = 1         # [m^2/s]     Diffusivity
         self.entpar    = 'Gaspar'  #             Entrainment parameterisation, either 'Holland' or 'Gaspar'
         self.mu        = 0.5       # []          Parameter in Gaspar entrainment. Gaspar: 0.5; Gladish: 2.5
-        self.maxdetr   = .5        # [m/s]       Cutoff detrainment rate
+        self.maxdetr   = .5        # [m/s]       Cutoff detrainment rate, only effective when O(1e-3)
         
         #Some parameters for saving and displaying output
         self.diagday   = .1        # [days]      Timestep at which to print diagnostics

@@ -1,5 +1,6 @@
 from tools import *
 from physics import *
+from preprocess import *
 
 def savefields(object):
     """Store time-average fields and save"""
@@ -27,7 +28,7 @@ def savefields(object):
 
         object.dsav['tend'] = object.time[object.t]
 
-        object.dsav['filename'] = f"../../results/{object.ds['name_geo'].values}_{object.ds.attrs['name_forcing']}_{object.dsav['tend'].values:.3f}"
+        object.dsav['filename'] = f"../../results/{object.ds['name_geo'].values}_{object.ds.attrs['name_forcing']}_{object.dsav['tend'].values:03.0f}"
         object.dsav.to_netcdf(f"{object.dsav['filename'].values}.nc")
         print(f'-------------------------------------------------------------------------------------')
         print(f"{object.time[object.t]:8.03f} days || Average fields saved as {object.dsav['filename'].values}.nc")
@@ -53,11 +54,17 @@ def saverestart(object):
         object.dsre['T'] = (['n','y','x'], object.T)
         object.dsre['S'] = (['n','y','x'], object.S)
         object.dsre['tend'] = object.time[object.t]
-        object.dsre.to_netcdf(f"../../results/restart/{object.ds['name_geo'].values}_{object.ds.attrs['name_forcing']}_{object.dsre['tend'].values:.3f}.nc")
+        object.restartfile = f"{object.ds.attrs['name_forcing']}_{object.dsre['tend'].values:03.0f}"
+        object.dsre.to_netcdf(f"../../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
 
         print(f'-------------------------------------------------------------------------------------')
         print(f"{object.time[object.t]:8.03f} days || Restart file saved")
         print(f'-------------------------------------------------------------------------------------')
+        
+        print(f"Restarting from {object.restartfile}")
+        initialize_vars(object)
+        print(f'Restarted')
+        
         
 def printdiags(object):
     if object.t in np.arange(object.diagint,object.nt+object.diagint,object.diagint):
