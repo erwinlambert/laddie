@@ -95,8 +95,8 @@ def updatesecondary(object):
         #print(np.where(object.tmask==1,-object.zb+object.D[1,:,:],0).min(),np.where(object.tmask==1,-object.zb+object.D[1,:,:],0).max())
         #print((-object.zb+object.D[1,:,:]).min(),(-object.zb+object.D[1,:,:]).max())
         #print(np.min(tempindex))#.min(),tempindex.max())
-        object.Ta = object.Tz[np.int_(np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]]
-        object.Sa = object.Sz[np.int_(np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]]
+        object.Ta = object.Tz[np.int_(.01*np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]]
+        object.Sa = object.Sz[np.int_(.01*np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]]
         
     object.Tf   = (object.l1*object.S[1,:,:]+object.l2+object.l3*object.zb).values
     

@@ -104,8 +104,8 @@ def initialize_vars(object):
             object.Ta   = np.interp(object.zb,object.z,object.Tz)
             object.Sa   = np.interp(object.zb,object.z,object.Sz)
         elif len(object.Tz.shape)==3:
-            object.Ta = object.Tz[np.int_(-object.zb),object.ind[0],object.ind[1]]
-            object.Sa = object.Sz[np.int_(-object.zb),object.ind[0],object.ind[1]]
+            object.Ta = object.Tz[np.int_(.01*-object.zb),object.ind[0],object.ind[1]]
+            object.Sa = object.Sz[np.int_(.01*-object.zb),object.ind[0],object.ind[1]]
             
         #object.Tf   = (object.l1*object.Sa+object.l2+object.l3*object.zb).values
         

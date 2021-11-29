@@ -3,11 +3,11 @@ class ModelConstants(object):
     def __init__(self):
         #General physical parameters
         self.g         = 9.81      # [m/s^2]     gravitational acceleration
-        self.L         = 3.35e5    # [J/kg]      Latent heat of fusion for ice
+        self.L         = 3.34e5    # [J/kg]      Latent heat of fusion for ice
         self.cp        = 3.974e3   # [J/kg/degC] specific heat capacity of ocean
         #self.spy       = 86400*365 # [s/yr]      seconds per year
-        self.alpha     =  7.5e-5   # [1/degC]    Thermal expansion coefficient
-        self.beta      =  7.7e-4   # [1/psu]     Haline contraction coefficient
+        self.alpha     =  3.733e-5   # [1/degC]    Thermal expansion coefficient
+        self.beta      =  7.843e-4   # [1/psu]     Haline contraction coefficient
         self.l1        = -5.73e-2  # [degC/psu]  freezing point salinity coefficient
         self.l2        = 8.32e-2   # [degC]      freezing point offset
         self.l3        = 7.61e-4   # [degC/m]    freezing point depth coefficient
@@ -21,13 +21,13 @@ class ModelConstants(object):
         self.Sc        = 2432.     # []          Schmidt number
         self.nu0       = 1.95e-6   # [m^2/s]     Molecular viscosity
         #self.rhofw     = 1000.     # [kg/m^3]    Density of freshwater
-        self.rho0      =  1033     # [kg/m^3]
+        self.rho0      =  1028     # [kg/m^3]    Reference density of seawater
         #self.rhoi      =   910     # [kg/m^3]
         #self.rhow      =  1028     # [kg/m^3]  
         #self.E0        = 3.6e-2    # []          entrainment coefficient        
         
         #Run parameters
-        self.nu        = .8        # []          Factor for Robert Asselin time filter
+        self.nu        = 1        # []          Factor for Robert Asselin time filter
         self.slip      = 1         # []          Factor free slip: 0, no slip: 2, partial no slip: [0..2]  
         self.dt        = 40        # [s]         Time step
         self.boundop   = 2         # []          Option for boundary conditions D,T,S. [use 1 for isomip]

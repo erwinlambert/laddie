@@ -83,7 +83,7 @@ class Forcing(ModelConstants):
                         Sh[1:-1,j,i] = np.convolve(Sh[:,j,i],weight,'valid')
 
         #Apply nearest neighbour onto model grid
-        depth = np.arange(5000) #depth also used as index, so must be positive with steps of 1
+        depth = np.arange(0,5000,100) #depth also used as index, so must be positive with steps of 1
         Tz = np.zeros((len(depth),mask.shape[0],mask.shape[1]))
         Sz = np.zeros((len(depth),mask.shape[0],mask.shape[1]))
         for j in range(mask.shape[0]):
@@ -122,7 +122,7 @@ class Forcing(ModelConstants):
         drhodz  ..  (float)  [kg/m^4]  linear density stratification
         """
         if ztcl>0:
-            print('z-coordinate is postive upwards; ztcl was {ztcl}, now set ztcl=-{ztcl}')
+            print(f'z-coordinate is postive upwards; ztcl was {ztcl}, now set ztcl=-{ztcl}')
             ztcl = -ztcl
         S0 = 34                       # [psu]  reference surface salinity
         T0 = self.l1*S0+self.l2       # [degC] surface freezing temperature
