@@ -30,7 +30,7 @@ class ModelConstants(object):
         self.nu        = 1        # []          Factor for Robert Asselin time filter
         self.slip      = 1         # []          Factor free slip: 0, no slip: 2, partial no slip: [0..2]  
         self.dt        = 40        # [s]         Time step
-        self.boundop   = 2         # []          Option for boundary conditions D,T,S. [use 1 for isomip]
+        self.boundop   = 1         # []          Option for boundary conditions D,T,S. [use 1 for isomip]
         self.minD      = .2        # [m]         Cutoff thickness
         self.maxD      = 3000.     # [m]         Cutoff maximum thickness
         self.mindrho   = .05       # [kg/m^3]    Minimum density difference with ambient water

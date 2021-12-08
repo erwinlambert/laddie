@@ -17,6 +17,25 @@ def create_mask(object):
     object.grd   = np.where(object.mask==1,1,object.grd)
     object.ocn   = np.where(object.mask==0,1,0)
 
+    #Define ocean rolled masks
+    object.ocnym1      = np.roll(object.ocn,-1,axis=0)
+    object.ocnyp1      = np.roll(object.ocn, 1,axis=0)
+    object.ocnxm1      = np.roll(object.ocn,-1,axis=1)
+    object.ocnxp1      = np.roll(object.ocn, 1,axis=1)
+    
+    #Mask ice shelf points sticking out as ocean
+    print(np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0))
+    while np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0) > 0:
+        object.ocn = np.where(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0,1,object.ocn)
+        object.tmask = np.where(object.ocn==1,0,object.tmask)
+        object.mask  = np.where(object.ocn==1,0,object.mask)
+        #Redefine rolled masks
+        object.ocnym1      = np.roll(object.ocn,-1,axis=0)
+        object.ocnyp1      = np.roll(object.ocn, 1,axis=0)
+        object.ocnxm1      = np.roll(object.ocn,-1,axis=1)
+        object.ocnxp1      = np.roll(object.ocn, 1,axis=1)
+        print(np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0))
+    
     #Rolled masks
     object.tmaskym1    = np.roll(object.tmask,-1,axis=0)
     object.tmaskyp1    = np.roll(object.tmask, 1,axis=0)
@@ -24,12 +43,8 @@ def create_mask(object):
     object.tmaskxp1    = np.roll(object.tmask, 1,axis=1)    
     object.tmaskxm1ym1 = np.roll(np.roll(object.tmask,-1,axis=0),-1,axis=1)
     object.tmaskxm1yp1 = np.roll(np.roll(object.tmask, 1,axis=0),-1,axis=1)
-    object.tmaskxp1ym1 = np.roll(np.roll(object.tmask,-1,axis=0), 1,axis=1)
-
-    object.ocnym1      = np.roll(object.ocn,-1,axis=0)
-    object.ocnyp1      = np.roll(object.ocn, 1,axis=0)
-    object.ocnxm1      = np.roll(object.ocn,-1,axis=1)
-    object.ocnxp1      = np.roll(object.ocn, 1,axis=1)
+    object.tmaskxp1ym1 = np.roll(np.roll(object.tmask,-1,axis=0), 1,axis=1)    
+    
 
     object.grdNu = 1-np.roll((1-object.grd)*(1-np.roll(object.grd,-1,axis=1)),-1,axis=0)
     object.grdSu = 1-np.roll((1-object.grd)*(1-np.roll(object.grd,-1,axis=1)), 1,axis=0)

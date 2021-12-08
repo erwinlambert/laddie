@@ -1,0 +1,13 @@
+lines.linewidth : 1.
+font.family : serif
+axes.titlesize : 9
+axes.labelsize : 9
+legend.fontsize : 9
+figure.titlesize : 9
+figure.subplot.wspace : .1
+figure.subplot.left : .1
+figure.subplot.right : .95
+figure.figsize : 7,5
+savefig.transparent : False
+savefig.facecolor : 'w'
+savefig.dpi : 450
