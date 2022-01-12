@@ -65,15 +65,19 @@ class Forcing(ModelConstants):
         nvsm = 10
         for j,jj in enumerate(lat):
             for i,ii in enumerate(lon):
-                if Sh[0,j,i] == 0:
-                    #k0 = np.argmax(Sh[:,j,i]!=0)+kup
-                    k0 = np.argmax(Sh[:,j,i]>Slimit)+kup
-                    Th[:k0,j,i] = Th[k0,j,i]
-                    Sh[:k0,j,i] = Sh[k0,j,i]
-                if Sh[-1,j,i] == 0:
-                    k1 = np.argmin(Sh[:,j,i]!=0)-kdwn
-                    Th[k1:,j,i] = Th[k1-1,j,i]
-                    Sh[k1:,j,i] = Sh[k1-1,j,i]
+                knz = np.nonzero(Sh[:,j,i])[0]
+                if len(knz) == 0:
+                    llon[j,i] = 1e36
+                    llat[j,i] = 1e36
+                else:
+                    if Sh[0,j,i] == 0:
+                        k0 = knz[0]+kup
+                        Th[:k0,j,i] = Th[k0,j,i]
+                        Sh[:k0,j,i] = Sh[k0,j,i]
+                    if Sh[-1,j,i] == 0:
+                        k1 = knz[-1]-kdwn
+                        Th[k1:,j,i] = Th[k1,j,i]
+                        Sh[k1:,j,i] = Sh[k1,j,i]
                 if sum(Sh[:,j,i]) == 0:
                     llon[j,i] = 1e36
                     llat[j,i] = 1e36
@@ -132,6 +136,25 @@ class Forcing(ModelConstants):
         self.ds['Sz'] = S0 + self.alpha*(self.ds.Tz-T0)/self.beta - drhodz*self.ds.z/(self.beta*self.rho0)
         self.ds = self.calc_fields()
         self.ds.attrs['name_forcing'] = f'tanh_Tdeep{Tdeep:.1f}_ztcl{ztcl}'
+        return self.ds
+    
+    def linear(self, S1,T1,z1=2000):
+        """ creates linear forcing profile
+        input:
+        ztcl    ..  (float)  [m]       thermocline depth
+        Tdeep   ..  (float)  [degC]    in situ temperature at depth
+        drhodz  ..  (float)  [kg/m^4]  linear density stratification
+        """
+        if z1>0:
+            print(f'z-coordinate is postive upwards; z1 was {z1}, now set z1=-{z1}')
+            z1 = -z1
+        S0 = 34                       # [psu]  reference surface salinity
+        T0 = self.l1*S0+self.l2       # [degC] surface freezing temperature
+        
+        self.ds['Tz'] = T0 + self.ds.z*(T1-T0)/z1 
+        self.ds['Sz'] = S0 + self.ds.z*(S1-S0)/z1
+        self.ds = self.calc_fields()
+        self.ds.attrs['name_forcing'] = f'linear_S1{S1:.1f}_T1{T1}'
         return self.ds
     
     def calc_fields(self):

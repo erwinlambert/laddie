@@ -14,7 +14,7 @@ warnings.filterwarnings('ignore')
 np.seterr(all='ignore')
 
 N = 2
-years = np.arange(1956,1970)
+years = np.arange(1970,1980)
 
 geom = Geometry('CrossDots')
 geom.coarsen(N=N)

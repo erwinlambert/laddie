@@ -5,6 +5,7 @@ class ModelConstants(object):
         self.g         = 9.81      # [m/s^2]     gravitational acceleration
         self.L         = 3.34e5    # [J/kg]      Latent heat of fusion for ice
         self.cp        = 3.974e3   # [J/kg/degC] specific heat capacity of ocean
+        self.ci        = 2009      # [J/kg/degC] specific heat capacity of ice
         #self.spy       = 86400*365 # [s/yr]      seconds per year
         self.alpha     =  3.733e-5   # [1/degC]    Thermal expansion coefficient
         self.beta      =  7.843e-4   # [1/psu]     Haline contraction coefficient
@@ -20,7 +21,7 @@ class ModelConstants(object):
         self.Pr        = 13.8      # []          Prandtl number
         self.Sc        = 2432.     # []          Schmidt number
         self.nu0       = 1.95e-6   # [m^2/s]     Molecular viscosity
-        #self.rhofw     = 1000.     # [kg/m^3]    Density of freshwater
+        self.rhofw     = 1000.     # [kg/m^3]    Density of freshwater
         self.rho0      =  1028     # [kg/m^3]    Reference density of seawater
         #self.rhoi      =   910     # [kg/m^3]
         #self.rhow      =  1028     # [kg/m^3]  
@@ -33,10 +34,11 @@ class ModelConstants(object):
         self.boundop   = 1         # []          Option for boundary conditions D,T,S. [use 1 for isomip]
         self.minD      = .2        # [m]         Cutoff thickness
         self.maxD      = 3000.     # [m]         Cutoff maximum thickness
-        self.mindrho   = .05       # [kg/m^3]    Minimum density difference with ambient water
+        self.mindrho   = .01       # [kg/m^3]    Minimum density difference with ambient water
         self.vcut      = 1.414     # [m/s]       Cutoff velocity U and V
         self.Dinit     = 10.       # [m]         Initial uniform thickness
         self.res       = 0.5       # [km]        Spatial resolution
+        self.Ti        = -25       # [degC]      Ice shelf temperature
         
         #Tunable physical parameters
         self.Cd        = 2.5e-3    # []          drag coefficient

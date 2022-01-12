@@ -2,7 +2,7 @@ from tools import *
 from physics import *
 from preprocess import *
 
-def savefields(object):
+def savefields(object,filename=None):
     """Store time-average fields and save"""
     object.dsav['U'] += im(object.u[1,:,:])
     object.dsav['V'] += jm(object.v[1,:,:])
@@ -11,6 +11,9 @@ def savefields(object):
     object.dsav['S'] += object.S[1,:,:]
     object.dsav['melt'] += object.melt
     object.dsav['entr'] += object.entr
+    object.dsav['ent2'] += object.ent2
+    object.dsav['detr'] += object.detr    
+    
     object.count += 1
 
     if object.t in np.arange(object.saveint,object.nt+object.saveint,object.saveint):
@@ -22,13 +25,17 @@ def savefields(object):
         object.dsav['T'] *= 1./object.count
         object.dsav['melt'] *= 3600*24*365.25/object.count
         object.dsav['entr'] *= 3600*24*365.25/object.count
+        object.dsav['ent2'] *= 3600*24*365.25/object.count
+        object.dsav['detr'] *= 3600*24*365.25/object.count        
 
         object.dsav['mav']  = 3600*24*365.25*(object.dsav.melt*object.dx*object.dy).sum()/(object.tmask*object.dx*object.dy).sum()
         object.dsav['mmax'] = 3600*24*365.25*object.dsav.melt.max()            
 
         object.dsav['tend'] = object.time[object.t]
-
-        object.dsav['filename'] = f"../../results/{object.ds['name_geo'].values}_{object.ds.attrs['name_forcing']}_{object.dsav['tend'].values:03.0f}"
+        if filename == None:
+            object.dsav['filename'] = f"../../results/{object.ds['name_geo'].values}_{object.ds.attrs['name_forcing']}_{object.dsav['tend'].values:03.0f}"
+        else:
+            object.dsav['filename'] = filename
         object.dsav.to_netcdf(f"{object.dsav['filename'].values}.nc")
         print(f'-------------------------------------------------------------------------------------')
         print(f"{object.time[object.t]:8.03f} days || Average fields saved as {object.dsav['filename'].values}.nc")
@@ -43,6 +50,9 @@ def savefields(object):
         object.dsav['S'] *= 0
         object.dsav['melt'] *= 0
         object.dsav['entr'] *= 0
+        object.dsav['ent2'] *= 0
+        object.dsav['detr'] *= 0        
+        
         object.dsav['tstart'] = object.time[object.t]
         
 def saverestart(object):
@@ -79,7 +89,7 @@ def printdiags(object):
         #Average melt rate [m/yr]
         d_Mav = 3600*24*365.25*div0((object.melt*object.dx*object.dy).sum(),(object.tmask*object.dx*object.dy).sum())
         #Meltwater fraction [%]
-        d_MWF = 100.*(object.melt*object.tmask*object.dx*object.dy).sum()/((object.melt+object.entr)*object.tmask*object.dx*object.dy).sum()
+        d_MWF = 100.*(object.melt*object.tmask*object.dx*object.dy).sum()/((object.melt+(object.entr+object.ent2-object.detr))*object.tmask*object.dx*object.dy).sum()
         #Integrated entrainment [Sv]
         d_Etot = 1e-6*(object.entr*object.tmask*object.dx*object.dy).sum()
         d_E2tot = 1e-6*(object.ent2*object.tmask*object.dx*object.dy).sum()
@@ -96,5 +106,7 @@ def printdiags(object):
         d_Vmax = ((im(object.u[1,:,:])**2 + jm(object.v[1,:,:])**2)**.5*object.tmask).max()
         #TKE
         d_TKE = 1e-9*((im(object.u[1,:,:])**2 + jm(object.v[1,:,:])**2)**.5*object.tmask*object.D[1,:,:]).sum()*object.dx*object.dy
-
-        print(f'{object.time[object.t]:8.03f} days || {d_Dav:5.01f}  [{d_Dmin:4.02f} {d_Dmax:4.0f}] m || {d_Mav: 5.02f} | {d_Mmax: 3.0f} m/yr || {d_MWF:5.02f} % || {d_Etot:5.03f} + {d_E2tot:5.03f} - {d_DEtot:5.03f} | {d_PSI: 5.03f} Sv || {d_Vmax: 3.02f} m/s || {d_TKE: 5.02f} []')
+        #drho
+        d_drho = 1000*np.where(object.tmask,object.drho,100).min()
+        
+        print(f'{object.time[object.t]:8.03f} days || {d_Dav:5.01f}  [{d_Dmin:4.02f} {d_Dmax:4.0f}] m || {d_Mav: 5.02f} | {d_Mmax: 3.0f} m/yr || {d_MWF:5.02f} % || {d_Etot:5.03f} + {d_E2tot:5.03f} - {d_DEtot:5.03f} | {d_PSI: 5.03f} Sv || {d_Vmax: 3.02f} m/s || {d_drho: 5.02f} []')

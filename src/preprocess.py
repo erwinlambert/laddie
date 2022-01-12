@@ -154,6 +154,8 @@ def initialize_vars(object):
     object.dsav['S'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
     object.dsav['melt'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
     object.dsav['entr'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
+    object.dsav['ent2'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
+    object.dsav['detr'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))    
     object.dsav['tmask'] = (['y','x'], object.tmask)
     object.dsav['mask']  = (['y','x'], object.mask.data)
     object.dsav['name_model'] = 'Layer'

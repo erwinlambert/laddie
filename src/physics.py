@@ -102,15 +102,21 @@ def updatesecondary(object):
     
     object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
     object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
-    #object.melt = object.cp/object.L*object.CG*(im(object.u[1,:,:])**2+jm(object.v[1,:,:])**2)**.5*(object.T[1,:,:]-object.Tf) * object.tmask
     
     object.ustar = (object.Cdtop*(im(object.u[1,:,:])**2+jm(object.v[1,:,:])**2+object.utide**2))**.5 * object.tmask
     object.gamT = object.ustar/(2.12*np.log(object.ustar*object.D[1,:,:]/object.nu0+1e-12)+12.5*object.Pr**(2./3)-8.68) * object.tmask
     object.gamS = object.ustar/(2.12*np.log(object.ustar*object.D[1,:,:]/object.nu0+1e-12)+12.5*object.Sc**(2./3)-8.68) * object.tmask
-    object.That = (object.T[1,:,:]-object.l2-object.l3*object.zb).values * object.tmask
-    object.Chat = object.cp*object.gamT/object.L
-    object.melt = .5*(object.Chat*object.That - object.gamS + (np.maximum((object.gamS+object.Chat*object.That)**2 - 4*object.gamS*object.Chat*object.l1*object.S[1,:,:],0))**.5) * object.tmask
-    object.Tb   = object.T[1,:,:] - div0(object.melt*object.L,object.cp*object.gamT) * object.tmask
+    
+    #Melt
+    That = (object.l2+object.l3*object.zb).values
+    Chat = object.cp/(object.L-object.ci*object.Ti)
+    Ctil = object.ci/object.cp
+
+    b = Chat*object.gamT*(That-object.T[1,:,:])+object.gamS*(1+Chat*Ctil*(That+object.l1*object.S[1,:,:]))
+    c = Chat*object.gamT*object.gamS*(That-object.T[1,:,:]+object.l1*object.S[1,:,:])
+
+    object.melt = .5*(-b+np.sqrt(b**2-4*c)) * object.tmask
+    object.Tb = div0(Chat*object.gamT*object.T[1,:,:]-object.melt,Chat*object.gamT+Chat*Ctil*object.melt) * object.tmask
     
     #object.entr = object.E0*np.maximum(0,(im(object.u[1,:,:])*object.dzdx + jm(object.v[1,:,:])*object.dzdy)) * object.tmask
     if object.entpar == 'Holland':
