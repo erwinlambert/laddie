@@ -1,6 +1,7 @@
 lines.linewidth : 1.
 font.size : 8
 font.family : serif
+text.usetex : True
 axes.titlesize : 8
 axes.labelsize : 8
 legend.fontsize : 8
