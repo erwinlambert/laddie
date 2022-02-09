@@ -9,6 +9,8 @@ class Geometry(ModelConstants):
     def __init__(self,name):
         if name=='Thwaites_e':
             x0,x1,y0,y1 = 3460,3640,7425,7700
+        elif name=='Thwaites':
+            x0,x1,y0,y1 = 3460,3640,7425,7642
         elif name=='PineIsland':
             x0,x1,y0,y1 = 3290,3550,7170,7400
         elif name=='CrossDots':

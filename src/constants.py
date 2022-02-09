@@ -46,7 +46,7 @@ class ModelConstants(object):
         self.Ah        = 6         # [m^2/s]     Laplacian viscosity
         self.Kh        = 1         # [m^2/s]     Diffusivity
         self.entpar    = 'Gaspar'  #             Entrainment parameterisation, either 'Holland' or 'Gaspar'
-        self.mu        = 0.5       # []          Parameter in Gaspar entrainment. Gaspar: 0.5; Gladish: 2.5
+        self.mu        = 2.5       # []          Parameter in Gaspar entrainment. Gaspar: 0.5; Gladish: 2.5
         self.maxdetr   = .5        # [m/s]       Cutoff detrainment rate, only effective when O(1e-3)
         
         #Some parameters for saving and displaying output

@@ -99,6 +99,10 @@ def initialize_vars(object):
     object.T = np.zeros((3,object.ny,object.nx)).astype('float64')
     object.S = np.zeros((3,object.ny,object.nx)).astype('float64')
     
+    
+    #Include ice shelf front gradient
+    object.zb = xr.where(object.isf,0,object.zb)
+    
     #Draft dz/dx and dz/dy on t-grid
     object.dzdx = np.gradient(object.zb,object.dx,axis=1)
     object.dzdy = np.gradient(object.zb,object.dy,axis=0)
