@@ -46,11 +46,21 @@ def convT(object,var):
         tE = - (np.maximum(object.u[1,:,:],0)*var                   + np.minimum(object.u[1,:,:],0)*(np.roll(var,-1,axis=1)*object.tmaskxm1+var*object.ocnxm1)) / object.dx * object.umask
         tW =   (np.maximum(object.uxp1    ,0)*(np.roll(var,1,axis=1)*object.tmaskxp1+var*object.ocnxp1) + np.minimum(object.uxp1    ,0)*var                   ) / object.dx * object.umaskxp1
     elif object.boundop ==2:
+        #Opion 2: zero inflow
         tN = - (np.maximum(object.v[1,:,:],0)*var                   + np.minimum(object.v[1,:,:],0)*np.roll(var,-1,axis=0)) / object.dy * object.vmask
         tS =   (np.maximum(object.vyp1    ,0)*np.roll(var,1,axis=0) + np.minimum(object.vyp1    ,0)*var                   ) / object.dy * object.vmaskyp1
         tE = - (np.maximum(object.u[1,:,:],0)*var                   + np.minimum(object.u[1,:,:],0)*np.roll(var,-1,axis=1)) / object.dx * object.umask
         tW =   (np.maximum(object.uxp1    ,0)*np.roll(var,1,axis=1) + np.minimum(object.uxp1    ,0)*var                   ) / object.dx * object.umaskxp1               
     return (tN+tS+tE+tW) * object.tmask
+
+def convT2(object,var,vara):
+    """Upstream convergence scheme for D, DT, DS; allowing for inflow of ambient water"""
+    tN = - (np.maximum(object.v[1,:,:],0)*var                   + np.minimum(object.v[1,:,:],0)*(np.roll(var,-1,axis=0)*object.tmaskym1+vara*object.ocnym1)) / object.dy * object.vmask
+    tS =   (np.maximum(object.vyp1    ,0)*(np.roll(var,1,axis=0)*object.tmaskyp1+vara*object.ocnyp1) + np.minimum(object.vyp1    ,0)*var                   ) / object.dy * object.vmaskyp1
+    tE = - (np.maximum(object.u[1,:,:],0)*var                   + np.minimum(object.u[1,:,:],0)*(np.roll(var,-1,axis=1)*object.tmaskxm1+vara*object.ocnxm1)) / object.dx * object.umask
+    tW =   (np.maximum(object.uxp1    ,0)*(np.roll(var,1,axis=1)*object.tmaskxp1+vara*object.ocnxp1) + np.minimum(object.uxp1    ,0)*var                   ) / object.dx * object.umaskxp1
+    return (tN+tS+tE+tW) * object.tmask
+
 
 def convu(object):
     """Convergence for Du"""
