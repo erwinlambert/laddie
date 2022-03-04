@@ -23,19 +23,20 @@ def create_mask(object):
     object.ocnxm1      = np.roll(object.ocn,-1,axis=1)
     object.ocnxp1      = np.roll(object.ocn, 1,axis=1)
     
-    #Mask ice shelf points sticking out as ocean
-    print('removing points sticking out')
-    print(np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0))
-    while np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0) > 0:
-        object.ocn = np.where(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0,1,object.ocn)
-        object.tmask = np.where(object.ocn==1,0,object.tmask)
-        object.mask  = np.where(object.ocn==1,0,object.mask)
-        #Redefine rolled masks
-        object.ocnym1      = np.roll(object.ocn,-1,axis=0)
-        object.ocnyp1      = np.roll(object.ocn, 1,axis=0)
-        object.ocnxm1      = np.roll(object.ocn,-1,axis=1)
-        object.ocnxp1      = np.roll(object.ocn, 1,axis=1)
+    if object.correctisf:
+        #Mask ice shelf points sticking out as ocean
+        print('removing points sticking out')
         print(np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0))
+        while np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0) > 0:
+            object.ocn = np.where(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0,1,object.ocn)
+            object.tmask = np.where(object.ocn==1,0,object.tmask)
+            object.mask  = np.where(object.ocn==1,0,object.mask)
+            #Redefine rolled masks
+            object.ocnym1      = np.roll(object.ocn,-1,axis=0)
+            object.ocnyp1      = np.roll(object.ocn, 1,axis=0)
+            object.ocnxm1      = np.roll(object.ocn,-1,axis=1)
+            object.ocnxp1      = np.roll(object.ocn, 1,axis=1)
+            print(np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0))
     
     #Rolled tmasks
     object.tmaskym1    = np.roll(object.tmask,-1,axis=0)
@@ -43,30 +44,31 @@ def create_mask(object):
     object.tmaskxm1    = np.roll(object.tmask,-1,axis=1)
     object.tmaskxp1    = np.roll(object.tmask, 1,axis=1)    
     
-    #Mask isolated ice shelf points as ocean
-    print('removing isolated points')
-    print(np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)))
-    while np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)):
-        object.ocn = np.where(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0),1,object.ocn)
-        object.tmask = np.where(object.ocn==1,0,object.tmask)
-        object.mask  = np.where(object.ocn==1,0,object.mask)
-        #Redefine rolled masks
+    if object.correctisf:
+        #Mask isolated ice shelf points as ocean
+        print('removing isolated points')
+        print(np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)))
+        while np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)):
+            object.ocn = np.where(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0),1,object.ocn)
+            object.tmask = np.where(object.ocn==1,0,object.tmask)
+            object.mask  = np.where(object.ocn==1,0,object.mask)
+            #Redefine rolled masks
+            object.tmaskym1    = np.roll(object.tmask,-1,axis=0)
+            object.tmaskyp1    = np.roll(object.tmask, 1,axis=0)
+            object.tmaskxm1    = np.roll(object.tmask,-1,axis=1)
+            object.tmaskxp1    = np.roll(object.tmask, 1,axis=1)   
+            print(np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)))
+
+        #Update rolled masks
+        object.ocnym1      = np.roll(object.ocn,-1,axis=0)
+        object.ocnyp1      = np.roll(object.ocn, 1,axis=0)
+        object.ocnxm1      = np.roll(object.ocn,-1,axis=1)
+        object.ocnxp1      = np.roll(object.ocn, 1,axis=1)    
         object.tmaskym1    = np.roll(object.tmask,-1,axis=0)
         object.tmaskyp1    = np.roll(object.tmask, 1,axis=0)
         object.tmaskxm1    = np.roll(object.tmask,-1,axis=1)
-        object.tmaskxp1    = np.roll(object.tmask, 1,axis=1)   
-        print(np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)))
-    
-    #Update rolled masks
-    object.ocnym1      = np.roll(object.ocn,-1,axis=0)
-    object.ocnyp1      = np.roll(object.ocn, 1,axis=0)
-    object.ocnxm1      = np.roll(object.ocn,-1,axis=1)
-    object.ocnxp1      = np.roll(object.ocn, 1,axis=1)    
-    object.tmaskym1    = np.roll(object.tmask,-1,axis=0)
-    object.tmaskyp1    = np.roll(object.tmask, 1,axis=0)
-    object.tmaskxm1    = np.roll(object.tmask,-1,axis=1)
-    object.tmaskxp1    = np.roll(object.tmask, 1,axis=1)      
-    
+        object.tmaskxp1    = np.roll(object.tmask, 1,axis=1)      
+
     object.tmaskxm1ym1 = np.roll(np.roll(object.tmask,-1,axis=0),-1,axis=1)
     object.tmaskxm1yp1 = np.roll(np.roll(object.tmask, 1,axis=0),-1,axis=1)
     object.tmaskxp1ym1 = np.roll(np.roll(object.tmask,-1,axis=0), 1,axis=1)    
@@ -129,8 +131,8 @@ def initialize_vars(object):
     #Include ice shelf front gradient
     object.zb = xr.where(object.isf,0,object.zb)
     
-    #Remove positive values
-    #object.zb = xr.where(np.logical_and(object.tmask==1,object.zb>-50),-50,object.zb)
+    #Remove positive values. Set shallowest ice shelf draft to 10 meters
+    object.zb = xr.where(np.logical_and(object.tmask==1,object.zb>-10),-10,object.zb)
     
     #Draft dz/dx and dz/dy on t-grid
     object.dzdx = np.gradient(object.zb,object.dx,axis=1)

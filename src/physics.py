@@ -73,8 +73,8 @@ def convu(object):
     
     tN = -DN *        ip_(object.v[1,:,:],object.vmask)           *(jp_(object.u[1,:,:],object.umask)-object.slip*object.u[1,:,:]*object.grdNu) /object.dy
     tS =  DS *np.roll(ip_(object.v[1,:,:],object.vmask),1,axis=0) *(jm_(object.u[1,:,:],object.umask)-object.slip*object.u[1,:,:]*object.grdSu) /object.dy
-    tE = -DE *        ip_(object.u[1,:,:],object.umask)           * ip_(object.u[1,:,:],object.umask)                                     /object.dx
-    tW =  DW *        im_(object.u[1,:,:],object.umask)           * im_(object.u[1,:,:],object.umask)                                     /object.dx
+    tE = -DE *        ip_(object.u[1,:,:],object.umask)           *(ip_(object.u[1,:,:],object.umask)-object.ocnxm1*(1-np.sign(object.u[1,:,:]))*object.u[1,:,:])                                     /object.dx
+    tW =  DW *        im_(object.u[1,:,:],object.umask)           *(im_(object.u[1,:,:],object.umask)-object.ocn*np.sign(object.u[1,:,:])*object.u[1,:,:])                                     /object.dx
     
     return (tN+tS+tE+tW) * object.umask
 
@@ -87,8 +87,8 @@ def convv(object):
     DN = object.Dym1                 + object.ocnym1 * object.D[1,:,:]*object.tmask
     DS = object.D[1,:,:]*object.tmask  + object.ocn    * object.Dym1 
     
-    tN = -DN *        jp_(object.v[1,:,:],object.vmask)           * jp_(object.v[1,:,:],object.vmask)                                     /object.dy
-    tS =  DS *        jm_(object.v[1,:,:],object.vmask)           * jm_(object.v[1,:,:],object.vmask)                                     /object.dy
+    tN = -DN *        jp_(object.v[1,:,:],object.vmask)           *(jp_(object.v[1,:,:],object.vmask)-object.ocnym1*(1-np.sign(object.v[1,:,:]))*object.v[1,:,:])                                      /object.dy
+    tS =  DS *        jm_(object.v[1,:,:],object.vmask)           *(jm_(object.v[1,:,:],object.vmask)-object.ocn*np.sign(object.v[1,:,:])*object.v[1,:,:])                                     /object.dy
     tE = -DE *        jp_(object.u[1,:,:],object.umask)           *(ip_(object.v[1,:,:],object.vmask)-object.slip*object.v[1,:,:]*object.grdEv) /object.dx
     tW =  DW *np.roll(jp_(object.u[1,:,:],object.umask),1,axis=1) *(im_(object.v[1,:,:],object.vmask)-object.slip*object.v[1,:,:]*object.grdWv) /object.dx
     

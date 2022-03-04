@@ -130,7 +130,7 @@ class Forcing(ModelConstants):
             ztcl = -ztcl
         S0 = 34                       # [psu]  reference surface salinity
         T0 = self.l1*S0+self.l2       # [degC] surface freezing temperature
-        z1 = 100                      # [m]    thermocline sharpness
+        z1 = 150                      # [m]    thermocline sharpness
         
         self.ds['Tz'] = Tdeep + (T0-Tdeep) * (1+np.tanh((self.ds.z-ztcl)/z1))/2
         self.ds['Sz'] = S0 + self.alpha*(self.ds.Tz-T0)/self.beta - drhodz*self.ds.z/(self.beta*self.rho0)
@@ -148,7 +148,7 @@ class Forcing(ModelConstants):
         if z1>0:
             print(f'z-coordinate is postive upwards; z1 was {z1}, now set z1=-{z1}')
             z1 = -z1
-        S0 = 34                       # [psu]  reference surface salinity
+        S0 = 34.5                     # [psu]  reference surface salinity
         T0 = self.l1*S0+self.l2       # [degC] surface freezing temperature
         
         self.ds['Tz'] = T0 + self.ds.z*(T1-T0)/z1 
