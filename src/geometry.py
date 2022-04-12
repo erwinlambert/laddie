@@ -69,3 +69,43 @@ class Geometry(ModelConstants):
         dims = ['y','x']
         geom = geom.assign_coords({'lat':(dims,lats), 'lon':(dims,lons)})  
         return geom
+
+class GeometryAS(ModelConstants):
+    """Create geometry input"""
+    def __init__(self):
+        x0,x1,y0,y1 = 900,2200,300,2000
+        name = 'CrossDots'
+        self.ds = xr.open_dataset('../../../data/annsofie/DotsonDraftAndMask_100m.nc')
+        self.ds = self.ds.isel(x=slice(x0,x1),y=slice(y0,y1))
+        #self.mask = self.ds.mask
+        self.ds.mask[:] = xr.where(self.ds.mask==1,3,self.ds.mask)
+        self.ds['draft'] = (self.ds.ice_draft).astype('float64')
+        self.name = name
+        ModelConstants.__init__(self)
+    
+    def coarsen(self,N):
+        """Coarsen grid resolution by a factor N"""
+        self.ds['mask'] = xr.where(self.ds.mask==0,np.nan,self.ds.mask)
+        self.ds['draft'] = xr.where(np.isnan(self.ds.mask),np.nan,self.ds.draft)
+        self.ds = self.ds.coarsen(x=N,y=N,boundary='trim').mean()
+
+        self.ds['mask'] = np.round(self.ds.mask)
+        self.ds['mask'] = xr.where(np.isnan(self.ds.mask),0,self.ds.mask)
+        self.ds['draft'] = xr.where(self.ds.mask==0,0,self.ds.draft)
+        self.ds['draft'] = xr.where(np.isnan(self.ds.draft),0,self.ds.draft)
+        self.res = 0.1*N
+        print(f'Resolution set to {self.res} km')
+        
+    def create(self):
+        """Create geometry"""
+        geom = self.ds[['mask','draft']]
+        geom['name_geo'] = f'{self.name}_{self.res:1.1f}'
+        print('Geometry',geom.name_geo.values,'created')
+        
+        #Add lon lat
+        project = pyproj.Proj("epsg:3031")
+        xx, yy = np.meshgrid(geom.x, geom.y)
+        lons, lats = project(xx, yy, inverse=True)
+        dims = ['y','x']
+        geom = geom.assign_coords({'lat':(dims,lats), 'lon':(dims,lons)})  
+        return geom
