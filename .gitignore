@@ -134,3 +134,9 @@ results/
 .DS_Store
 figures/draftplot_overview_complete.pdf
 figures/draftplot_overview_complete.pptx
+src/notebooks/Klooi_goldberg.ipynb
+src/notebooks/Main.ipynb
+src/notebooks/runCD1.py
+src/notebooks/Main_Ross.ipynb
+src/notebooks/Main_Annsofie.ipynb
+src/notebooks/Main_TottenMU.ipynb

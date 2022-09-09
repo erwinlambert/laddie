@@ -14,7 +14,8 @@ warnings.filterwarnings('ignore')
 np.seterr(all='ignore')
 
 N = 1
-years = np.arange(1980,2012)
+years = np.arange(2012,2017)
+#years = np.arange(1979,2012)
 
 geom = Geometry('CrossDots')
 geom.coarsen(N=N)
@@ -24,10 +25,10 @@ for yy in years:
     forc = Forcing(geom).mitgcm(startyear=yy,endyear=yy)
     layer = LayerModel(forc)
     layer.dt = 144
-    layer.Ah = 20
-    layer.Kh = 20
-    layer.Cdtop = 1.23e-3
-    layer.minD = 3.2
+    layer.Ah = 25
+    layer.Kh = 25
+    layer.Cdtop = 1.1e-3
+    layer.minD = 2.8
     layer.saveday = 5
     layer.restday = 100
-    ds = layer.compute(days=20)
+    ds = layer.compute(days=30)
