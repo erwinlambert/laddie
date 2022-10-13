@@ -118,22 +118,25 @@ class Forcing(ModelConstants):
         self.ds.attrs['name_forcing'] = f"mitgcm_{startyear}_{endyear}"
         return self.ds
         
-    def tanh(self, ztcl, Tdeep, drhodz=.6/720):
+    def tanh(self, ztcl, Tdeep, drhodz=.2/1000,z1=200):
         """ creates tanh thermocline forcing profile
         input:
         ztcl    ..  (float)  [m]       thermocline depth
         Tdeep   ..  (float)  [degC]    in situ temperature at depth
         drhodz  ..  (float)  [kg/m^4]  linear density stratification
+        z1      ..  (float)  [m]       thermocline sharpness
         """
         if ztcl>0:
             print(f'z-coordinate is postive upwards; ztcl was {ztcl}, now set ztcl=-{ztcl}')
             ztcl = -ztcl
         S0 = 34                       # [psu]  reference surface salinity
         T0 = self.l1*S0+self.l2       # [degC] surface freezing temperature
-        z1 = 150                      # [m]    thermocline sharpness
         
+        #drho = drhodz*np.abs(self.ds.z)
+        drho = .01*np.abs(self.ds.z)**.5
+
         self.ds['Tz'] = Tdeep + (T0-Tdeep) * (1+np.tanh((self.ds.z-ztcl)/z1))/2
-        self.ds['Sz'] = S0 + self.alpha*(self.ds.Tz-T0)/self.beta - drhodz*self.ds.z/(self.beta*self.rho0)
+        self.ds['Sz'] = S0 + self.alpha*(self.ds.Tz-T0)/self.beta + drho/(self.beta*self.rho0)
         self.ds = self.calc_fields()
         self.ds.attrs['name_forcing'] = f'tanh_Tdeep{Tdeep:.1f}_ztcl{ztcl}'
         return self.ds
