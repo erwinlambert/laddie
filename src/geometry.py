@@ -29,6 +29,8 @@ class Geometry(ModelConstants):
             x0,x1,y0,y1 = 3600,5630,4560,6420
         elif name=='Ross':
             x0,x1,y0,y1 = 5470,7500,7500,9400
+        elif name=='LCIS':
+            x0,x1,y0,y1 = 1900,2700,4050,4720
     
         self.ds = xr.open_dataset('../../../data/BedMachineAntarctica_2020-07-15_v02.nc')
         self.ds = self.ds.isel(x=slice(x0,x1),y=slice(y0,y1))
