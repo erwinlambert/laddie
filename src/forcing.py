@@ -129,7 +129,7 @@ class Forcing(ModelConstants):
         if ztcl>0:
             print(f'z-coordinate is postive upwards; ztcl was {ztcl}, now set ztcl=-{ztcl}')
             ztcl = -ztcl
-        S0 = 34                       # [psu]  reference surface salinity
+        S0 = 34.0                     # [psu]  reference surface salinity
         T0 = self.l1*S0+self.l2       # [degC] surface freezing temperature
         
         #drho = drhodz*np.abs(self.ds.z)
