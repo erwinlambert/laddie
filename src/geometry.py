@@ -32,7 +32,7 @@ class Geometry(ModelConstants):
         elif name=='LCIS':
             x0,x1,y0,y1 = 1900,2700,4050,4720
     
-        self.ds = xr.open_dataset('../../../data/BedMachineAntarctica_2020-07-15_v02.nc')
+        self.ds = xr.open_dataset('../data/BedMachineAntarctica_2020-07-15_v02.nc')
         self.ds = self.ds.isel(x=slice(x0,x1),y=slice(y0,y1))
         #self.mask = self.ds.mask
         self.ds.mask[:] = xr.where(self.ds.mask==1,2,self.ds.mask)
