@@ -5,39 +5,23 @@ import pyproj
 from constants import ModelConstants
 
 class Geometry(ModelConstants):
-    """Create geometry input"""
-    def __init__(self,name):
-        if name=='Thwaites_e':
-            x0,x1,y0,y1 = 3460,3640,7425,7700
-        elif name=='Thwaites':
-            x0,x1,y0,y1 = 3460,3640,7425,7642
-        elif name=='PineIsland':
-            x0,x1,y0,y1 = 3290,3550,7170,7400
-        elif name=='CrossDots':
-            x0,x1,y0,y1 = 3445,3705,7730,8065
-        elif name=='Dotson':
-            x0,x1,y0,y1 = 3465,3705,7865,8065
-        elif name=='Getz':
-            x0,x1,y0,y1 = 3510,4330,8080,9050
-        elif name=='Cosgrove':
-            x0,x1,y0,y1 = 3070,3190,7210,7420  
-        elif name=='TottenMU':
-            x0,x1,y0,y1 = 10960,11315,8665,9420
-        elif name=='Amery':
-            x0,x1,y0,y1 = 10010,11160,4975,5450
-        elif name=='FRIS':
-            x0,x1,y0,y1 = 3600,5630,4560,6420
-        elif name=='Ross':
-            x0,x1,y0,y1 = 5470,7500,7500,9400
-        elif name=='LCIS':
-            x0,x1,y0,y1 = 1900,2700,4050,4720
-    
-        self.ds = xr.open_dataset('../data/BedMachineAntarctica_2020-07-15_v02.nc')
-        self.ds = self.ds.isel(x=slice(x0,x1),y=slice(y0,y1))
-        #self.mask = self.ds.mask
-        self.ds.mask[:] = xr.where(self.ds.mask==1,2,self.ds.mask)
-        self.ds['draft'] = (self.ds.surface-self.ds.thickness).astype('float64')
-        self.name = name
+    """Create geometry input from ISOMIP+ """
+    def __init__(self,filename):
+        self.ds = xr.open_dataset(filename)
+
+        if len(self.ds.dims) ==3:
+            self.ds = self.ds.isel(t=0)
+            print('selecting first time step')
+
+        assert (self.ds.x[1]-self.ds.x[0]).values == (self.ds.y[1]-self.ds.y[0]).values
+
+        self.ds['draft'] = self.ds.lowerSurface.astype('float64')
+        self.ds['mask'] = 0.*self.ds.draft
+        self.ds['mask'][:] = np.where(self.ds.floatingMask.values,3,0)
+        self.ds['mask'][:] = np.where(self.ds.groundedMask.values,2,self.ds.mask)
+        self.ds['mask'][-1,:] = 2 #Prevent cyclic boundary conditions
+        self.name = filename[-26:-20]
+        print(self.name)
         ModelConstants.__init__(self)
     
     def coarsen(self,N):
@@ -50,7 +34,8 @@ class Geometry(ModelConstants):
         self.ds['mask'] = xr.where(np.isnan(self.ds.mask),0,self.ds.mask)
         self.ds['draft'] = xr.where(self.ds.mask==0,0,self.ds.draft)
         self.ds['draft'] = xr.where(np.isnan(self.ds.draft),0,self.ds.draft)
-        self.res *= N
+
+        self.res = (self.ds.x[1]-self.ds.x[0]).values/1000
         print(f'Resolution set to {self.res} km')
         
     def smoothen(self,N):
@@ -65,9 +50,9 @@ class Geometry(ModelConstants):
         print('Geometry',geom.name_geo.values,'created')
         
         #Add lon lat
-        project = pyproj.Proj("epsg:3031")
-        xx, yy = np.meshgrid(geom.x, geom.y)
-        lons, lats = project(xx, yy, inverse=True)
-        dims = ['y','x']
-        geom = geom.assign_coords({'lat':(dims,lats), 'lon':(dims,lons)})  
+        #project = pyproj.Proj("epsg:3031")
+        #xx, yy = np.meshgrid(geom.x, geom.y)
+        #lons, lats = project(xx, yy, inverse=True)
+        #dims = ['y','x']
+        #geom = geom.assign_coords({'lat':(dims,lats), 'lon':(dims,lons)})  
         return geom
