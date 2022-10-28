@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 
-from integrate import updatesecondary,intD,intu,intv,intT,intS
+from integrate import updatesecondary,intD,intU,intV,intT,intS
 
 def create_mask(object):
     """Create mask
@@ -120,8 +120,8 @@ def initialize_vars(object):
     assert object.entpar in ['Holland','Gaspar']
     
     #Major variables. Three arrays for storage of previous timestep, current timestep, and next timestep
-    object.u = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.v = np.zeros((3,object.ny,object.nx)).astype('float64')
+    object.U = np.zeros((3,object.ny,object.nx)).astype('float64')
+    object.V = np.zeros((3,object.ny,object.nx)).astype('float64')
     object.D = np.zeros((3,object.ny,object.nx)).astype('float64')
     object.T = np.zeros((3,object.ny,object.nx)).astype('float64')
     object.S = np.zeros((3,object.ny,object.nx)).astype('float64')
@@ -140,8 +140,8 @@ def initialize_vars(object):
     try:
         dsinit = xr.open_dataset(f"../../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
         object.tstart = dsinit.tend.values
-        object.u = dsinit.u.values
-        object.v = dsinit.v.values
+        object.U = dsinit.U.values
+        object.V = dsinit.V.values
         object.D = dsinit.D.values
         object.T = dsinit.T.values
         object.S = dsinit.S.values
@@ -164,8 +164,8 @@ def initialize_vars(object):
         #Perform first integration step with 1 dt
         updatesecondary(object)
         intD(object,object.dt)
-        intu(object,object.dt)
-        intv(object,object.dt)
+        intU(object,object.dt)
+        intV(object,object.dt)
         intT(object,object.dt)
         intS(object,object.dt)
 
