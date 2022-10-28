@@ -96,15 +96,12 @@ def convv(object):
 
 def updatesecondary(object):
     """Update a bunch of secondary variables"""    
+
+    #Ambient fields
     if len(object.Tz.shape)==1:
         object.Ta   = np.interp(object.zb-object.D[1,:,:],object.z,object.Tz)
         object.Sa   = np.interp(object.zb-object.D[1,:,:],object.z,object.Sz)
     elif len(object.Tz.shape)==3:
-        #print(object.t)
-        #tempindex = np.int_(np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]
-        #print(np.where(object.tmask==1,-object.zb+object.D[1,:,:],0).min(),np.where(object.tmask==1,-object.zb+object.D[1,:,:],0).max())
-        #print((-object.zb+object.D[1,:,:]).min(),(-object.zb+object.D[1,:,:]).max())
-        #print(np.min(tempindex))#.min(),tempindex.max())
         object.Ta = object.Tz[np.int_(.01*np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]]
         object.Sa = object.Sz[np.int_(.01*np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]]
         
@@ -113,11 +110,11 @@ def updatesecondary(object):
     object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
     object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
     
+    #Melt
     object.ustar = (object.Cdtop*(im(object.u[1,:,:])**2+jm(object.v[1,:,:])**2+object.utide**2))**.5 * object.tmask
     object.gamT = object.ustar/(2.12*np.log(object.ustar*object.D[1,:,:]/object.nu0+1e-12)+12.5*object.Pr**(2./3)-8.68) * object.tmask
     object.gamS = object.ustar/(2.12*np.log(object.ustar*object.D[1,:,:]/object.nu0+1e-12)+12.5*object.Sc**(2./3)-8.68) * object.tmask
     
-    #Melt
     That = (object.l2+object.l3*object.zb).values
     Chat = object.cp/(object.L-object.ci*object.Ti)
     Ctil = object.ci/object.cp
@@ -128,6 +125,7 @@ def updatesecondary(object):
     object.melt = .5*(-b+np.sqrt(b**2-4*c)) * object.tmask
     object.Tb = div0(Chat*object.gamT*object.T[1,:,:]-object.melt,Chat*object.gamT+Chat*Ctil*object.melt) * object.tmask
     
+    #Entrainment
     #object.entr = object.E0*np.maximum(0,(im(object.u[1,:,:])*object.dzdx + jm(object.v[1,:,:])*object.dzdy)) * object.tmask
     if object.entpar == 'Holland':
         object.entr = object.cl*object.Kh/object.Ah**2*(np.maximum(0,im(object.u[1,:,:])**2+jm(object.v[1,:,:])**2-object.g*object.drho*object.Kh/object.Ah*object.D[1,:,:]))**.5 * object.tmask
@@ -152,7 +150,3 @@ def updatesecondary(object):
 
     #Additional entrainment to prevent D<minD
     object.ent2 = np.maximum(0,object.minD-object.D[0,:,:]-(convT(object,object.D[1,:,:])-object.melt-(object.entr-object.detr))*2*object.dt)*object.tmask/(2*object.dt)
-    
-    #print(object.detr.max(),object.entr.max())
-    #print(object.drhob.min(),object.drhob.max(),object.drho.min(),object.drho.max())
-    #print(object.detr.max(),(object.entr-object.detr).max(),object.ent2.max(),object.D[1,:,:].min())

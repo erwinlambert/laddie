@@ -72,7 +72,6 @@ def create_mask(object):
     object.tmaskxm1ym1 = np.roll(np.roll(object.tmask,-1,axis=0),-1,axis=1)
     object.tmaskxm1yp1 = np.roll(np.roll(object.tmask, 1,axis=0),-1,axis=1)
     object.tmaskxp1ym1 = np.roll(np.roll(object.tmask,-1,axis=0), 1,axis=1)    
-    
 
     object.grdNu = 1-np.roll((1-object.grd)*(1-np.roll(object.grd,-1,axis=1)),-1,axis=0)
     object.grdSu = 1-np.roll((1-object.grd)*(1-np.roll(object.grd,-1,axis=1)), 1,axis=0)
@@ -127,7 +126,6 @@ def initialize_vars(object):
     object.T = np.zeros((3,object.ny,object.nx)).astype('float64')
     object.S = np.zeros((3,object.ny,object.nx)).astype('float64')
     
-    
     #Include ice shelf front gradient
     object.zb = xr.where(object.isf,0,object.zb)
     
@@ -156,9 +154,7 @@ def initialize_vars(object):
         elif len(object.Tz.shape)==3:
             object.Ta = object.Tz[np.int_(.01*-object.zb),object.ind[0],object.ind[1]]
             object.Sa = object.Sz[np.int_(.01*-object.zb),object.ind[0],object.ind[1]]
-            
-        #object.Tf   = (object.l1*object.Sa+object.l2+object.l3*object.zb).values
-        
+                    
         object.D += object.Dinit
         for n in range(3):
             object.T[n,:,:] = object.Ta-.1
@@ -201,7 +197,3 @@ def initialize_vars(object):
     object.dsre = object.dsre.drop_vars(['Tz','Sz'])
     object.dsre = object.dsre.drop_dims(['z'])    
     object.dsre = object.dsre.assign_coords({'n':np.array([0,1,2])})
-
-    #object.nt = int(object.days*24*3600/object.dt)+1    # Number of time steps
-    #object.tend = object.tstart+object.days
-    #object.time = np.linspace(object.tstart,object.tend,object.nt)  # Time in days
