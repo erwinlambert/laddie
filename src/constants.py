@@ -30,7 +30,6 @@ class ModelConstants(object):
         self.dt        = 120       # [s]         Time step
         self.boundop   = 1         # []          Option for boundary conditions D,T,S. [use 1 for isomip]
         self.minD      = .2        # [m]         Cutoff thickness
-        self.maxD      = 3000.     # [m]         Cutoff maximum thickness
         self.mindrho   = .005      # [kg/m^3]    Minimum density difference with ambient water
         self.vcut      = 1.414     # [m/s]       Cutoff velocity U and V
         self.Dinit     = 10.       # [m]         Initial uniform thickness

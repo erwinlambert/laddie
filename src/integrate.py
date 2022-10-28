@@ -29,8 +29,7 @@ def updatevars(object):
     updatesecondary(object)
     
 def cutforstability(object):
-    """Cut D, U, and V when exceeding specified thresholds"""
-    object.D = np.where(object.D>object.maxD,object.maxD,object.D)
+    """Cut U, and V when exceeding specified thresholds"""
     object.U = np.where(object.U>object.vcut,object.vcut,object.U)
     object.U = np.where(object.U<-object.vcut,-object.vcut,object.U)
     object.V = np.where(object.V>object.vcut,object.vcut,object.V)
