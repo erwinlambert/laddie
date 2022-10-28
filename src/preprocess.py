@@ -138,7 +138,7 @@ def initialize_vars(object):
 
     #Initial values
     try:
-        dsinit = xr.open_dataset(f"../../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
+        dsinit = xr.open_dataset(f"../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
         object.tstart = dsinit.tend.values
         object.U = dsinit.U.values
         object.V = dsinit.V.values

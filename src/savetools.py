@@ -33,7 +33,7 @@ def savefields(object,filename=None):
 
         object.dsav['tend'] = object.time[object.t]
         if filename == None:
-            object.dsav['filename'] = f"../../results/{object.ds['name_geo'].values}_{object.ds.attrs['name_forcing']}_{object.dsav['tend'].values:03.0f}"
+            object.dsav['filename'] = f"../results/{object.ds['name_geo'].values}_{object.ds.attrs['name_forcing']}_{object.dsav['tend'].values:03.0f}"
         else:
             object.dsav['filename'] = filename
         object.dsav.to_netcdf(f"{object.dsav['filename'].values}.nc")
@@ -58,14 +58,14 @@ def savefields(object,filename=None):
 def saverestart(object):
     if object.t in np.arange(object.restint,object.nt+object.restint,object.restint):
         """Output restart file"""
-        object.dsre['U'] = (['n','y','x'], object.u)
-        object.dsre['V'] = (['n','y','x'], object.v)
+        object.dsre['U'] = (['n','y','x'], object.U)
+        object.dsre['V'] = (['n','y','x'], object.V)
         object.dsre['D'] = (['n','y','x'], object.D)
         object.dsre['T'] = (['n','y','x'], object.T)
         object.dsre['S'] = (['n','y','x'], object.S)
         object.dsre['tend'] = object.time[object.t]
         object.restartfile = f"{object.ds.attrs['name_forcing']}_{object.dsre['tend'].values:03.0f}"
-        object.dsre.to_netcdf(f"../../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
+        object.dsre.to_netcdf(f"../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
 
         print(f'-------------------------------------------------------------------------------------')
         print(f"{object.time[object.t]:8.03f} days || Restart file saved")
