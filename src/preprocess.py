@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 
-from integrate import updatesecondary,intD,intu,intv,intT,intS
+from integrate import updatesecondary,intD,intU,intV,intT,intS
 
 def create_mask(object):
     """Create mask
@@ -72,7 +72,6 @@ def create_mask(object):
     object.tmaskxm1ym1 = np.roll(np.roll(object.tmask,-1,axis=0),-1,axis=1)
     object.tmaskxm1yp1 = np.roll(np.roll(object.tmask, 1,axis=0),-1,axis=1)
     object.tmaskxp1ym1 = np.roll(np.roll(object.tmask,-1,axis=0), 1,axis=1)    
-    
 
     object.grdNu = 1-np.roll((1-object.grd)*(1-np.roll(object.grd,-1,axis=1)),-1,axis=0)
     object.grdSu = 1-np.roll((1-object.grd)*(1-np.roll(object.grd,-1,axis=1)), 1,axis=0)
@@ -121,12 +120,11 @@ def initialize_vars(object):
     assert object.entpar in ['Holland','Gaspar']
     
     #Major variables. Three arrays for storage of previous timestep, current timestep, and next timestep
-    object.u = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.v = np.zeros((3,object.ny,object.nx)).astype('float64')
+    object.U = np.zeros((3,object.ny,object.nx)).astype('float64')
+    object.V = np.zeros((3,object.ny,object.nx)).astype('float64')
     object.D = np.zeros((3,object.ny,object.nx)).astype('float64')
     object.T = np.zeros((3,object.ny,object.nx)).astype('float64')
     object.S = np.zeros((3,object.ny,object.nx)).astype('float64')
-    
     
     #Include ice shelf front gradient
     object.zb = xr.where(object.isf,0,object.zb)
@@ -140,10 +138,10 @@ def initialize_vars(object):
 
     #Initial values
     try:
-        dsinit = xr.open_dataset(f"../../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
+        dsinit = xr.open_dataset(f"../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
         object.tstart = dsinit.tend.values
-        object.u = dsinit.u.values
-        object.v = dsinit.v.values
+        object.U = dsinit.U.values
+        object.V = dsinit.V.values
         object.D = dsinit.D.values
         object.T = dsinit.T.values
         object.S = dsinit.S.values
@@ -156,9 +154,7 @@ def initialize_vars(object):
         elif len(object.Tz.shape)==3:
             object.Ta = object.Tz[np.int_(.01*-object.zb),object.ind[0],object.ind[1]]
             object.Sa = object.Sz[np.int_(.01*-object.zb),object.ind[0],object.ind[1]]
-            
-        #object.Tf   = (object.l1*object.Sa+object.l2+object.l3*object.zb).values
-        
+                    
         object.D += object.Dinit
         for n in range(3):
             object.T[n,:,:] = object.Ta-.1
@@ -168,8 +164,8 @@ def initialize_vars(object):
         #Perform first integration step with 1 dt
         updatesecondary(object)
         intD(object,object.dt)
-        intu(object,object.dt)
-        intv(object,object.dt)
+        intU(object,object.dt)
+        intV(object,object.dt)
         intT(object,object.dt)
         intS(object,object.dt)
 
@@ -193,7 +189,7 @@ def initialize_vars(object):
     object.dsav['detr'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))    
     object.dsav['tmask'] = (['y','x'], object.tmask)
     object.dsav['mask']  = (['y','x'], object.mask.data)
-    object.dsav['name_model'] = 'Layer'
+    object.dsav['name_model'] = 'LADDIE'
     object.dsav['tstart'] = object.tstart
 
     #For storing restart file
@@ -201,7 +197,3 @@ def initialize_vars(object):
     object.dsre = object.dsre.drop_vars(['Tz','Sz'])
     object.dsre = object.dsre.drop_dims(['z'])    
     object.dsre = object.dsre.assign_coords({'n':np.array([0,1,2])})
-
-    #object.nt = int(object.days*24*3600/object.dt)+1    # Number of time steps
-    #object.tend = object.tstart+object.days
-    #object.time = np.linspace(object.tstart,object.tend,object.nt)  # Time in days

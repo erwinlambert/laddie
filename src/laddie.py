@@ -6,8 +6,8 @@ import preprocess as pp
 import integrate as it
 import savetools as st
 
-class LayerModel(ModelConstants):
-    """ Layer model based on Holland et al (2007)
+class Laddie(ModelConstants):
+    """ LADDIE model
     
         input:
         ds including:

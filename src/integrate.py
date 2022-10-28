@@ -6,35 +6,34 @@ from tools import *
 def integrate(object):
     """Integration of 2 time steps, now-centered Leapfrog scheme"""
     intD(object,2*object.dt)
-    intu(object,2*object.dt)
-    intv(object,2*object.dt) 
+    intU(object,2*object.dt)
+    intV(object,2*object.dt) 
     intT(object,2*object.dt)
     intS(object,2*object.dt)        
 
 def timefilter(object):
     """Time filter, Robert Asselin scheme"""
     object.D[1,:,:] += object.nu/2 * (object.D[0,:,:]+object.D[2,:,:]-2*object.D[1,:,:]) * object.tmask
-    object.u[1,:,:] += object.nu/2 * (object.u[0,:,:]+object.u[2,:,:]-2*object.u[1,:,:]) * object.umask
-    object.v[1,:,:] += object.nu/2 * (object.v[0,:,:]+object.v[2,:,:]-2*object.v[1,:,:]) * object.vmask
+    object.U[1,:,:] += object.nu/2 * (object.U[0,:,:]+object.U[2,:,:]-2*object.U[1,:,:]) * object.umask
+    object.V[1,:,:] += object.nu/2 * (object.V[0,:,:]+object.V[2,:,:]-2*object.V[1,:,:]) * object.vmask
     object.T[1,:,:] += object.nu/2 * (object.T[0,:,:]+object.T[2,:,:]-2*object.T[1,:,:]) * object.tmask
     object.S[1,:,:] += object.nu/2 * (object.S[0,:,:]+object.S[2,:,:]-2*object.S[1,:,:]) * object.tmask
     
 def updatevars(object):
     """Update temporary variables"""
     object.D = np.roll(object.D,-1,axis=0)
-    object.u = np.roll(object.u,-1,axis=0)
-    object.v = np.roll(object.v,-1,axis=0)
+    object.U = np.roll(object.U,-1,axis=0)
+    object.V = np.roll(object.V,-1,axis=0)
     object.T = np.roll(object.T,-1,axis=0)
     object.S = np.roll(object.S,-1,axis=0)
     updatesecondary(object)
     
 def cutforstability(object):
-    """Cut D, U, and V when exceeding specified thresholds"""
-    object.D = np.where(object.D>object.maxD,object.maxD,object.D)
-    object.u = np.where(object.u>object.vcut,object.vcut,object.u)
-    object.u = np.where(object.u<-object.vcut,-object.vcut,object.u)
-    object.v = np.where(object.v>object.vcut,object.vcut,object.v)
-    object.v = np.where(object.v<-object.vcut,-object.vcut,object.v)   
+    """Cut U, and V when exceeding specified thresholds"""
+    object.U = np.where(object.U>object.vcut,object.vcut,object.U)
+    object.U = np.where(object.U<-object.vcut,-object.vcut,object.U)
+    object.V = np.where(object.V>object.vcut,object.vcut,object.V)
+    object.V = np.where(object.V<-object.vcut,-object.vcut,object.V)   
     
 def intD(object,delt):
     """Integrate D"""
@@ -46,32 +45,32 @@ def intD(object,delt):
                     -  object.detr \
                     ) * object.tmask * delt    
     
-def intu(object,delt):
-    """Integrate u"""
-    object.u[2,:,:] = object.u[0,:,:] \
-                    +div0((-object.u[1,:,:] * ip_t(object,(object.D[2,:,:]-object.D[0,:,:]))/(2*object.dt) \
-                    +  convu(object) \
+def intU(object,delt):
+    """Integrate U"""
+    object.U[2,:,:] = object.U[0,:,:] \
+                    +div0((-object.U[1,:,:] * ip_t(object,(object.D[2,:,:]-object.D[0,:,:]))/(2*object.dt) \
+                    +  convU(object) \
                     +  -object.g*ip_t(object,object.drho*object.D[1,:,:])*(object.Dxm1-object.D[1,:,:])/object.dx \
                     +  object.g*ip_t(object,object.drho*object.D[1,:,:]*object.dzdx) \
                     +  -.5*object.g*ip_t(object,object.D[1,:,:])**2*(np.roll(object.drho,-1,axis=1)-object.drho)/object.dx \
-                    +  object.f*ip_t(object,object.D[1,:,:]*jm_(object.v[1,:,:],object.vmask)) \
-                    +  -object.Cd* object.u[1,:,:] *(object.u[1,:,:]**2 + ip(jm(object.v[1,:,:]))**2)**.5 \
-                    +  object.Ah*lapu(object) \
-                    +  -object.detr* object.u[1,:,:] \
+                    +  object.f*ip_t(object,object.D[1,:,:]*jm_(object.V[1,:,:],object.vmask)) \
+                    +  -object.Cd* object.U[1,:,:] *(object.U[1,:,:]**2 + ip(jm(object.V[1,:,:]))**2)**.5 \
+                    +  object.Ah*lapU(object) \
+                    +  -object.detr* object.U[1,:,:] \
                     ),ip_t(object,object.D[1,:,:])) * object.umask * delt
 
-def intv(object,delt):
-    """Integrate v"""
-    object.v[2,:,:] = object.v[0,:,:] \
-                    +div0((-object.v[1,:,:] * jp_t(object,(object.D[2,:,:]-object.D[0,:,:]))/(2*object.dt) \
-                    + convv(object) \
+def intV(object,delt):
+    """Integrate V"""
+    object.V[2,:,:] = object.V[0,:,:] \
+                    +div0((-object.V[1,:,:] * jp_t(object,(object.D[2,:,:]-object.D[0,:,:]))/(2*object.dt) \
+                    + convV(object) \
                     + -object.g*jp_t(object,object.drho*object.D[1,:,:])*(object.Dym1-object.D[1,:,:])/object.dy \
                     + object.g*jp_t(object,object.drho*object.D[1,:,:]*object.dzdy) \
                     + -.5*object.g*jp_t(object,object.D[1,:,:])**2*(np.roll(object.drho,-1,axis=0)-object.drho)/object.dy \
-                    + -object.f*jp_t(object,object.D[1,:,:]*im_(object.u[1,:,:],object.umask)) \
-                    + -object.Cd* object.v[1,:,:] *(object.v[1,:,:]**2 + jp(im(object.u[1,:,:]))**2)**.5 \
-                    + object.Ah*lapv(object) \
-                    +  -object.detr* object.v[1,:,:] \
+                    + -object.f*jp_t(object,object.D[1,:,:]*im_(object.U[1,:,:],object.umask)) \
+                    + -object.Cd* object.V[1,:,:] *(object.V[1,:,:]**2 + jp(im(object.U[1,:,:]))**2)**.5 \
+                    + object.Ah*lapV(object) \
+                    +  -object.detr* object.V[1,:,:] \
                     ),jp_t(object,object.D[1,:,:])) * object.vmask * delt
     
 def intT(object,delt):

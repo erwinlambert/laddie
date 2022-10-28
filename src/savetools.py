@@ -4,8 +4,8 @@ from preprocess import *
 
 def savefields(object,filename=None):
     """Store time-average fields and save"""
-    object.dsav['U'] += im(object.u[1,:,:])
-    object.dsav['V'] += jm(object.v[1,:,:])
+    object.dsav['U'] += im(object.U[1,:,:])
+    object.dsav['V'] += jm(object.V[1,:,:])
     object.dsav['D'] += object.D[1,:,:]
     object.dsav['T'] += object.T[1,:,:]
     object.dsav['S'] += object.S[1,:,:]
@@ -33,7 +33,7 @@ def savefields(object,filename=None):
 
         object.dsav['tend'] = object.time[object.t]
         if filename == None:
-            object.dsav['filename'] = f"../../results/{object.ds['name_geo'].values}_{object.ds.attrs['name_forcing']}_{object.dsav['tend'].values:03.0f}"
+            object.dsav['filename'] = f"../results/{object.ds['name_geo'].values}_{object.ds.attrs['name_forcing']}_{object.dsav['tend'].values:03.0f}"
         else:
             object.dsav['filename'] = filename
         object.dsav.to_netcdf(f"{object.dsav['filename'].values}.nc")
@@ -58,14 +58,14 @@ def savefields(object,filename=None):
 def saverestart(object):
     if object.t in np.arange(object.restint,object.nt+object.restint,object.restint):
         """Output restart file"""
-        object.dsre['u'] = (['n','y','x'], object.u)
-        object.dsre['v'] = (['n','y','x'], object.v)
+        object.dsre['U'] = (['n','y','x'], object.U)
+        object.dsre['V'] = (['n','y','x'], object.V)
         object.dsre['D'] = (['n','y','x'], object.D)
         object.dsre['T'] = (['n','y','x'], object.T)
         object.dsre['S'] = (['n','y','x'], object.S)
         object.dsre['tend'] = object.time[object.t]
         object.restartfile = f"{object.ds.attrs['name_forcing']}_{object.dsre['tend'].values:03.0f}"
-        object.dsre.to_netcdf(f"../../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
+        object.dsre.to_netcdf(f"../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
 
         print(f'-------------------------------------------------------------------------------------')
         print(f"{object.time[object.t]:8.03f} days || Restart file saved")
@@ -103,9 +103,9 @@ def printdiags(object):
         d_Sav = div0((object.D[1,:,:]*object.S[1,:,:]*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())   
         #Average speed [m/s]
         #d_Vav = div0((object.D[1,:,:]*(im(object.u[1,:,:])**2 + jm(object.v[1,:,:])**2)**.5*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())
-        d_Vmax = ((im(object.u[1,:,:])**2 + jm(object.v[1,:,:])**2)**.5*object.tmask).max()
+        d_Vmax = ((im(object.U[1,:,:])**2 + jm(object.V[1,:,:])**2)**.5*object.tmask).max()
         #TKE
-        d_TKE = 1e-9*((im(object.u[1,:,:])**2 + jm(object.v[1,:,:])**2)**.5*object.tmask*object.D[1,:,:]).sum()*object.dx*object.dy
+        d_TKE = 1e-9*((im(object.U[1,:,:])**2 + jm(object.V[1,:,:])**2)**.5*object.tmask*object.D[1,:,:]).sum()*object.dx*object.dy
         #drho
         d_drho = 1000*np.where(object.tmask,object.drho,100).min()
         
