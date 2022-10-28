@@ -189,7 +189,7 @@ def initialize_vars(object):
     object.dsav['detr'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))    
     object.dsav['tmask'] = (['y','x'], object.tmask)
     object.dsav['mask']  = (['y','x'], object.mask.data)
-    object.dsav['name_model'] = 'Layer'
+    object.dsav['name_model'] = 'LADDIE'
     object.dsav['tstart'] = object.tstart
 
     #For storing restart file

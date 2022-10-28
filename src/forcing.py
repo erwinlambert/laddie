@@ -28,7 +28,7 @@ class Forcing(ModelConstants):
         ModelConstants.__init__(self)
         return
 
-    def tanh(self, ztcl, Tdeep, drhodz=.2/1000,z1=200):
+    def tanh(self, ztcl, Tdeep, drhodz=.2/1000,z1=-200):
         """ creates 1D tanh thermocline forcing profile
         input:
         ztcl    ..  (float)  [m]       thermocline depth
@@ -51,7 +51,7 @@ class Forcing(ModelConstants):
         self.ds.attrs['name_forcing'] = f'tanh_Tdeep{Tdeep:.1f}_ztcl{ztcl}'
         return self.ds
     
-    def linear(self, S1,T1,S0=33.8,T0=-1.9,z1=720):
+    def linear(self, S1,T1,S0=33.8,T0=-1.9,z1=-720):
         """ creates 1D linear forcing profiles
         input:
         z1      ..  (float)  [m]       reference depth
@@ -63,8 +63,6 @@ class Forcing(ModelConstants):
         if z1>0:
             print(f'z-coordinate is postive upwards; z1 was {z1}, now set z1=-{z1}')
             z1 = -z1
-        #S0 = 34.5                     # [psu]  reference surface salinity
-        #T0 = self.l1*S0+self.l2       # [degC] surface freezing temperature
         
         self.ds['Tz'] = T0 + self.ds.z*(T1-T0)/z1 
         self.ds['Sz'] = S0 + self.ds.z*(S1-S0)/z1
@@ -101,7 +99,7 @@ class Forcing(ModelConstants):
         return self.ds
 
     def calc_fields(self):
-        """ adds Ta/Sa fields to geometry dataset: forcing  = frac*COLD + (1-frac)*WARM """
+        """ adds Ta/Sa fields to dataset"""
         assert 'Tz' in self.ds
         assert 'Sz' in self.ds
         Sa = np.interp(self.ds.draft.values, self.ds.z.values, self.ds.Sz.values)
