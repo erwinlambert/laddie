@@ -35,6 +35,7 @@ class ModelConstants(object):
         self.Dinit     = 10.       # [m]         Initial uniform thickness
         self.res       = 0.5       # [km]        Spatial resolution
         self.Ti        = -25       # [degC]      Ice shelf temperature
+        self.gamTfix   = None      # []          Turbulent exchange coefficient. If None: computed online
         
         #Tunable physical parameters
         self.Cd        = 2.5e-3    # []          drag coefficient
