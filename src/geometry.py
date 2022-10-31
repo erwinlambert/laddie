@@ -6,12 +6,14 @@ from constants import ModelConstants
 
 class Geometry(ModelConstants):
     """Create geometry input from ISOMIP+ """
-    def __init__(self,filename):
+    def __init__(self,filename,year=0):
         self.ds = xr.open_dataset(filename)
 
+        vargeom = False
         if len(self.ds.dims) ==3:
-            self.ds = self.ds.isel(t=0)
-            print('selecting first time step')
+            vargeom = True
+            self.ds = self.ds.isel(t=year)
+            print(f'selecting year {year}')
 
         assert (self.ds.x[1]-self.ds.x[0]).values == (self.ds.y[1]-self.ds.y[0]).values
 
@@ -19,8 +21,17 @@ class Geometry(ModelConstants):
         self.ds['mask'] = 0.*self.ds.draft
         self.ds['mask'][:] = np.where(self.ds.floatingMask.values,3,0)
         self.ds['mask'][:] = np.where(self.ds.groundedMask.values,2,self.ds.mask)
+
+        #Calving criterium
+        self.ds['draft'][:] = np.where(np.logical_and(self.ds.mask==3,self.ds.draft>-90),0,self.ds.draft)
+        self.ds['mask'][:] = np.where(np.logical_and(self.ds.mask==3,self.ds.draft>-90),0,self.ds.mask)
+
         self.ds['mask'][-1,:] = 2 #Prevent cyclic boundary conditions
-        self.name = filename[-26:-20]
+
+        if vargeom:
+            self.name = f'{filename[-26:-20]}_{year:02.0f}'
+        else:
+            self.name = filename[-26:-20]
         print(self.name)
         ModelConstants.__init__(self)
     

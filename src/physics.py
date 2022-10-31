@@ -112,9 +112,14 @@ def updatesecondary(object):
     
     #Melt
     object.ustar = (object.Cdtop*(im(object.U[1,:,:])**2+jm(object.V[1,:,:])**2+object.utide**2))**.5 * object.tmask
-    object.gamT = object.ustar/(2.12*np.log(object.ustar*object.D[1,:,:]/object.nu0+1e-12)+12.5*object.Pr**(2./3)-8.68) * object.tmask
-    object.gamS = object.ustar/(2.12*np.log(object.ustar*object.D[1,:,:]/object.nu0+1e-12)+12.5*object.Sc**(2./3)-8.68) * object.tmask
     
+    if object.gamTfix == None:
+        object.gamT = object.ustar/(2.12*np.log(object.ustar*object.D[1,:,:]/object.nu0+1e-12)+12.5*object.Pr**(2./3)-8.68) * object.tmask
+        object.gamS = object.ustar/(2.12*np.log(object.ustar*object.D[1,:,:]/object.nu0+1e-12)+12.5*object.Sc**(2./3)-8.68) * object.tmask
+    else:
+        object.gamT = object.gamTfix #.0002
+        object.gamS = object.gamT/35.
+
     That = (object.l2+object.l3*object.zb).values
     Chat = object.cp/(object.L-object.ci*object.Ti)
     Ctil = object.ci/object.cp
