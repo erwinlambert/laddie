@@ -18,7 +18,17 @@ def timefilter(object):
     object.V[1,:,:] += object.nu/2 * (object.V[0,:,:]+object.V[2,:,:]-2*object.V[1,:,:]) * object.vmask
     object.T[1,:,:] += object.nu/2 * (object.T[0,:,:]+object.T[2,:,:]-2*object.T[1,:,:]) * object.tmask
     object.S[1,:,:] += object.nu/2 * (object.S[0,:,:]+object.S[2,:,:]-2*object.S[1,:,:]) * object.tmask
-    
+
+    object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
+    if object.mindrho==None:
+        #Apply convection scheme
+        object.T[1,:,:] = np.where(object.drho<0,object.Ta,object.T[1,:,:]) #Convective heating unlimited by available heat underneath layer. May overstimate convective melt
+        object.S[1,:,:] = np.where(object.drho<0,object.Sa-.1,object.S[1,:,:])
+        object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
+    else:
+        #Prescribe minimum stratification
+        object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
+
 def updatevars(object):
     """Update temporary variables"""
     object.D = np.roll(object.D,-1,axis=0)

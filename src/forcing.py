@@ -69,7 +69,29 @@ class Forcing(ModelConstants):
         self.ds = self.calc_fields()
         self.ds.attrs['name_forcing'] = f'linear_S1{S1:.1f}_T1{T1}'
         return self.ds
-    
+
+    def linear2(self, S1,T1,S0=33.8,T0=-1.9,z1=-720):
+        """ creates 1D linear forcing profiles
+        input:
+        z1      ..  (float)  [m]       reference depth
+        T0      ..  (float)  [degC]    temperature at the surface
+        T1      ..  (float)  [degC]    temperature at depth
+        S0      ..  (float)  [psu]     salinity at the surface
+        S1      ..  (float)  [psu]     salinity at depth
+        """
+        if z1>0:
+            print(f'z-coordinate is postive upwards; z1 was {z1}, now set z1=-{z1}')
+            z1 = -z1
+        
+        if T1>T0:
+            self.ds['Tz'] = np.minimum(T0 + self.ds.z*(T1-T0)/z1,T1)
+        else:
+            self.ds['Tz'] = np.maximum(T0 + self.ds.z*(T1-T0)/z1,T1)
+        self.ds['Sz'] = np.minimum(S0 + self.ds.z*(S1-S0)/z1,S1)
+        self.ds = self.calc_fields()
+        self.ds.attrs['name_forcing'] = f'linear2_S1{S1:.1f}_T1{T1}'
+        return self.ds
+
     def isomip(self,cond):
         """ creates ISOMIP+ warm or cold profiles
         input:
