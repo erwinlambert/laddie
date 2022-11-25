@@ -45,13 +45,13 @@ def create_mask(object):
     object.tmaskxp1    = np.roll(object.tmask, 1,axis=1)    
     
     if object.correctisf:
-        #Mask isolated ice shelf points as ocean
+        #Mask isolated ice shelf points as grounded
         print('removing isolated points')
         print(np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)))
         while np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)):
-            object.ocn = np.where(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0),1,object.ocn)
-            object.tmask = np.where(object.ocn==1,0,object.tmask)
-            object.mask  = np.where(object.ocn==1,0,object.mask)
+            object.mask = np.where(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0),2,object.mask)
+            object.tmask = np.where(object.mask==3,1,0)
+            object.grd   = np.where(object.mask==2,1,0)
             #Redefine rolled masks
             object.tmaskym1    = np.roll(object.tmask,-1,axis=0)
             object.tmaskyp1    = np.roll(object.tmask, 1,axis=0)
@@ -157,7 +157,7 @@ def initialize_vars(object):
                     
         object.D += object.Dinit
         for n in range(3):
-            object.T[n,:,:] = object.Ta-.1
+            object.T[n,:,:] = object.Ta
             object.S[n,:,:] = object.Sa-.1
         print('Starting from noflow')
         

@@ -108,16 +108,26 @@ def updatesecondary(object):
     object.Tf   = (object.l1*object.S[1,:,:]+object.l2+object.l3*object.zb).values
     
     object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
-    object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
+
+    #Ensure stable stratification
+    object.convection = np.where(object.drho<0*object.tmask,1,0)
+    if object.mindrho==None:
+        #Apply convection scheme
+        object.T[1,:,:] = np.where(object.drho<0,object.Ta,object.T[1,:,:]) #Convective heating unlimited by available heat underneath layer. May overstimate convective melt
+        object.S[1,:,:] = np.where(object.drho<0,object.Sa-.1,object.S[1,:,:])
+        object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
+    else:
+        #Prescribe minimum stratification
+        object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
     
     #Melt
     object.ustar = (object.Cdtop*(im(object.U[1,:,:])**2+jm(object.V[1,:,:])**2+object.utide**2))**.5 * object.tmask
     
     if object.gamTfix == None:
-        object.gamT = object.ustar/(2.12*np.log(object.ustar*object.D[1,:,:]/object.nu0+1e-12)+12.5*object.Pr**(2./3)-8.68) * object.tmask
-        object.gamS = object.ustar/(2.12*np.log(object.ustar*object.D[1,:,:]/object.nu0+1e-12)+12.5*object.Sc**(2./3)-8.68) * object.tmask
+        object.gamT = object.ustar/(2.12*np.log(object.ustar*np.maximum(object.D[1,:,:],object.minD)/object.nu0+1e-12)+12.5*object.Pr**(2./3)-8.68) * object.tmask
+        object.gamS = object.ustar/(2.12*np.log(object.ustar*np.maximum(object.D[1,:,:],object.minD)/object.nu0+1e-12)+12.5*object.Sc**(2./3)-8.68) * object.tmask
     else:
-        object.gamT = object.gamTfix #.0002
+        object.gamT = object.gamTfix #.00018
         object.gamS = object.gamT/35.
 
     That = (object.l2+object.l3*object.zb).values
