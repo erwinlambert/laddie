@@ -114,7 +114,7 @@ def updatesecondary(object):
     if object.mindrho==None:
         #Apply convection scheme
         object.T[1,:,:] = np.where(object.drho<0,object.Ta,object.T[1,:,:]) #Convective heating unlimited by available heat underneath layer. May overstimate convective melt
-        object.S[1,:,:] = np.where(object.drho<0,object.Sa-.1,object.S[1,:,:])
+        object.S[1,:,:] = np.where(object.drho<0,object.Sa,object.S[1,:,:])
         object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
     else:
         #Prescribe minimum stratification
@@ -164,4 +164,4 @@ def updatesecondary(object):
     object.Uxp1    = np.roll(object.U[1,:,:],1,axis=1)      
 
     #Additional entrainment to prevent D<minD
-    object.ent2 = np.maximum(0,object.minD-object.D[0,:,:]-(convT(object,object.D[1,:,:])-object.melt-(object.entr-object.detr))*2*object.dt)*object.tmask/(2*object.dt)
+    object.ent2 = np.maximum(0,(object.minD-object.D[0,:,:])/(2*object.dt)-(convT(object,object.D[1,:,:])+object.melt+object.entr-object.detr)) *object.tmask

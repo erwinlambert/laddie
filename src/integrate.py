@@ -23,7 +23,7 @@ def timefilter(object):
     if object.mindrho==None:
         #Apply convection scheme
         object.T[1,:,:] = np.where(object.drho<0,object.Ta,object.T[1,:,:]) #Convective heating unlimited by available heat underneath layer. May overstimate convective melt
-        object.S[1,:,:] = np.where(object.drho<0,object.Sa-.1,object.S[1,:,:])
+        object.S[1,:,:] = np.where(object.drho<0,object.Sa,object.S[1,:,:])
         object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
     else:
         #Prescribe minimum stratification
