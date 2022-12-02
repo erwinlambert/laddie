@@ -111,15 +111,15 @@ def updatesecondary(object):
 
     #Ensure stable stratification
     object.convection = np.where(object.drho<0*object.tmask,1,0)
-    if object.mindrho==None:
-        #Apply convection scheme
+    if object.convop == 0:
+    #    #Prescribe minimum stratification
+        object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
+    elif object.convop == 1:        
+    #    #Apply instantaneous convection
         object.T[1,:,:] = np.where(object.drho<0,object.Ta,object.T[1,:,:]) #Convective heating unlimited by available heat underneath layer. May overstimate convective melt
         object.S[1,:,:] = np.where(object.drho<0,object.Sa,object.S[1,:,:])
         object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
-    else:
-        #Prescribe minimum stratification
-        object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
-    
+
     #Melt
     object.ustar = (object.Cdtop*(im(object.U[1,:,:])**2+jm(object.V[1,:,:])**2+object.utide**2))**.5 * object.tmask
     
@@ -148,7 +148,7 @@ def updatesecondary(object):
     elif object.entpar == 'Gaspar':
         object.Sb = (object.Tb-object.l2-object.l3*object.zb).values/object.l1
         object.drhob = (object.beta*(object.S[1,:,:]-object.Sb) - object.alpha*(object.T[1,:,:]-object.Tb)) * object.tmask
-        object.ent = 2*object.mu/object.g * div0(object.ustar**3,object.D[1,:,:]*np.maximum(0,object.drho)) - div0(object.drhob,np.maximum(0,object.drho))*object.melt * object.tmask
+        object.ent = 2*object.mu/object.g * div0(object.ustar**3,object.D[1,:,:]*np.maximum(.0001,object.drho)) - div0(object.drhob,np.maximum(.0001,object.drho))*object.melt * object.tmask
         object.entr = np.maximum(object.ent,0)
         object.detr = np.minimum(object.maxdetr,np.maximum(-object.ent,0))
     

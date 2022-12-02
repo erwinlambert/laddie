@@ -20,14 +20,14 @@ def timefilter(object):
     object.S[1,:,:] += object.nu/2 * (object.S[0,:,:]+object.S[2,:,:]-2*object.S[1,:,:]) * object.tmask
 
     object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
-    if object.mindrho==None:
-        #Apply convection scheme
+    if object.convop == 0:
+    #    #Prescribe minimum stratification
+        object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
+    elif object.convop == 1:        
+    #    #Apply instantaneous convection
         object.T[1,:,:] = np.where(object.drho<0,object.Ta,object.T[1,:,:]) #Convective heating unlimited by available heat underneath layer. May overstimate convective melt
         object.S[1,:,:] = np.where(object.drho<0,object.Sa,object.S[1,:,:])
         object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
-    else:
-        #Prescribe minimum stratification
-        object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
 
 def updatevars(object):
     """Update temporary variables"""
@@ -93,6 +93,7 @@ def intT(object,delt):
                     -  object.detr*object.Ta \
                     +  object.melt*object.Tb - object.gamT*(object.T[1,:,:]-object.Tb) \
                     +  object.Kh*lapT(object,object.T[0,:,:]) \
+                    -  (object.T[0,:,:]-object.Ta)*np.where(object.drho<0,1,0)*object.D[1,:,:]/object.convtime *np.where(object.convop==2,1,0) \
                     ),object.D[1,:,:]) * object.tmask * delt
 
 def intS(object,delt):
@@ -104,4 +105,5 @@ def intS(object,delt):
                     +  object.ent2*object.Sa \
                     -  object.detr*object.Sa \
                     +  object.Kh*lapT(object,object.S[0,:,:]) \
+                    -  (object.S[0,:,:]-object.Sa)*np.where(object.drho<0,1,0)*object.D[1,:,:]/object.convtime *np.where(object.convop==2,1,0)\
                     ),object.D[1,:,:]) * object.tmask * delt
