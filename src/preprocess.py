@@ -25,8 +25,8 @@ def create_mask(object):
     
     if object.correctisf:
         #Mask ice shelf points sticking out as ocean
-        print('removing points sticking out')
-        print(np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0))
+        #print('removing points sticking out')
+        #print(np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0))
         while np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0) > 0:
             object.ocn = np.where(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0,1,object.ocn)
             object.tmask = np.where(object.ocn==1,0,object.tmask)
@@ -36,7 +36,7 @@ def create_mask(object):
             object.ocnyp1      = np.roll(object.ocn, 1,axis=0)
             object.ocnxm1      = np.roll(object.ocn,-1,axis=1)
             object.ocnxp1      = np.roll(object.ocn, 1,axis=1)
-            print(np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0))
+            #print(np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0))
     
     #Rolled tmasks
     object.tmaskym1    = np.roll(object.tmask,-1,axis=0)
@@ -46,8 +46,8 @@ def create_mask(object):
     
     if object.correctisf:
         #Mask isolated ice shelf points as grounded
-        print('removing isolated points')
-        print(np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)))
+        #print('removing isolated points')
+        #print(np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)))
         while np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)):
             object.mask = np.where(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0),2,object.mask)
             object.tmask = np.where(object.mask==3,1,0)
@@ -57,7 +57,7 @@ def create_mask(object):
             object.tmaskyp1    = np.roll(object.tmask, 1,axis=0)
             object.tmaskxm1    = np.roll(object.tmask,-1,axis=1)
             object.tmaskxp1    = np.roll(object.tmask, 1,axis=1)   
-            print(np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)))
+            #print(np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)))
 
         #Update rolled masks
         object.ocnym1      = np.roll(object.ocn,-1,axis=0)
@@ -189,6 +189,10 @@ def initialize_vars(object):
     object.dsav['detr'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))    
     object.dsav['tmask'] = (['y','x'], object.tmask)
     object.dsav['mask']  = (['y','x'], object.mask.data)
+    object.dsav['zb'] = (['y','x'], object.zb.data)
+    object.dsav['H'] = (['y','x'], object.H.data)
+    object.dsav['Ui'] = (['y','x'], object.Ussa[0,:,:])
+    object.dsav['Vi'] = (['y','x'], object.Vssa[0,:,:])
     object.dsav['name_model'] = 'LADDIE'
     object.dsav['tstart'] = object.tstart
 

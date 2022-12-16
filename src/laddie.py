@@ -40,13 +40,21 @@ class Laddie(ModelConstants):
         #Inherit input values
         self.ds   = ds
         self.x    = ds.x
-        self.y    = ds.y        
+        self.y    = ds.y      
+        self.z    = ds.z.values  
         self.mask = ds.mask
+
         self.zb   = ds.draft
-        self.z    = ds.z.values
+        self.H    = ds.thickness
+        self.B    = ds.bed
+        self.zs   = ds.surface
+        
         self.Tz   = ds.Tz.values
         self.Sz   = ds.Sz.values
         self.ind  = np.indices(self.zb.shape)
+
+        self.Ussa = np.zeros((2,len(self.y),len(self.x)))
+        self.Vssa = np.zeros((2,len(self.y),len(self.x)))
 
         #Physical parameters
         ModelConstants.__init__(self)

@@ -23,6 +23,7 @@ class ModelConstants(object):
         self.nu0       = 1.95e-6   # [m^2/s]     Molecular viscosity
         self.rhofw     = 1000.     # [kg/m^3]    Density of freshwater
         self.rho0      = 1028.     # [kg/m^3]    Reference density of seawater   
+        self.rhoi      = 918.      # [kg/m^3]    Density of ice
         
         #Run parameters
         self.nu        = .8        # []          Factor for Robert Asselin time filter

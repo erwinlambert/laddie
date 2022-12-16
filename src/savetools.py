@@ -41,6 +41,9 @@ def savefields(object,filename=None):
         print(f"{object.time[object.t]:8.03f} days || Average fields saved as {object.dsav['filename'].values}.nc")
         print(f'-------------------------------------------------------------------------------------')
         
+        """Keep last average melt rate"""
+        object.lastmelt = object.dsav.melt.copy()
+
         """Set to zero"""
         object.count = 0
         object.dsav['U'] *= 0
