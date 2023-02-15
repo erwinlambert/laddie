@@ -1,6 +1,6 @@
 [Run]
-name = 'test'   # Run name
-rundays = 10    # [days] run duration
+name = "test"   # Run name
+days = 10       # [days] run duration
 
 [Time]
 dt = 120        # [s] timestep
@@ -8,10 +8,12 @@ restday = 30    # [days] interval to save restartfile
 saveday = 30    # [days] interval to save model output
 
 [Geometry]
-filename = '../input/CrossDots.nc'  # File containing geometry input
+filename = "./input/CrossDots.nc"  # File containing geometry input
+lonlat = true               # Include longitude latitude in output files
+projection = "epsg:3031"  # Projection to use for computing longitude, latitude
 
 [Forcing]
-option = 'tanh' # Available options: 'tanh', ....
+option = "tanh" # Available options: 'tanh', ....
 
 [Options]
 correctisf = false    #             Remove ice shelf grids sticking out and isolated points
@@ -19,13 +21,14 @@ slip      = 1         # [0...2]     Factor free slip: 0, no slip: 2, partial no 
 convop    = 1         # [0,1,2]     Option for convection when stratification is unstable 0: prescribe mindrho | 1: instantaneous convection | 2: restoring convection
 
 [Directories]
-results = '../results/'  # Main results directory in which rundirs are placed
+results = "./output/"  # Main results directory in which rundirs are placed
 
 [Filenames]
-restartfile = ''  # Restartfile
+restartfile = ""  # Restartfile
+logfile = "output.log" # Log file
 
 [Initialisation]
-Dinit = 10.0       # [m]         Initial uniform thickness
+Dinit = 10.0       # [m]         Initial uniform thickness D
 
 [Parameters]
 #External forcing
@@ -42,7 +45,7 @@ Cd        = 2.5e-3    # []          drag coefficient
 Cdtop     = 1.1e-3    # []          Drag coefficient in Ustar
 Ah        = 25        # [m^2/s]     Laplacian viscosity
 Kh        = 25        # [m^2/s]     Diffusivity
-entpar    = 'Gaspar'  #             Entrainment parameterisation, either 'Holland' or 'Gaspar'
+entpar    = "Gaspar"  #             Entrainment parameterisation, either 'Holland' or 'Gaspar'
 mu        = 2.5       # []          Parameter in Gaspar entrainment. Gaspar: 0.5; Gladish: 2.5
 maxdetr   = 0.5        # [m/s]       Cutoff detrainment rate, only effective when O(1e-3)
 #Numerical parameters
@@ -52,10 +55,10 @@ vcut      = 1.414     # [m/s]       Cutoff velocity U and V
 [EOS]
 #Parameters related to the equation of state and the freezing point
 alpha = 3.733e-5  # [1/degC]    Thermal expansion coefficient
-beta = 7.843e-4  # [1/psu]     Haline contraction coefficient
-l1        = -5.73e-2  # [degC/psu]  freezing point salinity coefficient
-l2        = 8.32e-2   # [degC]      freezing point offset
-l3        = 7.61e-4   # [degC/m]    freezing point depth coefficient
+beta  = 7.843e-4  # [1/psu]     Haline contraction coefficient
+l1    = -5.73e-2  # [degC/psu]  freezing point salinity coefficient
+l2    = 8.32e-2   # [degC]      freezing point offset
+l3    = 7.61e-4   # [degC/m]    freezing point depth coefficient
 
 [Constants]
 #Physical parameters that are usually kept constant
@@ -71,9 +74,12 @@ nu0 = 1.95e-6   # [m^2/s]     Molecular viscosity
 [Numerics]
 nu = 0.8        # []          Factor for Robert Asselin time filter
 spy = 31536000  # [s/yr]      seconds per year
+dpm = [31,28,31,30,31,30,31,31,30,31,30,31] # days per month
 
 [Convection]
-mindrho   = 0.005      # [kg/m^3]    Used for convop = 0 | Minimum density difference with ambient water
+#Parameters specific to convection scheme
+mindrho   = 0.005     # [kg/m^3]    Used for convop = 0 | Minimum density difference with ambient water
 convtime  = 1000      # [s]         Used for convop = 2 | Restoring time scale towards ambient S and T where unstable
 
 [Output]
+#Choose variables to save

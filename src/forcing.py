@@ -3,6 +3,22 @@ import xarray as xr
 
 from constants import ModelConstants
 
+def create_forcing(object):
+
+    object.z    = ds.z.values  
+
+    object.Tz   = ds.Tz.values
+    object.Sz   = ds.Sz.values
+    object.ind  = np.indices(object.zb.shape)
+    
+    #Check what type of forcing is required
+
+    #Run the appropriate function
+
+    #Create attributes
+    return
+
+
 class Forcing(ModelConstants):
     """ """
 

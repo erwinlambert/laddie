@@ -1,7 +1,110 @@
+import os,sys
 import numpy as np
 import xarray as xr
 
 from integrate import updatesecondary,intD,intU,intV,intT,intS
+
+def create_rundir(object):
+    #Create run directory and logfile
+    object.name = object.config["Run"]["name"]
+    object.rundir = os.path.join(object.config["Directories"]["results"],object.name)
+    object.logfile = os.path.join(object.rundir,object.config["Filenames"]["logfile"])
+
+    try:
+        os.mkdir(object.rundir)
+    except:
+        sys.exit('Error: cannot create run dir, aborting. Try choosing a new runname')
+
+    object.print2log("Rundir created")
+
+    return
+
+def read_config(object):
+
+    #Inherit all config keys and check whether they are of the correct form / type
+    object.print2log("Starting to read config file")
+
+    #Run
+    object.days = object.config["Run"]["days"]
+
+    #Time
+    object.dt      = object.config["Time"]["dt"]
+    object.restday = object.config["Time"]["restday"]
+    object.saveday = object.config["Time"]["saveday"]
+
+    #Geometry
+    object.geomfile   = object.config["Geometry"]["filename"]
+    object.lonlat     = object.config["Geometry"]["lonlat"]
+    object.projection = object.config["Geometry"]["projection"]
+
+    #Forcing
+    object.forcop = object.config["Forcing"]["option"]
+    assert object.forcop in ["tanh","linear","linear2","isomip"], "Invalid input for Forcing.option"
+
+    #Options
+    object.correctisf = object.config["Options"]["correctisf"]
+    object.slip       = object.config["Options"]["slip"]
+    assert object.slip >= 0, "Invalid input for Options.slip"
+    assert object.slip <= 2, "Invalid input for Options.slip"
+    object.convop     = object.config["Options"]["convop"]
+    assert object.convop in [0,1,2], "Invalid input for Options.convop"
+
+    #Directories
+    object.resultdir = object.config["Directories"]["results"]
+
+    #Filenames
+    object.restartfile = object.config["Filenames"]["restartfile"]
+
+    #Parameters
+    object.Dinit    = object.config["Initialisation"]["Dinit"]
+    
+    object.utide    = object.config["Parameters"]["utide"]
+    object.Ti       = object.config["Parameters"]["Ti"]
+    object.f        = object.config["Parameters"]["f"]
+    object.rhofw    = object.config["Parameters"]["rhofw"]
+    object.rho0     = object.config["Parameters"]["rho0"]
+    object.rhoi     = object.config["Parameters"]["rhoi"]
+    object.gamTfix  = object.config["Parameters"]["gamTfix"]
+    object.Cd       = object.config["Parameters"]["Cd"]
+    object.Cdtop    = object.config["Parameters"]["Cdtop"]
+    object.Ah       = object.config["Parameters"]["Ah"]
+    object.Kh       = object.config["Parameters"]["Kh"]
+    object.entpar   = object.config["Parameters"]["entpar"]
+    object.mu       = object.config["Parameters"]["mu"]
+    object.maxdetr  = object.config["Parameters"]["maxdetr"]
+    object.minD     = object.config["Parameters"]["minD"]
+    object.vcut     = object.config["Parameters"]["vcut"]
+    
+    object.alpha    = object.config["EOS"]["alpha"]
+    object.beta     = object.config["EOS"]["beta"]
+    object.l1       = object.config["EOS"]["l1"]
+    object.l2       = object.config["EOS"]["l2"]
+    object.l3       = object.config["EOS"]["l3"]
+
+    object.g        = object.config["Constants"]["g"]
+    object.L        = object.config["Constants"]["L"]
+    object.cp       = object.config["Constants"]["cp"]
+    object.ci       = object.config["Constants"]["ci"]
+    object.CG       = object.config["Constants"]["CG"]
+    object.Pr       = object.config["Constants"]["Pr"]
+    object.Sc       = object.config["Constants"]["Sc"]
+    object.nu0      = object.config["Constants"]["nu0"]
+
+    object.nu       = object.config["Numerics"]["nu"]
+    object.spy      = object.config["Numerics"]["spy"]
+    object.dpm      = object.config["Numerics"]["dpm"]
+
+    object.mindrho  = object.config["Convection"]["mindrho"]
+    object.convtime = object.config["Convection"]["convtime"]
+
+    object.print2log("Finished reading config. All input correct")
+
+    return
+
+
+
+
+
 
 def create_mask(object):
     """Create mask
@@ -114,7 +217,12 @@ def create_grid(object):
         print('1D run, using free slip')
         object.slip = 0  
 
-def initialize_vars(object):
+    #Temporal parameters
+    object.nt = int(object.days*24*3600/object.dt)+1    # Number of time steps
+    object.tend = object.tstart+object.days
+    object.time = np.linspace(object.tstart,object.tend,object.nt)  # Time in days
+
+def initialise_vars(object):
     
     #Check whether entrainment parameterisation is valid
     assert object.entpar in ['Holland','Gaspar']
@@ -135,6 +243,10 @@ def initialize_vars(object):
     #Draft dz/dx and dz/dy on t-grid
     object.dzdx = np.gradient(object.zb,object.dx,axis=1)
     object.dzdy = np.gradient(object.zb,object.dy,axis=0)
+
+    #For dynamic ice module
+    object.Ussa = np.zeros((2,len(object.y),len(object.x)))
+    object.Vssa = np.zeros((2,len(object.y),len(object.x)))
 
     #Initial values
     try:
@@ -168,6 +280,9 @@ def initialize_vars(object):
         intV(object,object.dt)
         intT(object,object.dt)
         intS(object,object.dt)
+    return
+
+def prepare_output(object):
 
     #For storing time averages
     object.count = 0
@@ -201,3 +316,5 @@ def initialize_vars(object):
     object.dsre = object.dsre.drop_vars(['Tz','Sz'])
     object.dsre = object.dsre.drop_dims(['z'])    
     object.dsre = object.dsre.assign_coords({'n':np.array([0,1,2])})
+
+    return

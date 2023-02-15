@@ -1,8 +1,50 @@
 import numpy as np
 import xarray as xr
+import sys
 import pyproj
 
 from constants import ModelConstants
+
+def read_geom(object):
+    #Read input file
+
+    try:
+        ds = xr.open_dataset(object.geomfile)
+
+        #Check order of x and y
+        object.dx = ds.x[1]-ds.x[0]
+        object.dy = ds.y[1]-ds.y[0]
+        if object.dx<0:
+            object.print2log('inverting x-coordinates')
+            ds = ds.reindex(x=list(reversed(ds.x)))
+            object.dx = -object.dx
+        if object.dy<0:
+            object.print2log('inverting y-coordinates')
+            ds = ds.reindex(y=list(reversed(ds.y)))
+            object.dy = -object.dy
+
+        #Read variables
+        object.x    = ds.x
+        object.y    = ds.y     
+        object.mask = ds.mask
+        object.H    = ds.thickness
+        object.B    = ds.bed
+        object.zs   = ds.surface
+
+        ds.close()
+
+        object.zb = object.zs-object.H
+
+    except:
+        object.print2log(f"Error, cannot read geometry file {object.geomfile}. Check whether it exists and contains the correct variables")
+        sys.exit()
+
+    object.print2log(f"Finished reading geometry {object.geomfile}. All good")
+
+    return
+
+
+
 
 class Geometry(ModelConstants):
     """Create geometry input from ISOMIP+ """
