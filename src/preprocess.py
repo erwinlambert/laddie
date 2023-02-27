@@ -36,10 +36,19 @@ def read_config(object):
     object.geomfile   = object.config["Geometry"]["filename"]
     object.lonlat     = object.config["Geometry"]["lonlat"]
     object.projection = object.config["Geometry"]["projection"]
+    object.coarsen    = object.config["Geometry"]["coarsen"]
 
     #Forcing
     object.forcop = object.config["Forcing"]["option"]
     assert object.forcop in ["tanh","linear","linear2","isomip"], "Invalid input for Forcing.option"
+    object.z0     = object.config["Forcing"]["z0"]
+    if object.z0>0: object.z0 = -object.z0
+    object.S0     = object.config["Forcing"]["S0"]
+    object.S1     = object.config["Forcing"]["S1"]
+    object.T1     = object.config["Forcing"]["T1"]
+    object.z1     = object.config["Forcing"]["z1"]
+    object.isomipcond = object.config["Forcing"]["isomipcond"]
+    assert object.isomipcond in ["warm","cold"]
 
     #Options
     object.correctisf = object.config["Options"]["correctisf"]

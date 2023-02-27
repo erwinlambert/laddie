@@ -29,11 +29,11 @@ class Laddie():
         #Read input geometry
         ge.read_geom(self)
 
-        sys.exit()
-
         #Read or create forcing
         fo.create_forcing(self)
 
+        sys.exit()
+        
         #Create grid
         pp.create_grid(self)
 
