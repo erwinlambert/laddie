@@ -4,7 +4,7 @@ import xarray as xr
 
 from integrate import updatesecondary,intD,intU,intV,intT,intS
 
-def create_rundir(object):
+def create_rundir(object,configfile):
     #Create run directory and logfile
     object.name = object.config["Run"]["name"]
     object.rundir = os.path.join(object.config["Directories"]["results"],object.name)
@@ -14,6 +14,8 @@ def create_rundir(object):
         os.mkdir(object.rundir)
     except:
         sys.exit('Error: cannot create run dir, aborting. Try choosing a new runname')
+
+    os.system(f"cp {configfile} {object.rundir}")
 
     object.print2log("Rundir created")
 
@@ -31,6 +33,7 @@ def read_config(object):
     object.dt      = object.config["Time"]["dt"]
     object.restday = object.config["Time"]["restday"]
     object.saveday = object.config["Time"]["saveday"]
+    object.diagday = object.config["Time"]["diagday"]
 
     #Geometry
     object.geomfile   = object.config["Geometry"]["filename"]
@@ -57,6 +60,9 @@ def read_config(object):
     assert object.slip <= 2, "Invalid input for Options.slip"
     object.convop     = object.config["Options"]["convop"]
     assert object.convop in [0,1,2], "Invalid input for Options.convop"
+    object.boundop    = object.config["Options"]["boundop"]
+    assert object.boundop in [0,1], "Invalid input for Options.boundop"
+    object.usegamtfix = object.config["Options"]["usegamtfix"]
 
     #Directories
     object.resultdir = object.config["Directories"]["results"]
@@ -79,6 +85,7 @@ def read_config(object):
     object.Ah       = object.config["Parameters"]["Ah"]
     object.Kh       = object.config["Parameters"]["Kh"]
     object.entpar   = object.config["Parameters"]["entpar"]
+    assert object.entpar in ['Holland','Gaspar'], "Invalid option for entpar"
     object.mu       = object.config["Parameters"]["mu"]
     object.maxdetr  = object.config["Parameters"]["maxdetr"]
     object.minD     = object.config["Parameters"]["minD"]
@@ -137,8 +144,8 @@ def create_mask(object):
     
     if object.correctisf:
         #Mask ice shelf points sticking out as ocean
-        #print('removing points sticking out')
-        #print(np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0))
+        object.print2log('Removing grid points sticking out')
+        object.print2log(f"{np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0)} remaining...")
         while np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0) > 0:
             object.ocn = np.where(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0,1,object.ocn)
             object.tmask = np.where(object.ocn==1,0,object.tmask)
@@ -148,8 +155,9 @@ def create_mask(object):
             object.ocnyp1      = np.roll(object.ocn, 1,axis=0)
             object.ocnxm1      = np.roll(object.ocn,-1,axis=1)
             object.ocnxp1      = np.roll(object.ocn, 1,axis=1)
-            #print(np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0))
-    
+            object.print2log(f"{np.sum(object.tmask*(object.ocnym1*object.ocnyp1+object.ocnxm1*object.ocnxp1)>0)} remaining...")
+        object.print2log("Finished removing grid points sticking out")
+
     #Rolled tmasks
     object.tmaskym1    = np.roll(object.tmask,-1,axis=0)
     object.tmaskyp1    = np.roll(object.tmask, 1,axis=0)
@@ -158,8 +166,8 @@ def create_mask(object):
     
     if object.correctisf:
         #Mask isolated ice shelf points as grounded
-        #print('removing isolated points')
-        #print(np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)))
+        object.print2log('removing isolated grid points')
+        object.print2log(f"{np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0))} remaining...")
         while np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)):
             object.mask = np.where(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0),2,object.mask)
             object.tmask = np.where(object.mask==3,1,0)
@@ -169,7 +177,8 @@ def create_mask(object):
             object.tmaskyp1    = np.roll(object.tmask, 1,axis=0)
             object.tmaskxm1    = np.roll(object.tmask,-1,axis=1)
             object.tmaskxp1    = np.roll(object.tmask, 1,axis=1)   
-            #print(np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0)))
+            object.print2log(f"{np.sum(np.logical_and(object.tmask==1,object.tmaskym1+object.tmaskyp1+object.tmaskxm1+object.tmaskxp1==0))} remaining...")
+        object.print2log("Finished removing isolated grid points")
 
         #Update rolled masks
         object.ocnym1      = np.roll(object.ocn,-1,axis=0)
@@ -211,6 +220,9 @@ def create_mask(object):
     object.umaskxp1 = np.roll(object.umask,1,axis=1)
     object.vmaskyp1 = np.roll(object.vmask,1,axis=0)
     
+    object.print2log("Finished creating mask")
+
+    return
 
 def create_grid(object):   
     #Spatial parameters
@@ -218,23 +230,20 @@ def create_grid(object):
     object.ny = len(object.y)
     object.dx = (object.x[1]-object.x[0]).values
     object.dy = (object.y[1]-object.y[0]).values
-    object.xu = object.x+object.dx
-    object.yv = object.y+object.dy
+    object.xu = object.x + 0.5*object.dx
+    object.yv = object.y + 0.5*object.dy
 
     # Assure free-slip is used in 1D simulation
     if (len(object.y)==3 or len(object.x)==3):
         print('1D run, using free slip')
         object.slip = 0  
 
-    #Temporal parameters
-    object.nt = int(object.days*24*3600/object.dt)+1    # Number of time steps
-    object.tend = object.tstart+object.days
-    object.time = np.linspace(object.tstart,object.tend,object.nt)  # Time in days
+    object.print2log("Finished creating grid")
+
+    return
+
 
 def initialise_vars(object):
-    
-    #Check whether entrainment parameterisation is valid
-    assert object.entpar in ['Holland','Gaspar']
     
     #Major variables. Three arrays for storage of previous timestep, current timestep, and next timestep
     object.U = np.zeros((3,object.ny,object.nx)).astype('float64')
@@ -259,16 +268,16 @@ def initialise_vars(object):
 
     #Initial values
     try:
-        dsinit = xr.open_dataset(f"../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
+        dsinit = xr.open_dataset(object.restartfile)
         object.tstart = dsinit.tend.values
         object.U = dsinit.U.values
         object.V = dsinit.V.values
         object.D = dsinit.D.values
         object.T = dsinit.T.values
         object.S = dsinit.S.values
-        print(f'Starting from restart file at day {object.tstart:.3f}')
+        object.print2log(f'Starting from restart file at day {object.tstart:.0f}')
     except:    
-        object.tstart = 0
+        object.tstart = 0.
         if len(object.Tz.shape)==1:
             object.Ta   = np.interp(object.zb,object.z,object.Tz)
             object.Sa   = np.interp(object.zb,object.z,object.Sz)
@@ -280,7 +289,7 @@ def initialise_vars(object):
         for n in range(3):
             object.T[n,:,:] = object.Ta
             object.S[n,:,:] = object.Sa-.1
-        print('Starting from noflow')
+        object.print2log(f'Starting from scratch with zero velocity and uniform thickness {object.Dinit:.0f} m')
         
         #Perform first integration step with 1 dt
         updatesecondary(object)
@@ -289,19 +298,26 @@ def initialise_vars(object):
         intV(object,object.dt)
         intT(object,object.dt)
         intS(object,object.dt)
+
     return
 
 def prepare_output(object):
+
+    #Temporal parameters
+    object.nt = int(object.days*24*3600/object.dt)+1    # Number of time steps
+    object.tend = object.tstart+object.days
+    object.time = np.linspace(object.tstart,object.tend,object.nt)  # Time in days
 
     #For storing time averages
     object.count = 0
     object.saveint = int(object.saveday*3600*24/object.dt)
     object.diagint = int(object.diagday*3600*24/object.dt)
     object.restint = int(object.restday*3600*24/object.dt)
-    
-    object.dsav = object.ds
-    object.dsav = object.dsav.drop_vars(['Tz','Sz'])
-    object.dsav = object.dsav.drop_dims(['z'])
+
+    object.dsav = xr.Dataset()
+    object.dsav = object.dsav.assign_coords({'x':object.x,'y':object.y})
+    if object.lonlat:
+        object.dsav = object.dsav.assign_coords({'lon':object.lon,'lat':object.lat})
     object.dsav['U'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
     object.dsav['V'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
     object.dsav['D'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
@@ -312,18 +328,63 @@ def prepare_output(object):
     object.dsav['ent2'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
     object.dsav['detr'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))    
     object.dsav['tmask'] = (['y','x'], object.tmask)
+    object.dsav['umask'] = (['y','x'], object.umask)
+    object.dsav['vmask'] = (['y','x'], object.vmask)
     object.dsav['mask']  = (['y','x'], object.mask.data)
     object.dsav['zb'] = (['y','x'], object.zb.data)
     object.dsav['H'] = (['y','x'], object.H.data)
-    object.dsav['Ui'] = (['y','x'], object.Ussa[0,:,:])
-    object.dsav['Vi'] = (['y','x'], object.Vssa[0,:,:])
-    object.dsav['name_model'] = 'LADDIE'
-    object.dsav['tstart'] = object.tstart
+    object.dsav['B'] = (['y','x'], object.B.data)
+    #object.dsav['Ui'] = (['y','x'], object.Ussa[0,:,:])
+    #object.dsav['Vi'] = (['y','x'], object.Vssa[0,:,:])
+
+
+    #Add attributes
+    object.dsav['U'].attrs['name'] = 'Ocean velocity in x-direction'
+    object.dsav['U'].attrs['units'] = 'm/s'
+    object.dsav['V'].attrs['name'] = 'Ocean velocity in y-direction'
+    object.dsav['V'].attrs['units'] = 'm/s'
+    object.dsav['D'].attrs['name'] = 'Mixed layer thickness'
+    object.dsav['D'].attrs['units'] = 'm'
+    object.dsav['T'].attrs['name'] = 'Layer-averaged potential temperature'
+    object.dsav['T'].attrs['units'] = 'degrees C'
+    object.dsav['S'].attrs['name'] = 'Layer-averaged salinity'
+    object.dsav['S'].attrs['units'] = 'psu'
+    object.dsav['melt'].attrs['name'] = 'Basal melt rate'
+    object.dsav['melt'].attrs['units'] = 'm/yr'
+    object.dsav['entr'].attrs['name'] = 'Entrainment rate of ambient water'
+    object.dsav['entr'].attrs['units'] = 'm/yr'
+    object.dsav['ent2'].attrs['name'] = 'Additional entrainment to ensure minimum layer thickness'
+    object.dsav['ent2'].attrs['units'] = 'm/yr'
+    object.dsav['detr'].attrs['name'] = 'Detrainment rate'
+    object.dsav['detr'].attrs['units'] = 'm/yr'
+    object.dsav['tmask'].attrs['name'] = 'Mask at grid center (t-grid)'
+    object.dsav['umask'].attrs['name'] = 'Mask at grid side + 1/2 dx (u-grid)'
+    object.dsav['vmask'].attrs['name'] = 'Mask at grid side + 1/2 dy (v-grid)'
+    object.dsav['mask'].attrs['name'] = 'Mask at grid center (t-grid)'
+    object.dsav['mask'].attrs['values'] = '0: open ocean. 1 and 2: grounded ice or bare rock. 3: ice shelf and cavity'
+    object.dsav['zb'].attrs['name'] = 'Ice shelf draft depth'
+    object.dsav['zb'].attrs['units'] = 'm'    
+    object.dsav['H'].attrs['name'] = 'Ice shelf thickness'
+    object.dsav['H'].attrs['units'] = 'm'  
+    object.dsav['B'].attrs['name'] = 'Bedrock depth'
+    object.dsav['B'].attrs['units'] = 'm'  
+
+    object.dsav.attrs['model_name'] = 'LADDIE'
+    object.dsav.attrs['model_version'] = object.modelversion
+    object.dsav.attrs['time_start'] = object.tstart
 
     #For storing restart file
-    object.dsre = object.ds
-    object.dsre = object.dsre.drop_vars(['Tz','Sz'])
-    object.dsre = object.dsre.drop_dims(['z'])    
-    object.dsre = object.dsre.assign_coords({'n':np.array([0,1,2])})
+    object.dsre = xr.Dataset()
+    object.dsre = object.dsav.assign_coords({'x':object.x,'y':object.y,'n':np.array([0,1,2])})
+    object.dsre['tmask'] = (['y','x'], object.tmask)
+    object.dsre['umask'] = (['y','x'], object.umask)
+    object.dsre['vmask'] = (['y','x'], object.vmask)
+    object.dsre['mask']  = (['y','x'], object.mask.data)
+    object.dsre['zb'] = (['y','x'], object.zb.data)
+    object.dsre['H'] = (['y','x'], object.H.data)
+    object.dsre['B'] = (['y','x'], object.B.data)
+    object.dsre.attrs['name_model'] = 'LADDIE'
+    object.dsre.attrs['model_version'] = object.modelversion
 
+    object.print2log("Prepared datasets for output and restart files")
     return

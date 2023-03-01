@@ -31,6 +31,8 @@ def read_geom(object):
 
         if object.lonlat:
             ds = add_lonlat(ds,object.projection)
+            object.lon = ds.lon
+            object.lat = ds.lat
             object.print2log(f"Added longitude and latitude dimensions")
 
         #Read variables

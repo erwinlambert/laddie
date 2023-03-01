@@ -16,12 +16,14 @@ class Laddie():
     def __init__(self,configfile):
         """All preprocessing steps"""
 
+        self.modelversion = '1.0'
+
         #Read config file
         with open(configfile,'rb') as f:
             self.config = tomli.load(f)
 
         #Create run directory
-        pp.create_rundir(self)
+        pp.create_rundir(self,configfile)
 
         #Read config file
         pp.read_config(self)
@@ -31,8 +33,6 @@ class Laddie():
 
         #Read or create forcing
         fo.create_forcing(self)
-
-        sys.exit()
         
         #Create grid
         pp.create_grid(self)
@@ -49,6 +49,8 @@ class Laddie():
     def compute(self):
         """Run the model"""
 
+        self.print2log("Starting computation...")
+
         #Integration
         for self.t in range(self.nt):
             it.updatevars(self)
@@ -56,14 +58,15 @@ class Laddie():
             it.timefilter(self)
             it.cutforstability(self)       
 
+            st.printdiags(self)
             st.savefields(self)
             st.saverestart(self)
-            st.printdiags(self)
-            
-        print('-----------------------------')
-        print(f'Run completed')
+
+
+        self.print2log('-----------------------------')
+        self.print2log(f'Run completed')
         
-        return self.ds
+        return
 
     def print2log(self,text):
         with open(self.logfile,"a") as file:

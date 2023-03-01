@@ -1,11 +1,12 @@
 [Run]
 name = "test"   # Run name
-days = 10       # [days] run duration
+days = 2        # [days] run duration
 
 [Time]
-dt = 120        # [s] timestep
-restday = 30    # [days] interval to save restartfile
-saveday = 30    # [days] interval to save model output
+dt = 96        # [s] timestep
+restday = 1    # [days] interval to save restartfile
+saveday = 1    # [days] interval to save model output
+diagday = 0.01   # [days] interval to spit out diagnostics
 
 [Geometry]
 filename = "./input/CrossDots.nc"  # File containing geometry input
@@ -14,25 +15,27 @@ projection = "epsg:3031"  # Projection to use for computing longitude, latitude
 coarsen = 1               # Factor to coarsen geometry
 
 [Forcing]
-option = "isomip" # Available options: 'tanh', ....
+option = "tanh" # Available options: 'tanh', ....
 z0    = -720    # [m] Reference depth used in 'tanh' and 'linear', 'isomip', and 'linear2'
 S0    = 34.0    # [psu] Surface salinity used in 'tanh'
 S1    = 34.5    # [psu] Salinity at depth z0 used in 'linear', 'linear2'
 T1    = 1.0     # [degC] Temperature at depth used in 'tanh'
 z1    = 100     # [m] Depth scale used in 'tanh'
-isomipcond = "warm" # ISOMIP condition, either 'warm' or 'cold'
+isomipcond = "cold" # ISOMIP condition, either 'warm' or 'cold'
 
 [Options]
 correctisf = false    #             Remove ice shelf grids sticking out and isolated points
 slip      = 1         # [0...2]     Factor free slip: 0, no slip: 2, partial no slip: between 0 and 2
 convop    = 1         # [0,1,2]     Option for convection when stratification is unstable 0: prescribe mindrho | 1: instantaneous convection | 2: restoring convection
+boundop   = 1         # [0,1]       Option for boundary conditions. Should be set to 1
+usegamtfix = true    #             Use fixed gamma_T rather than computing it
 
 [Directories]
 results = "./output/"  # Main results directory in which rundirs are placed
 
 [Filenames]
-restartfile = ""  # Restartfile
-logfile = "output.log" # Log file
+restartfile = ""#"./results/restart/CrossDots_0.5_tanh_Tdeep0.4_ztcl-500_001.nc"  # Restartfile
+logfile = "log.txt" # Log file
 
 [Initialisation]
 Dinit = 10.0       # [m]         Initial uniform thickness D
@@ -46,7 +49,7 @@ f         = -1.37e-4  # [1/s]       Coriolis parameter
 rhofw     = 1000.0     # [kg/m^3]    Density of freshwater
 rho0      = 1028.0     # [kg/m^3]    Reference density of seawater 
 rhoi      = 918.0      # [kg/m^3]    Density of ice
-gamTfix   = false      # []          Turbulent exchange coefficient. If False: computed online
+gamTfix   = 0.00018    # []          Turbulent exchange coefficient. If False: computed online
 #Tuning
 Cd        = 2.5e-3    # []          drag coefficient
 Cdtop     = 1.1e-3    # []          Drag coefficient in Ustar
@@ -56,7 +59,7 @@ entpar    = "Gaspar"  #             Entrainment parameterisation, either 'Hollan
 mu        = 2.5       # []          Parameter in Gaspar entrainment. Gaspar: 0.5; Gladish: 2.5
 maxdetr   = 0.5        # [m/s]       Cutoff detrainment rate, only effective when O(1e-3)
 #Numerical parameters
-minD      = 0.2        # [m]         Cutoff thickness
+minD      = 1.0        # [m]         Cutoff thickness
 vcut      = 1.414     # [m/s]       Cutoff velocity U and V
 
 [EOS]

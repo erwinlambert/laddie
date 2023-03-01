@@ -17,7 +17,10 @@ def create_forcing(object):
     elif object.forcop == "linear2":
         linear2(object)    
 
-    print(object.Tz)
+    #object.Sa = np.interp(object.zb.values, object.z, object.Sz)
+    #object.Ta = np.interp(object.zb.values, object.z, object.Tz)
+
+    object.print2log(f"Finished creating forcing {object.forcname}")
 
     return
 
@@ -27,11 +30,15 @@ def tanh(object):
     object.Tz = object.T1 + (object.T0-object.T1) * (1+np.tanh((object.z-object.z0)/object.z1))/2
     object.Sz = object.S0 + object.alpha*(object.Tz-object.T0)/object.beta + drho/(object.beta*object.rho0)
 
+    object.forcname = f"{object.forcop}_{object.T1:.1f}_{object.z0}"
+
     return 
 
 def linear(object):
     object.Tz = object.T0 + object.z*(object.T1-object.T0)/object.z0 
     object.Sz = object.S0 + object.z*(object.S1-object.S0)/object.z0
+
+    object.forcname = f"{object.forcop}_{object.T1:.1f}_{object.z0}"
 
     return
 
@@ -41,6 +48,8 @@ def linear2(object):
     else:
         object.Tz = np.maximum(object.T0 + object.z*(object.T1-object.T0)/object.z0,object.T1)
     object.Sz = np.minimum(object.S0 + object.z*(object.S1-object.S0)/object.z0,object.S1)
+
+    object.forcname = f"{object.forcop}_{object.T1:.1f}_{object.z0}"
 
     return
 
@@ -59,5 +68,7 @@ def isomip(object):
 
     object.Tz = T0 + object.z*(T1-T0)/z1 
     object.Sz = S0 + object.z*(S1-S0)/z1
+
+    object.forcname = f"{object.forcop}_{object.isomipcond}"
 
     return
