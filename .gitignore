@@ -131,6 +131,7 @@ dmypy.json
 data
 data/
 results/
+output/
 .DS_Store
 figures/draftplot_overview_complete.pdf
 figures/draftplot_overview_complete.pptx

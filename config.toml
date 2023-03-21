@@ -9,19 +9,19 @@ saveday = 1    # [days] interval to save model output
 diagday = 0.01   # [days] interval to spit out diagnostics
 
 [Geometry]
-filename = "./input/CrossDots.nc"  # File containing geometry input
-lonlat = true               # Include longitude latitude in output files
+filename = "./input/Ocean1.nc"  # File containing geometry input
+lonlat = false               # Include longitude latitude in output files
 projection = "epsg:3031"  # Projection to use for computing longitude, latitude
 coarsen = 1               # Factor to coarsen geometry
 
 [Forcing]
-option = "tanh" # Available options: 'tanh', ....
+option = "isomip" # Available options: 'tanh', ....
 z0    = -720    # [m] Reference depth used in 'tanh' and 'linear', 'isomip', and 'linear2'
 S0    = 34.0    # [psu] Surface salinity used in 'tanh'
-S1    = 34.5    # [psu] Salinity at depth z0 used in 'linear', 'linear2'
+S1    = 35.0    # [psu] Salinity at depth z0 used in 'linear', 'linear2'
 T1    = 1.0     # [degC] Temperature at depth used in 'tanh'
 z1    = 100     # [m] Depth scale used in 'tanh'
-isomipcond = "cold" # ISOMIP condition, either 'warm' or 'cold'
+isomipcond = "warm" # ISOMIP condition, either 'warm' or 'cold'
 
 [Options]
 correctisf = false    #             Remove ice shelf grids sticking out and isolated points
@@ -53,8 +53,8 @@ gamTfix   = 0.00018    # []          Turbulent exchange coefficient. If False: c
 #Tuning
 Cd        = 2.5e-3    # []          drag coefficient
 Cdtop     = 1.1e-3    # []          Drag coefficient in Ustar
-Ah        = 25        # [m^2/s]     Laplacian viscosity
-Kh        = 25        # [m^2/s]     Diffusivity
+Ah        = 6        # [m^2/s]     Laplacian viscosity
+Kh        = 1        # [m^2/s]     Diffusivity
 entpar    = "Gaspar"  #             Entrainment parameterisation, either 'Holland' or 'Gaspar'
 mu        = 2.5       # []          Parameter in Gaspar entrainment. Gaspar: 0.5; Gladish: 2.5
 maxdetr   = 0.5        # [m/s]       Cutoff detrainment rate, only effective when O(1e-3)

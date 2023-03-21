@@ -1,19 +1,31 @@
 import os,sys
 import numpy as np
 import xarray as xr
+import datetime as dt
 
 from integrate import updatesecondary,intD,intU,intV,intT,intS
 
 def create_rundir(object,configfile):
     #Create run directory and logfile
     object.name = object.config["Run"]["name"]
-    object.rundir = os.path.join(object.config["Directories"]["results"],object.name)
-    object.logfile = os.path.join(object.rundir,object.config["Filenames"]["logfile"])
 
     try:
+        object.rundir = os.path.join(object.config["Directories"]["results"],object.name)
         os.mkdir(object.rundir)
     except:
-        sys.exit('Error: cannot create run dir, aborting. Try choosing a new runname')
+        try:
+            object.rundir = os.path.join(object.config["Directories"]["results"],dt.datetime.today().strftime(f"{object.name}_%Y-%m-%d"))
+            os.mkdir(object.rundir)
+        except:
+            for n in range(100):
+                try:
+                    object.rundir = os.path.join(object.config["Directories"]["results"],dt.datetime.today().strftime(f"{object.name}_%Y-%m-%d_{n}"))
+                    os.mkdir(object.rundir)
+                    break
+                except:
+                    continue
+
+    object.logfile = os.path.join(object.rundir,object.config["Filenames"]["logfile"])
 
     os.system(f"cp {configfile} {object.rundir}")
 
@@ -266,10 +278,9 @@ def initialise_vars(object):
     object.Ussa = np.zeros((2,len(object.y),len(object.x)))
     object.Vssa = np.zeros((2,len(object.y),len(object.x)))
 
-    #Initial values
     try:
         dsinit = xr.open_dataset(object.restartfile)
-        object.tstart = dsinit.tend.values
+        object.tstart = dsinit.time
         object.U = dsinit.U.values
         object.V = dsinit.V.values
         object.D = dsinit.D.values

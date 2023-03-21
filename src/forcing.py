@@ -17,9 +17,6 @@ def create_forcing(object):
     elif object.forcop == "linear2":
         linear2(object)    
 
-    #object.Sa = np.interp(object.zb.values, object.z, object.Sz)
-    #object.Ta = np.interp(object.zb.values, object.z, object.Tz)
-
     object.print2log(f"Finished creating forcing {object.forcname}")
 
     return
