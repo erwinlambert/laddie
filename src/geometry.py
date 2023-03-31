@@ -1,69 +1,84 @@
 import numpy as np
 import xarray as xr
+import sys
 import pyproj
 
 from constants import ModelConstants
 
-class Geometry(ModelConstants):
-    """Create geometry input from ISOMIP+ """
-    def __init__(self,filename,year=0):
-        self.ds = xr.open_dataset(filename)
+def read_geom(object):
+    #Read input file
 
-        vargeom = False
-        if len(self.ds.dims) ==3:
-            vargeom = True
-            self.ds = self.ds.isel(t=year)
-            print(f'selecting year {year}')
+    try:
+        ds = xr.open_dataset(object.geomfile)
 
-        assert (self.ds.x[1]-self.ds.x[0]).values == (self.ds.y[1]-self.ds.y[0]).values
+        #Check order of x and y
+        object.dx = ds.x[1]-ds.x[0]
+        object.dy = ds.y[1]-ds.y[0]
+        if object.dx<0:
+            object.print2log('inverting x-coordinates')
+            ds = ds.reindex(x=list(reversed(ds.x)))
+            object.dx = -object.dx
+        if object.dy<0:
+            object.print2log('inverting y-coordinates')
+            ds = ds.reindex(y=list(reversed(ds.y)))
+            object.dy = -object.dy
 
-        self.ds['draft'] = self.ds.lowerSurface.astype('float64')
-        self.ds['mask'] = 0.*self.ds.draft
-        self.ds['mask'][:] = np.where(self.ds.floatingMask.values,3,0)
-        self.ds['mask'][:] = np.where(self.ds.groundedMask.values,2,self.ds.mask)
+        if object.coarsen>1:
+            ds = apply_coarsen(ds,object.coarsen)
+            object.print2log(f"Coarsened geometry by a factor of {object.coarsen}")
 
-        #Calving criterium
-        self.ds['draft'][:] = np.where(np.logical_and(self.ds.mask==3,self.ds.draft>-90),0,self.ds.draft)
-        self.ds['mask'][:] = np.where(np.logical_and(self.ds.mask==3,self.ds.draft>-90),0,self.ds.mask)
+        object.print2log("test")
 
-        self.ds['mask'][-1,:] = 2 #Prevent cyclic boundary conditions
+        if object.lonlat:
+            ds = add_lonlat(ds,object.projection)
+            object.lon = ds.lon
+            object.lat = ds.lat
+            object.print2log(f"Added longitude and latitude dimensions")
 
-        if vargeom:
-            self.name = f'{filename[-26:-20]}_{year:02.0f}'
-        else:
-            self.name = filename[-26:-20]
-        print(self.name)
-        ModelConstants.__init__(self)
-    
-    def coarsen(self,N):
-        """Coarsen grid resolution by a factor N"""
-        self.ds['mask'] = xr.where(self.ds.mask==0,np.nan,self.ds.mask)
-        self.ds['draft'] = xr.where(np.isnan(self.ds.mask),np.nan,self.ds.draft)
-        self.ds = self.ds.coarsen(x=N,y=N,boundary='trim').mean()
+        #Read variables
+        object.x    = ds.x
+        object.y    = ds.y     
+        object.mask = ds.mask
+        object.H    = ds.thickness
+        object.B    = ds.bed
+        object.zs   = ds.surface
 
-        self.ds['mask'] = np.round(self.ds.mask)
-        self.ds['mask'] = xr.where(np.isnan(self.ds.mask),0,self.ds.mask)
-        self.ds['draft'] = xr.where(self.ds.mask==0,0,self.ds.draft)
-        self.ds['draft'] = xr.where(np.isnan(self.ds.draft),0,self.ds.draft)
+        ds.close()
 
-        self.res = (self.ds.x[1]-self.ds.x[0]).values/1000
-        print(f'Resolution set to {self.res} km')
-        
-    def smoothen(self,N):
-        """Smoothen geometry"""
-        for n in range(0,N):
-            self.ds.draft = .5*self.ds.draft + .125*(np.roll(self.ds.draft,-1,axis=0)+np.roll(self.ds.draft,1,axis=0)+np.roll(self.ds.draft,-1,axis=1)+np.roll(self.ds.draft,1,axis=1))
+        object.zb = object.zs-object.H
 
-    def create(self):
-        """Create geometry"""
-        geom = self.ds[['mask','draft']]
-        geom['name_geo'] = f'{self.name}_{self.res:1.1f}'
-        print('Geometry',geom.name_geo.values,'created')
-        
-        #Add lon lat
-        #project = pyproj.Proj("epsg:3031")
-        #xx, yy = np.meshgrid(geom.x, geom.y)
-        #lons, lats = project(xx, yy, inverse=True)
-        #dims = ['y','x']
-        #geom = geom.assign_coords({'lat':(dims,lats), 'lon':(dims,lons)})  
-        return geom
+    except:
+        object.print2log(f"Error, cannot read geometry file {object.geomfile}. Check whether it exists and contains the correct variables")
+        sys.exit()
+
+    object.res = (object.x[1]-object.x[0]).values/1000
+    object.print2log(f"Finished reading geometry {object.geomfile} at resolution {object.res} km. All good")
+
+    return
+
+
+def apply_coarsen(ds,N):
+    """Coarsen grid resolution by a factor N"""
+    print('start')
+    ds['mask'] = xr.where(ds.mask==0,np.nan,ds.mask)
+    ds['thickness'] = xr.where(np.isnan(ds.mask),np.nan,ds.thickness)
+    ds['surface'] = xr.where(np.isnan(ds.mask),np.nan,ds.surface)
+    ds['bed'] = xr.where(np.isnan(ds.mask),np.nan,ds.bed)
+    ds = ds.coarsen(x=N,y=N,boundary='trim').mean()
+    print('test1')
+    ds['mask'] = np.round(ds.mask)
+    ds['mask'] = xr.where(np.isnan(ds.mask),0,ds.mask)
+    ds['thickness'] = xr.where(ds.mask==0,0,ds.thickness)
+    ds['surface'] = xr.where(ds.mask==0,0,ds.surface)
+    print('test2')
+    ds['thickness'] = xr.where(np.isnan(ds.thickness),0,ds.thickness)
+    ds['surface'] = xr.where(np.isnan(ds.surface),0,ds.surface)
+    return ds
+
+def add_lonlat(ds,proj):
+        project = pyproj.Proj(proj)
+        xx, yy = np.meshgrid(ds.x, ds.y)
+        lons, lats = project(xx, yy, inverse=True)
+        dims = ['y','x']
+        ds = ds.assign_coords({'lat':(dims,lats), 'lon':(dims,lons)})
+        return ds

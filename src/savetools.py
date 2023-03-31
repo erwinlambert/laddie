@@ -1,8 +1,9 @@
+import os,sys
 from tools import *
 from physics import *
 from preprocess import *
 
-def savefields(object,filename=None):
+def savefields(object):
     """Store time-average fields and save"""
     object.dsav['U'] += im(object.U[1,:,:])
     object.dsav['V'] += jm(object.V[1,:,:])
@@ -31,15 +32,14 @@ def savefields(object,filename=None):
         object.dsav['mav']  = 3600*24*365.25*(object.dsav.melt*object.dx*object.dy).sum()/(object.tmask*object.dx*object.dy).sum()
         object.dsav['mmax'] = 3600*24*365.25*object.dsav.melt.max()            
 
-        object.dsav['tend'] = object.time[object.t]
-        if filename == None:
-            object.dsav['filename'] = f"../results/{object.ds['name_geo'].values}_{object.ds.attrs['name_forcing']}_{object.dsav['tend'].values:03.0f}"
-        else:
-            object.dsav['filename'] = filename
-        object.dsav.to_netcdf(f"{object.dsav['filename'].values}.nc")
-        print(f'-------------------------------------------------------------------------------------')
-        print(f"{object.time[object.t]:8.03f} days || Average fields saved as {object.dsav['filename'].values}.nc")
-        print(f'-------------------------------------------------------------------------------------')
+        object.dsav.attrs['time_end'] = object.time[object.t]
+
+        filename = os.path.join(object.rundir,f"output_{object.dsav.attrs['time_end']:06.0f}.nc")
+        
+        object.dsav.to_netcdf(filename)
+        object.print2log(f'-------------------------------------------------------------------------------------')
+        object.print2log(f"{object.time[object.t]:8.0f} days || Average fields saved as {filename}")
+        object.print2log(f'-------------------------------------------------------------------------------------')
         
         """Keep last average melt rate"""
         object.lastmelt = object.dsav.melt.copy()
@@ -56,7 +56,7 @@ def savefields(object,filename=None):
         object.dsav['ent2'] *= 0
         object.dsav['detr'] *= 0        
         
-        object.dsav['tstart'] = object.time[object.t]
+        object.dsav.attrs['time_start'] = object.time[object.t]
         
 def saverestart(object):
     if object.t in np.arange(object.restint,object.nt+object.restint,object.restint):
@@ -66,18 +66,18 @@ def saverestart(object):
         object.dsre['D'] = (['n','y','x'], object.D)
         object.dsre['T'] = (['n','y','x'], object.T)
         object.dsre['S'] = (['n','y','x'], object.S)
-        object.dsre['tend'] = object.time[object.t]
-        object.restartfile = f"{object.ds.attrs['name_forcing']}_{object.dsre['tend'].values:03.0f}"
-        object.dsre.to_netcdf(f"../results/restart/{object.ds['name_geo'].values}_{object.restartfile}.nc")
+        object.dsre.attrs['time'] = object.time[object.t]
 
-        print(f'-------------------------------------------------------------------------------------')
-        print(f"{object.time[object.t]:8.03f} days || Restart file saved")
-        print(f'-------------------------------------------------------------------------------------')
+        object.restartfile = os.path.join(object.rundir,f"restart_{object.dsre.attrs['time']:06.0f}.nc")
+
+        object.dsre.to_netcdf(object.restartfile)
+
+        object.print2log(f'-------------------------------------------------------------------------------------')
+        object.print2log(f"{object.time[object.t]:8.0f} days || Restart file saved as {object.restartfile}")
+        object.print2log(f'-------------------------------------------------------------------------------------')
         
-        print(f"Restarting from {object.restartfile}")
-        initialize_vars(object)
-        print(f'Restarted')
-        
+        object.print2log(f"Restarting from {object.restartfile}")
+        initialise_vars(object)        
         
 def printdiags(object):
     if object.t in np.arange(object.diagint,object.nt+object.diagint,object.diagint):
@@ -114,4 +114,4 @@ def printdiags(object):
         #Convection
         d_conv = object.convection.sum()
         
-        print(f'{object.time[object.t]:8.03f} days || {d_Dav:5.01f}  [{d_Dmin:4.02f} {d_Dmax:4.0f}] m || {d_Mav: 5.02f} | {d_Mmax: 3.0f} m/yr || {d_MWF:5.02f} % || {d_Etot:5.03f} + {d_E2tot:5.03f} - {d_DEtot:5.03f} | {d_PSI: 5.03f} Sv || {d_Vmax: 3.02f} m/s || {d_drho: 5.05f} {d_conv: 3.0f} []')
+        object.print2log(f'{object.time[object.t]:8.03f} days || {d_Dav:5.01f}  [{d_Dmin:4.02f} {d_Dmax:4.0f}] m || {d_Mav: 5.02f} | {d_Mmax: 3.0f} m/yr || {d_MWF:5.02f} % || {d_Etot:5.03f} + {d_E2tot:5.03f} - {d_DEtot:5.03f} | {d_PSI: 5.03f} Sv || {d_Vmax: 3.02f} m/s || {d_drho: 5.05f} {d_conv: 3.0f} []')

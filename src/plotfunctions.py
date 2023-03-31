@@ -10,7 +10,7 @@ import cartopy.crs as ccrs
 
 def prettyplot(dsav,figsize=(10,10)):
  
-    fname = sorted(glob.glob(f"../../results/{dsav['name_geo'].values}_{dsav.attrs['name_forcing']}_*.nc"))[-1]
+    fname = sorted(glob.glob(f"../results/{dsav['name_geo'].values}_{dsav.attrs['name_forcing']}_*.nc"))[-1]
     try:
         ds = xr.open_dataset(fname)
     except:
@@ -60,7 +60,7 @@ def prettyplot(dsav,figsize=(10,10)):
     ax.set_yticks([])
     plt.tight_layout()
     
-    fname = f"../../results/figures/{ds['name_geo'].values}_{ds.attrs['name_forcing']}__{ds['tend'].values:.3f}"
+    fname = f"../results/figures/prettyplot_{ds['name_geo'].values}_{ds.attrs['name_forcing']}__{ds['tend'].values:.3f}"
 
     plt.savefig(f"{fname}.png")
     plt.show()
