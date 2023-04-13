@@ -254,6 +254,111 @@ def create_grid(object):
 
     return
 
+### Nearest neighbour function
+def compute_average_NN(object_variable, mask):
+    """
+    Compute the average of neighbouring cells masked as ice shelf. 
+    INPUT:
+        - object_variable: variable for which the NN average is to be computed, for example: object.T
+        - mask: mask that corresponds to object_variable, for example: object.tmask
+    """
+    # Create nn_average array to store average nearest neighbour values
+    nn_average = object_variable * 0
+
+    for i in range(3):
+        var = object_variable[i,:,:]
+
+        # Only take values from cells within shelf mask
+        vari = np.where(mask==1, var, 0)
+
+        # Take the sum of the values in neighbouring cells for nt = 1 
+        nn_total = np.roll(vari,-1,axis=0)+ np.roll(vari,1,axis=0) + np.roll(vari,-1,axis=1) + np.roll(vari,1,axis=1)
+
+        # Compute the weight using the mask (the weight is the number of neighbouring cells which contain values within the shelf mask)
+        weight = np.roll(mask,-1, axis=0)+ np.roll(mask,1, axis=0) + np.roll(mask,-1, axis=1) + np.roll(mask,1, axis=1)
+
+        # Divide sum of neighbours by the weight and fill nn_average array
+        nn_average[i,:,:] = nn_total / (weight)
+
+    return nn_average
+
+def dsinit_to_new_geometry(object, dsinit):
+    # Check if object geometry matches restart file geometry
+    difftmask = np.sum(np.abs(object.tmask - dsinit.tmask))
+    diffumask = np.sum(np.abs(object.umask - dsinit.umask))
+    diffvmask = np.sum(np.abs(object.vmask - dsinit.vmask))
+
+    totaldiff = difftmask.values+diffumask.values+diffvmask.values
+    print('Total mask difference (tmask+umask+vmask)',totaldiff)
+    
+    if totaldiff==0: #object.mask == dsinit.mask:
+        object.print2log('Input file geometry matches restart file geometry.')
+        object.tstart = dsinit.time
+        object.U = dsinit.U.values
+        object.V = dsinit.V.values
+        object.D = dsinit.D.values
+        object.T = dsinit.T.values
+        object.S = dsinit.S.values
+
+    elif totaldiff>0:
+        object.print2log('Input file geometry does not match restart file geometry.')
+        object.print2log('Extrapolate restart file variables to mask of input file.')
+
+        object.tstart = dsinit.time
+
+        # Inherit values for variables in grid cells that were already marked as iceshelf
+        object.T[:] = np.where(np.logical_and(object.tmask==1, dsinit.tmask==1), dsinit.T[:], object.T[:])
+        object.S[:] = np.where(np.logical_and(object.tmask==1, dsinit.tmask==1), dsinit.S[:], object.S[:])
+        object.D[:] = np.where(np.logical_and(object.tmask==1, dsinit.tmask==1), dsinit.D[:], object.D[:])
+        object.U[:] = np.where(np.logical_and(object.umask==1, dsinit.umask==1), dsinit.U[:], object.U[:])
+        object.V[:] = np.where(np.logical_and(object.vmask==1, dsinit.vmask==1), dsinit.V[:], object.V[:]) 
+
+        # Condition which marks cells that are newly ice shelfs to True
+        conditiont = np.logical_and(object.tmask[:]==1, dsinit.tmask[:]==0)
+        conditionu = np.logical_and(object.umask[:]==1, dsinit.umask[:]==0)
+        conditionv = np.logical_and(object.vmask[:]==1, dsinit.vmask[:]==0)
+
+        # Fill new ice shelf grid cells with np.nan
+        object.T[:] = np.where(conditiont, np.nan, object.T[:])
+        object.S[:] = np.where(conditiont, np.nan, object.S[:])
+        object.D[:] = np.where(conditiont, np.nan, object.D[:])
+        object.U[:] = np.where(conditionu, np.nan, object.U[:])
+        object.V[:] = np.where(conditionv, np.nan, object.V[:])    
+    
+        # Count empty cells
+        N_empty_cells_tmask = np.sum(np.isnan(object.T[1]))
+        N_empty_cells_umask = np.sum(np.isnan(object.U[1]))
+        N_empty_cells_vmask = np.sum(np.isnan(object.V[1]))
+
+        # Fill new cells with average of nearest neighbour, use a while loop to make sure every cell is filled
+        print('empty tmask:', N_empty_cells_tmask)  # tmask, variables T, S, D
+        while N_empty_cells_tmask > 0:
+            print('in tmask while loop')
+            object.T[:] = np.where(conditiont, compute_average_NN(object.T, dsinit.tmask), object.T[:])
+            object.S[:] = np.where(conditiont, compute_average_NN(object.S, dsinit.tmask), object.S[:])
+            object.D[:] = np.where(conditiont, compute_average_NN(object.D, dsinit.tmask), object.D[:])
+            # Update tmask
+            dsinit.tmask[:] = np.where(np.logical_and(np.isnan(object.T[1])==False, dsinit.tmask[:]==0), 1, dsinit.tmask[:])
+            N_empty_cells_tmask = np.sum(np.isnan(object.T[1]))
+            print('empty tmask loop:', N_empty_cells_tmask)
+
+        print('empty umask:', N_empty_cells_umask)  # umask, variable U
+        while N_empty_cells_umask > 0:
+            object.U[:] = np.where(conditionu, compute_average_NN(object.U, dsinit.umask),object.U[:])
+            # Update umask
+            dsinit.umask[:] = np.where(np.logical_and(np.isnan(object.U[1])==False, dsinit.umask[:]==0), 1, dsinit.umask[:])
+            N_empty_cells_umask = np.sum(np.isnan(object.U[1]))
+            print('empty umask loop:', N_empty_cells_umask)
+
+        print('empty vmask:', N_empty_cells_vmask)  # vmask, variable V
+        while N_empty_cells_vmask > 0:
+            object.V[:] = np.where(conditionv, compute_average_NN(object.V, dsinit.vmask),object.V[:])
+            # Update vmask
+            dsinit.vmask[:] = np.where(np.logical_and(np.isnan(object.V[1])==False, dsinit.vmask[:]==0), 1, dsinit.vmask[:])
+            N_empty_cells_vmask = np.sum(np.isnan(object.V[1]))
+            print('empty vmask loop:', N_empty_cells_vmask)
+
+    return object
 
 def initialise_vars(object):
     
@@ -277,15 +382,12 @@ def initialise_vars(object):
     #For dynamic ice module
     object.Ussa = np.zeros((2,len(object.y),len(object.x)))
     object.Vssa = np.zeros((2,len(object.y),len(object.x)))
+    object.print2log(f'{object.restartfile}')
 
     try:
         dsinit = xr.open_dataset(object.restartfile)
-        object.tstart = dsinit.time
-        object.U = dsinit.U.values
-        object.V = dsinit.V.values
-        object.D = dsinit.D.values
-        object.T = dsinit.T.values
-        object.S = dsinit.S.values
+        dsinit_to_new_geometry(object, dsinit)
+
         object.print2log(f'Starting from restart file at day {object.tstart:.0f}')
     except:    
         object.tstart = 0.
