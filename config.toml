@@ -10,6 +10,7 @@ diagday = 0.01   # [days] interval to spit out diagnostics
 
 [Geometry]
 filename = "./input/Ocean1.nc"  # File containing geometry input
+geomyear = false			# Time index of geometry input
 lonlat = false               # Include longitude latitude in output files
 projection = "epsg:3031"  # Projection to use for computing longitude, latitude
 coarsen = 1               # Factor to coarsen geometry

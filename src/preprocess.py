@@ -4,7 +4,7 @@ import xarray as xr
 import datetime as dt
 
 from integrate import updatesecondary,intD,intU,intV,intT,intS
-from tools import div0
+from tools import div0, div0_NN
 
 def create_rundir(object,configfile):
     #Create run directory and logfile
@@ -282,7 +282,7 @@ def compute_average_NN(object_variable, mask):
         weight = np.roll(mask,-1, axis=0)+ np.roll(mask,1, axis=0) + np.roll(mask,-1, axis=1) + np.roll(mask,1, axis=1)
 
         # Divide sum of neighbours by the weight and fill nn_average array
-        nn_average[i,:,:] = div0(nn_total,weight)
+        nn_average[i,:,:] = div0_NN(nn_total,weight)
 
     return nn_average
 
@@ -291,9 +291,8 @@ def dsinit_to_new_geometry(object, dsinit):
     difftmask = np.sum(np.abs(object.tmask - dsinit.tmask))
     diffumask = np.sum(np.abs(object.umask - dsinit.umask))
     diffvmask = np.sum(np.abs(object.vmask - dsinit.vmask))
-
+    
     totaldiff = difftmask.values+diffumask.values+diffvmask.values
-    #print('Total mask difference between restart file geometry and input file geometry: (dtmask + dumask + dvmask) = ', totaldiff, 'cells.')
     object.print2log(f'Total mask difference between restart file geometry and input file geometry: (dtmask + dumask + dvmask) = {totaldiff:.0f} cells.')
     
     if totaldiff==0:

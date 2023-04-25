@@ -10,7 +10,7 @@ diagday = 0.01   		# [days] interval to spit out diagnostics
 
 [Geometry]
 filename = '@INPUT_FILE_GEOMETRY'  	# File containing geometry input
-geomyear = @INPUT_FILE_GEOMYEAR  	# Year of geometry file
+geomyear = @INPUT_FILE_GEOMYEAR  	# Time index of geometry file [in this case Year]
 lonlat = false               		# Include longitude latitude in output files
 projection = "epsg:3031"  			# Projection to use for computing longitude, latitude
 coarsen = 2               			# Factor to coarsen geometry
