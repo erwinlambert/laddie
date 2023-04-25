@@ -50,6 +50,7 @@ def read_config(object):
 
     #Geometry
     object.geomfile   = object.config["Geometry"]["filename"]
+    object.geomyear   = object.config["Geometry"]["geomyear"]
     object.lonlat     = object.config["Geometry"]["lonlat"]
     object.projection = object.config["Geometry"]["projection"]
     object.coarsen    = object.config["Geometry"]["coarsen"]

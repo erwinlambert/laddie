@@ -11,6 +11,11 @@ def read_geom(object):
     try:
         ds = xr.open_dataset(object.geomfile)
 
+        #Check for time dimension
+        if len(ds.dims) ==3:
+            ds = ds.isel(t=object.geomyear)
+            print(f'selecting year {object.geomyear}')
+
         #Check order of x and y
         object.dx = ds.x[1]-ds.x[0]
         object.dy = ds.y[1]-ds.y[0]
