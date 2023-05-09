@@ -58,3 +58,4 @@ class ModelConstants(object):
         self.saveday   = 10        # [days]      Interval at which to save time-average fields
         self.restday   = 10        # [days]      Interval at which to save restart file
         
+        self.geomyear  = 0         # []          Time index of geometry input (only used when geometry file has time dimension)

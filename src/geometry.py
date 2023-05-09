@@ -11,6 +11,11 @@ def read_geom(object):
     try:
         ds = xr.open_dataset(object.geomfile)
 
+        #Check for time dimension
+        if len(ds.dims) ==3:
+            ds = ds.isel(t=object.geomyear)
+            object.print2log(f'selecting geometry time index {object.geomyear}')
+
         #Check order of x and y
         object.dx = ds.x[1]-ds.x[0]
         object.dy = ds.y[1]-ds.y[0]
@@ -59,18 +64,15 @@ def read_geom(object):
 
 def apply_coarsen(ds,N):
     """Coarsen grid resolution by a factor N"""
-    print('start')
     ds['mask'] = xr.where(ds.mask==0,np.nan,ds.mask)
     ds['thickness'] = xr.where(np.isnan(ds.mask),np.nan,ds.thickness)
     ds['surface'] = xr.where(np.isnan(ds.mask),np.nan,ds.surface)
     ds['bed'] = xr.where(np.isnan(ds.mask),np.nan,ds.bed)
     ds = ds.coarsen(x=N,y=N,boundary='trim').mean()
-    print('test1')
     ds['mask'] = np.round(ds.mask)
     ds['mask'] = xr.where(np.isnan(ds.mask),0,ds.mask)
     ds['thickness'] = xr.where(ds.mask==0,0,ds.thickness)
     ds['surface'] = xr.where(ds.mask==0,0,ds.surface)
-    print('test2')
     ds['thickness'] = xr.where(np.isnan(ds.thickness),0,ds.thickness)
     ds['surface'] = xr.where(np.isnan(ds.surface),0,ds.surface)
     return ds
