@@ -54,6 +54,9 @@ def read_config(object):
     object.lonlat     = object.config["Geometry"]["lonlat"]
     object.projection = object.config["Geometry"]["projection"]
     object.coarsen    = object.config["Geometry"]["coarsen"]
+    object.calvthresh = object.config["Geometry"]["calvthresh"]
+    assert object.calvthresh >= 0, "Invalid input for Geometry.calvthresh; should be a positive value"
+    object.removebergs= object.config["Geometry"]["removebergs"]
 
     #Forcing
     object.forcop = object.config["Forcing"]["option"]

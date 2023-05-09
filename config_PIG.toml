@@ -1,11 +1,11 @@
 [Run]
-name = "PIG_bm3_2"   # Run name
-days = 20        # [days] run duration
+name = "PIG_bm3_c100_rb"   # Run name
+days = 1        # [days] run duration
 
 [Time]
 dt = 72        # [s] timestep
-restday = 5    # [days] interval to save restartfile
-saveday = 5    # [days] interval to save model output
+restday = 1    # [days] interval to save restartfile
+saveday = 1    # [days] interval to save model output
 diagday = 0.01   # [days] interval to spit out diagnostics
 
 [Geometry]
@@ -14,6 +14,8 @@ geomyear = false			# Time index of geometry input
 lonlat = true               # Include longitude latitude in output files
 projection = "epsg:3031"  # Projection to use for computing longitude, latitude
 coarsen = 1               # Factor to coarsen geometry
+calvthresh = 100          # [m] Thickness threshold for calving
+removebergs = true        # Remove icebergs
 
 [Forcing]
 option = "tanh" # Available options: 'tanh', ....
