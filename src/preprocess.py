@@ -293,7 +293,6 @@ def dsinit_to_new_geometry(object, dsinit):
     diffvmask = np.sum(np.abs(object.vmask - dsinit.vmask))
     
     totaldiff = difftmask.values+diffumask.values+diffvmask.values
-    object.print2log(f'Total mask difference between restart file geometry and input file geometry: (dtmask + dumask + dvmask) = {totaldiff:.0f} cells.')
     
     if totaldiff==0:
         # If input geometry and restart geometry match
@@ -307,9 +306,9 @@ def dsinit_to_new_geometry(object, dsinit):
         object.T = dsinit.T.values
         object.S = dsinit.S.values
 
-    elif totaldiff>0:
+    else:
         # In input geometry and restart geometry do not match
-        object.print2log('Input file geometry does not match restart file geometry. Extrapolate restart file variables to mask from input file.')
+        object.print2log(f'Input file geometry does not match restart file geometry: (dtmask + dumask + dvmask) = {totaldiff:.0f} cells. Extrapolate restart file variables to mask from input file.')
 
         object.tstart = dsinit.time
 
