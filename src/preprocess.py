@@ -287,6 +287,10 @@ def compute_average_NN(object_variable, mask):
     return nn_average
 
 def dsinit_to_new_geometry(object, dsinit):
+
+    #Inherit start time from restart file
+    object.tstart = dsinit.time
+
     # Check whether object geometry matches restart file geometry
     difftmask = np.sum(np.abs(object.tmask - dsinit.tmask))
     diffumask = np.sum(np.abs(object.umask - dsinit.umask))
@@ -298,8 +302,6 @@ def dsinit_to_new_geometry(object, dsinit):
         # If input geometry and restart geometry match
         object.print2log('Input file geometry matches restart file geometry.')
 
-        object.tstart = dsinit.time
-
         object.U = dsinit.U.values
         object.V = dsinit.V.values
         object.D = dsinit.D.values
@@ -309,8 +311,6 @@ def dsinit_to_new_geometry(object, dsinit):
     else:
         # In input geometry and restart geometry do not match
         object.print2log(f'Input file geometry does not match restart file geometry: (dtmask + dumask + dvmask) = {totaldiff:.0f} cells. Extrapolate restart file variables to mask from input file.')
-
-        object.tstart = dsinit.time
 
         # Inherit values for variables in grid cells that were already marked as iceshelf
         object.T[:] = np.where(np.logical_and(object.tmask==1, dsinit.tmask==1), dsinit.T[:], object.T[:])
