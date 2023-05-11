@@ -4,6 +4,10 @@ def div0(a,b):
     """Divide to variables allowing for divide by zero"""
     return np.divide(a,b,out=np.zeros_like(a), where=b!=0)
 
+def div0_NN(a,b):
+    """Divide to variables allowing for divide by zero, set output to np.nan if divided by zero"""
+    return np.divide(a,b,out=np.zeros_like(a)*np.nan, where=b!=0)
+
 def im(var):
     """Value at i-1/2 """
     return .5*(var+np.roll(var,1,axis=1))
