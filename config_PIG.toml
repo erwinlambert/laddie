@@ -16,6 +16,7 @@ projection = "epsg:3031"  # Projection to use for computing longitude, latitude
 coarsen = 1               # Factor to coarsen geometry
 calvthresh = 100          # [m] Thickness threshold for calving
 removebergs = true        # Remove icebergs
+readsavebed = true    #             Read and save bed geometry. Set to false if absent in geometry
 
 [Forcing]
 option = "tanh" # Available options: 'tanh', ....

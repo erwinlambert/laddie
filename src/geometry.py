@@ -43,7 +43,8 @@ def read_geom(object):
         object.y    = ds.y     
         object.mask = ds.mask
         object.H    = ds.thickness
-        object.B    = ds.bed
+        if object.readsavebed:
+            object.B    = ds.bed
         object.zs   = ds.surface
 
         ds.close()
