@@ -13,7 +13,8 @@ def read_geom(object):
 
         #Check for time dimension
         if len(ds.dims) ==3:
-            ds = ds.isel(t=object.geomyear)
+            #ds = ds.isel(t=object.geomyear)
+            ds = ds.isel(Nisf=object.geomyear)
             object.print2log(f'selecting geometry time index {object.geomyear}')
 
         #Check order of x and y
@@ -43,9 +44,14 @@ def read_geom(object):
         object.y    = ds.y     
         object.mask = ds.mask
         object.H    = ds.thickness
-        if object.readsavebed:
-            object.B    = ds.bed
         object.zs   = ds.surface
+
+        object.readsavebed = True
+        try:
+            object.B    = ds.bed
+        except:
+            object.readsavebed = False
+            object.print2log("Warning: no Bed included in input file, so omitted from output")
 
         ds.close()
 

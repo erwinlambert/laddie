@@ -80,7 +80,6 @@ def read_config(object):
     object.boundop    = object.config["Options"]["boundop"]
     assert object.boundop in [0,1], "Invalid input for Options.boundop"
     object.usegamtfix = object.config["Options"]["usegamtfix"]
-    object.readsavebed = object.config["Options"]["readsavebed"]
 
     #Directories
     object.resultdir = object.config["Directories"]["results"]

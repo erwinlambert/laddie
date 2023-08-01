@@ -32,7 +32,6 @@ slip      = 1         # [0...2]     Factor free slip: 0, no slip: 2, partial no 
 convop    = 1         # [0,1,2]     Option for convection when stratification is unstable 0: prescribe mindrho | 1: instantaneous convection | 2: restoring convection
 boundop   = 1         # [0,1]       Option for boundary conditions. Should be set to 1
 usegamtfix = false    #             Use fixed gamma_T rather than computing it
-readsavebed = true    #             Read and save bed geometry. Set to false if absent in geometry
 
 [Directories]
 results = "./output/"  # Main results directory in which rundirs are placed
