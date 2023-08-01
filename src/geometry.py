@@ -13,8 +13,7 @@ def read_geom(object):
 
         #Check for time dimension
         if len(ds.dims) ==3:
-            #ds = ds.isel(t=object.geomyear)
-            ds = ds.isel(Nisf=object.geomyear)
+            ds = ds.isel(t=object.geomyear)
             object.print2log(f'selecting geometry time index {object.geomyear}')
 
         #Check order of x and y
