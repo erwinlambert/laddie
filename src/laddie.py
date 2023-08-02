@@ -32,7 +32,10 @@ class Laddie():
         ge.read_geom(self)
 
         #Read or create forcing
-        fo.create_forcing(self)
+        if self.forcop == "file":
+            fo.read_forcing(self)
+        else:
+            fo.create_forcing(self)
         
         #Create grid
         pp.create_grid(self)

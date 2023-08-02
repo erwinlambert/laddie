@@ -60,7 +60,8 @@ def read_config(object):
 
     #Forcing
     object.forcop = object.config["Forcing"]["option"]
-    assert object.forcop in ["tanh","linear","linear2","isomip"], "Invalid input for Forcing.option"
+    assert object.forcop in ["tanh","linear","linear2","isomip","file"], "Invalid input for Forcing.option"
+    if object.forcop == "file": object.forcfile = object.config["Forcing"]["filename"]
     object.z0     = object.config["Forcing"]["z0"]
     if object.z0>0: object.z0 = -object.z0
     object.S0     = object.config["Forcing"]["S0"]

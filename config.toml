@@ -18,7 +18,8 @@ calvthresh = 0            # [m] Thickness threshold for calving
 removebergs = true        # Remove icebergs
 
 [Forcing]
-option = "isomip" # Available options: 'tanh', ....
+option = "file" # Available options: 'file', 'tanh', 'linear', 'isomip', and 'linear2'
+filename = "./input/forc_test.nc" #File containing T and S profiles, called if option = 'file
 z0    = -720    # [m] Reference depth used in 'tanh' and 'linear', 'isomip', and 'linear2'
 S0    = 34.0    # [psu] Surface salinity used in 'tanh'
 S1    = 35.0    # [psu] Salinity at depth z0 used in 'linear', 'linear2'
