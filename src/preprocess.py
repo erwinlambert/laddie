@@ -452,7 +452,8 @@ def prepare_output(object):
     object.dsav['mask']  = (['y','x'], object.mask.data)
     object.dsav['zb'] = (['y','x'], object.zb.data)
     object.dsav['H'] = (['y','x'], object.H.data)
-    object.dsav['B'] = (['y','x'], object.B.data)
+    if object.readsavebed:
+        object.dsav['B'] = (['y','x'], object.B.data)
     #object.dsav['Ui'] = (['y','x'], object.Ussa[0,:,:])
     #object.dsav['Vi'] = (['y','x'], object.Vssa[0,:,:])
 
@@ -484,9 +485,10 @@ def prepare_output(object):
     object.dsav['zb'].attrs['name'] = 'Ice shelf draft depth'
     object.dsav['zb'].attrs['units'] = 'm'    
     object.dsav['H'].attrs['name'] = 'Ice shelf thickness'
-    object.dsav['H'].attrs['units'] = 'm'  
-    object.dsav['B'].attrs['name'] = 'Bedrock depth'
-    object.dsav['B'].attrs['units'] = 'm'  
+    object.dsav['H'].attrs['units'] = 'm'
+    if object.readsavebed:
+        object.dsav['B'].attrs['name'] = 'Bedrock depth'
+        object.dsav['B'].attrs['units'] = 'm'  
 
     object.dsav.attrs['model_name'] = 'LADDIE'
     object.dsav.attrs['model_version'] = object.modelversion
@@ -501,7 +503,8 @@ def prepare_output(object):
     object.dsre['mask']  = (['y','x'], object.mask.data)
     object.dsre['zb'] = (['y','x'], object.zb.data)
     object.dsre['H'] = (['y','x'], object.H.data)
-    object.dsre['B'] = (['y','x'], object.B.data)
+    if object.readsavebed:
+        object.dsre['B'] = (['y','x'], object.B.data)
     object.dsre.attrs['name_model'] = 'LADDIE'
     object.dsre.attrs['model_version'] = object.modelversion
 
