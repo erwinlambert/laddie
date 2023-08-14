@@ -10,7 +10,6 @@ def read_geom(object):
 
     try:
         ds = xr.open_dataset(object.geomfile)
-        nnn = 1
 
         #Check for time dimension
         if len(ds.dims) ==3:
@@ -54,13 +53,11 @@ def read_geom(object):
             object.print2log("Warning: no Bed included in input file, so omitted from output")
   
         ds.close()
-        print(f"OK {nnn}"); nnn+=1
         #Apply calving threshold
         ncalv = sum(sum(np.logical_and(object.mask.values==3,object.H.values<object.calvthresh)))
-        print(f"OK {nnn}"); nnn+=1
         object.mask = xr.where(np.logical_and(object.mask.values==3,object.H.values<object.calvthresh),0,object.mask.values)
         object.print2log(f"Removed {ncalv} grid points with thickness below {object.calvthresh} m")
-        print(f"OK {nnn}"); nnn+=1
+        
         #Remove icebergs
         if object.removebergs:
             remove_icebergs(object)
