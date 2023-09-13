@@ -102,8 +102,8 @@ def updatesecondary(object):
         object.Ta   = np.interp(object.zb-object.D[1,:,:],object.z,object.Tz)
         object.Sa   = np.interp(object.zb-object.D[1,:,:],object.z,object.Sz)
     elif len(object.Tz.shape)==3:
-        object.Ta = object.Tz[np.int_(.01*np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]]
-        object.Sa = object.Sz[np.int_(.01*np.minimum(4999,-object.zb+object.D[1,:,:])),object.ind[0],object.ind[1]]
+        object.Ta = object.Tz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
+        object.Sa = object.Sz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
         
     object.Tf   = (object.l1*object.S[1,:,:]+object.l2+object.l3*object.zb).values
     

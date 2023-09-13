@@ -10,8 +10,12 @@ def read_forcing(object):
         ds = xr.open_dataset(object.forcfile)
 
         object.z = ds.z
-        object.Tz = ds.T
-        object.Sz = ds.S
+        object.Tz = ds.T.values
+        object.Sz = ds.S.values
+
+        if len(object.Tz.shape)==3:
+            object.Tax1 = np.arange(object.Tz.shape[1])[:,None]
+            object.Tax2 = np.arange(object.Tz.shape[2])[:,None]
 
         ds.close()
 

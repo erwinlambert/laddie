@@ -79,7 +79,7 @@ def read_config(object):
     object.convop     = object.config["Options"]["convop"]
     assert object.convop in [0,1,2], "Invalid input for Options.convop"
     object.boundop    = object.config["Options"]["boundop"]
-    assert object.boundop in [0,1], "Invalid input for Options.boundop"
+    assert object.boundop in [1,2], "Invalid input for Options.boundop"
     object.usegamtfix = object.config["Options"]["usegamtfix"]
 
     #Directories
@@ -399,12 +399,12 @@ def initialise_vars(object):
     except:    
         object.tstart = 0.
         if len(object.Tz.shape)==1:
-            object.Ta   = np.interp(object.zb,object.z,object.Tz)
-            object.Sa   = np.interp(object.zb,object.z,object.Sz)
+            object.Ta = np.interp(object.zb,object.z,object.Tz)
+            object.Sa = np.interp(object.zb,object.z,object.Sz)
         elif len(object.Tz.shape)==3:
-            object.Ta = object.Tz[np.int_(.01*-object.zb),object.ind[0],object.ind[1]]
-            object.Sa = object.Sz[np.int_(.01*-object.zb),object.ind[0],object.ind[1]]
-                    
+            object.Ta = object.Tz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
+            object.Sa = object.Sz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
+           
         object.D += object.Dinit
         for n in range(3):
             object.T[n,:,:] = object.Ta
