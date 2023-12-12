@@ -3,8 +3,6 @@ import xarray as xr
 import sys
 import pyproj
 
-from constants import ModelConstants
-
 def read_geom(object):
     #Read input file
 

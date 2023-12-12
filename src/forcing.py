@@ -2,8 +2,6 @@ import sys
 import numpy as np
 import xarray as xr
 
-from constants import ModelConstants
-
 def read_forcing(object):
     #Called if forcing is provided from input file
     try:

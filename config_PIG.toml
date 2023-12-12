@@ -1,5 +1,5 @@
 [Run]
-name = "PIG_bm3_c100_rb"   # Run name
+name = "PIG"   # Run name
 days = 1        # [days] run duration
 
 [Time]
