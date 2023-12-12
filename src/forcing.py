@@ -1,7 +1,35 @@
+import sys
 import numpy as np
 import xarray as xr
 
 from constants import ModelConstants
+
+def read_forcing(object):
+    #Called if forcing is provided from input file
+    try:
+        ds = xr.open_dataset(object.forcfile)
+
+        object.z = ds.z
+        object.Tz = ds.T.values
+        object.Sz = ds.S.values
+
+        if len(object.Tz.shape)==3:
+            object.Tax1 = np.arange(object.Tz.shape[1])[:,None]
+            object.Tax2 = np.arange(object.Tz.shape[2])[:,None]
+
+        ds.close()
+
+    except:
+        object.print2log(f"Error: could not open forcing input file {object.forcfile}. Check whether filename is correct and file contains variables z, T and S")
+        sys.exit()
+
+    #Do checks on validity
+
+    object.forcname = object.forcfile
+
+    object.print2log(f"Succesfully read forcing input file {object.forcfile}")
+
+    return
 
 def create_forcing(object):
 

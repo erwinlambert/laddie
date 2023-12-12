@@ -51,14 +51,13 @@ def read_geom(object):
         except:
             object.readsavebed = False
             object.print2log("Warning: no Bed included in input file, so omitted from output")
-
+  
         ds.close()
-
         #Apply calving threshold
-        ncalv = sum(sum(np.logical_and(object.mask==3,object.H<object.calvthresh))).values
-        object.mask = xr.where(np.logical_and(object.mask==3,object.H<object.calvthresh),0,object.mask)
+        ncalv = sum(sum(np.logical_and(object.mask.values==3,object.H.values<object.calvthresh)))
+        object.mask = xr.where(np.logical_and(object.mask.values==3,object.H.values<object.calvthresh),0,object.mask.values)
         object.print2log(f"Removed {ncalv} grid points with thickness below {object.calvthresh} m")
-
+        
         #Remove icebergs
         if object.removebergs:
             remove_icebergs(object)
