@@ -1,5 +1,4 @@
 import numpy as np
-
 from tools import *
 
 def lapT(object,var):
@@ -52,15 +51,6 @@ def convT(object,var):
         tE = - (np.maximum(object.U[1,:,:],0)*var                   + np.minimum(object.U[1,:,:],0)*np.roll(var,-1,axis=1)) / object.dx * object.umask
         tW =   (np.maximum(object.Uxp1    ,0)*np.roll(var,1,axis=1) + np.minimum(object.Uxp1    ,0)*var                   ) / object.dx * object.umaskxp1               
     return (tN+tS+tE+tW) * object.tmask
-
-def convT2(object,var,vara):
-    """Upstream convergence scheme for D, DT, DS; allowing for inflow of ambient water"""
-    tN = - (np.maximum(object.V[1,:,:],0)*var                   + np.minimum(object.V[1,:,:],0)*(np.roll(var,-1,axis=0)*object.tmaskym1+vara*object.ocnym1)) / object.dy * object.vmask
-    tS =   (np.maximum(object.Vyp1    ,0)*(np.roll(var,1,axis=0)*object.tmaskyp1+vara*object.ocnyp1) + np.minimum(object.Vyp1    ,0)*var                   ) / object.dy * object.vmaskyp1
-    tE = - (np.maximum(object.U[1,:,:],0)*var                   + np.minimum(object.U[1,:,:],0)*(np.roll(var,-1,axis=1)*object.tmaskxm1+vara*object.ocnxm1)) / object.dx * object.umask
-    tW =   (np.maximum(object.Uxp1    ,0)*(np.roll(var,1,axis=1)*object.tmaskxp1+vara*object.ocnxp1) + np.minimum(object.Uxp1    ,0)*var                   ) / object.dx * object.umaskxp1
-    return (tN+tS+tE+tW) * object.tmask
-
 
 def convU(object):
     """Convergence for DU"""
@@ -141,7 +131,6 @@ def updatesecondary(object):
     object.Tb = div0(Chat*object.gamT*object.T[1,:,:]-object.melt,Chat*object.gamT+Chat*Ctil*object.melt) * object.tmask
 
     #Entrainment
-    #object.entr = object.E0*np.maximum(0,(im(object.U[1,:,:])*object.dzdx + jm(object.V[1,:,:])*object.dzdy)) * object.tmask
     if object.entpar == 'Holland':
         object.entr = object.cl*object.Kh/object.Ah**2*(np.maximum(0,im(object.U[1,:,:])**2+jm(object.V[1,:,:])**2-object.g*object.drho*object.Kh/object.Ah*object.D[1,:,:]))**.5 * object.tmask
         object.detr = 0.*object.entr

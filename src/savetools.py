@@ -1,4 +1,4 @@
-import os,sys
+import os
 from tools import *
 from physics import *
 from preprocess import *
@@ -101,14 +101,14 @@ def printdiags(object):
         #Integrated volume thickness convergence == net in/outflow [Sv]
         d_PSI = -1e-6*(convT(object,object.D[1,:,:])*object.tmask*object.dx*object.dy).sum()
         #Average temperature [degC]
-        d_Tav = div0((object.D[1,:,:]*object.T[1,:,:]*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())
+        #d_Tav = div0((object.D[1,:,:]*object.T[1,:,:]*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())
         #Average salinity [psu]
-        d_Sav = div0((object.D[1,:,:]*object.S[1,:,:]*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())   
+        #d_Sav = div0((object.D[1,:,:]*object.S[1,:,:]*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())   
         #Average speed [m/s]
         #d_Vav = div0((object.D[1,:,:]*(im(object.u[1,:,:])**2 + jm(object.v[1,:,:])**2)**.5*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())
         d_Vmax = ((im(object.U[1,:,:])**2 + jm(object.V[1,:,:])**2)**.5*object.tmask).max()
         #TKE
-        d_TKE = 1e-9*((im(object.U[1,:,:])**2 + jm(object.V[1,:,:])**2)**.5*object.tmask*object.D[1,:,:]).sum()*object.dx*object.dy
+        #d_TKE = 1e-9*((im(object.U[1,:,:])**2 + jm(object.V[1,:,:])**2)**.5*object.tmask*object.D[1,:,:]).sum()*object.dx*object.dy
         #drho
         d_drho = 1000*np.where(object.tmask,object.drho,100).min()
         #Convection

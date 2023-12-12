@@ -1,7 +1,6 @@
 import numpy as np
 import xarray as xr
 import sys
-import pyproj
 
 def read_geom(object):
     #Read input file
@@ -95,6 +94,7 @@ def apply_coarsen(ds,N):
     return ds
 
 def add_lonlat(ds,proj):
+    import pyproj
     project = pyproj.Proj(proj)
     xx, yy = np.meshgrid(ds.x, ds.y)
     lons, lats = project(xx, yy, inverse=True)

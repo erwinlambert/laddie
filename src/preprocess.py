@@ -1,4 +1,4 @@
-import os,sys
+import os
 import numpy as np
 import xarray as xr
 import datetime as dt
@@ -386,9 +386,6 @@ def initialise_vars(object):
     object.dzdx = np.gradient(object.zb,object.dx,axis=1)
     object.dzdy = np.gradient(object.zb,object.dy,axis=0)
 
-    #For dynamic ice module
-    object.Ussa = np.zeros((2,len(object.y),len(object.x)))
-    object.Vssa = np.zeros((2,len(object.y),len(object.x)))
     object.print2log(f'Restart file: {object.restartfile}')
 
     try:
@@ -455,8 +452,6 @@ def prepare_output(object):
     object.dsav['H'] = (['y','x'], object.H.data)
     if object.readsavebed:
         object.dsav['B'] = (['y','x'], object.B.data)
-    #object.dsav['Ui'] = (['y','x'], object.Ussa[0,:,:])
-    #object.dsav['Vi'] = (['y','x'], object.Vssa[0,:,:])
 
 
     #Add attributes
