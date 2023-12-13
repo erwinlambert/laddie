@@ -1,4 +1,4 @@
-import os
+import os,sys
 import numpy as np
 import xarray as xr
 import datetime as dt
@@ -7,27 +7,38 @@ from integrate import updatesecondary,intD,intU,intV,intT,intS
 from tools import div0, div0_NN
 
 def create_rundir(object,configfile):
-    #Create run directory and logfile
-    object.name = object.config["Run"]["name"]
+    """Create run directory and logfile"""
+
+    #Read run name
+    object.name = tryread(object,"Run","name",str)
+    #Read directory to store output
+    object.resultdir = tryread(object,"Directories","results",str,checkdir=True)
+    #Read logfile
+    object.logfilename = tryread(object,"Filenames","logfile",str,default="log.txt")
 
     try:
+        #Create rundirectory
         object.rundir = os.path.join(object.config["Directories"]["results"],object.name)
         os.mkdir(object.rundir)
     except:
         try:
+            #Create rundirectory with current date
             object.rundir = os.path.join(object.config["Directories"]["results"],dt.datetime.today().strftime(f"{object.name}_%Y-%m-%d"))
             os.mkdir(object.rundir)
         except:
             for n in range(100):
                 try:
+                    #Create rundirectory with current date and incremental number
                     object.rundir = os.path.join(object.config["Directories"]["results"],dt.datetime.today().strftime(f"{object.name}_%Y-%m-%d_{n}"))
                     os.mkdir(object.rundir)
                     break
                 except:
                     continue
 
-    object.logfile = os.path.join(object.rundir,object.config["Filenames"]["logfile"])
+    #Create log file
+    object.logfile = os.path.join(object.rundir,object.logfilename)
 
+    #Copy config file to run directory
     os.system(f"cp {configfile} {object.rundir}")
 
     object.print2log("Rundir created")
@@ -37,108 +48,192 @@ def create_rundir(object,configfile):
 def read_config(object):
 
     #Inherit all config keys and check whether they are of the correct form / type
-    object.print2log("Starting to read config file")
+    object.print2log("========= Starting to read config file =============")
 
     #Run
-    object.days = object.config["Run"]["days"]
+    object.days = tryread(object,"Run","days",float)
 
     #Time
-    object.dt      = object.config["Time"]["dt"]
-    object.restday = object.config["Time"]["restday"]
-    object.saveday = object.config["Time"]["saveday"]
-    object.diagday = object.config["Time"]["diagday"]
+    object.dt      = tryread(object,"Time","dt",int,allowconversion=False)
+    object.restday = tryread(object,"Time","restday",float)
+    object.saveday = tryread(object,"Time","saveday",float)
+    object.diagday = tryread(object,"Time","diagday",float)
 
     #Geometry
-    object.geomfile   = object.config["Geometry"]["filename"]
-    object.geomyear   = object.config["Geometry"]["geomyear"]
-    object.lonlat     = object.config["Geometry"]["lonlat"]
-    object.projection = object.config["Geometry"]["projection"]
-    object.coarsen    = object.config["Geometry"]["coarsen"]
-    object.calvthresh = object.config["Geometry"]["calvthresh"]
-    assert object.calvthresh >= 0, "Invalid input for Geometry.calvthresh; should be a positive value"
-    object.removebergs= object.config["Geometry"]["removebergs"]
+    object.geomfile   = tryread(object,"Geometry","filename",str,checkfile=True)
+    object.geomyear   = tryread(object,"Geometry","geomyear",int,(0,1e20),allowconversion=False,default=0)
+    object.lonlat     = tryread(object,"Geometry","lonlat",bool,default=False)
+    if object.lonlat:
+        object.projection = tryread(object,"Geometry","projection",str,default="epsg:3031")
+    object.coarsen    = tryread(object,"Geometry","coarsen",int,default=1)
+    object.calvthresh = tryread(object,"Geometry","calvthresh",float,(0,1e20))
+    object.removebergs= tryread(object,"Geometry","removebergs",bool)
 
     #Forcing
-    object.forcop = object.config["Forcing"]["option"]
-    assert object.forcop in ["tanh","linear","linear2","isomip","file"], "Invalid input for Forcing.option"
-    if object.forcop == "file": object.forcfile = object.config["Forcing"]["filename"]
-    object.z0     = object.config["Forcing"]["z0"]
-    if object.z0>0: object.z0 = -object.z0
-    object.S0     = object.config["Forcing"]["S0"]
-    object.S1     = object.config["Forcing"]["S1"]
-    object.T1     = object.config["Forcing"]["T1"]
-    object.z1     = object.config["Forcing"]["z1"]
-    object.isomipcond = object.config["Forcing"]["isomipcond"]
-    assert object.isomipcond in ["warm","cold"]
+    object.forcop = tryread(object,"Forcing","option",str,["tanh","linear","linear2","isomip","file"])
+    #Read forcing-specific parameters
+    if object.forcop == "file": 
+        object.forcfile = tryread(object,"Forcing","filename",str,checkfile=True)
+    if object.forcop == "tanh":
+        object.z1    = tryread(object,"Forcing","z1",float,(-5000,0))
+        object.drho0 = tryread(object,"Forcing","drho0",float,(0,100))
+    if object.forcop in ["tanh","linear","linear2"]:
+        object.z0     = tryread(object,"Forcing","z0",float,(-5000,0))
+        object.S0     = tryread(object,"Forcing","S0",float,(0,100))
+        object.S1     = tryread(object,"Forcing","S1",float,(0,100))
+        object.T1     = tryread(object,"Forcing","T1",float,(-100,100))
+    if object.forcop == "isomip":
+        object.isomipcond = tryread(object,"Forcing","isomipcond",str,['warm','cold'])
 
     #Options
-    object.correctisf = object.config["Options"]["correctisf"]
-    object.slip       = object.config["Options"]["slip"]
-    assert object.slip >= 0, "Invalid input for Options.slip"
-    assert object.slip <= 2, "Invalid input for Options.slip"
-    object.convop     = object.config["Options"]["convop"]
-    assert object.convop in [0,1,2], "Invalid input for Options.convop"
-    object.boundop    = object.config["Options"]["boundop"]
-    assert object.boundop in [1,2], "Invalid input for Options.boundop"
-    object.usegamtfix = object.config["Options"]["usegamtfix"]
-
-    #Directories
-    object.resultdir = object.config["Directories"]["results"]
+    object.correctisf = tryread(object,"Options","correctisf",bool)
+    object.slip       = tryread(object,"Options","slip",float,(0,2))
+    object.convop     = tryread(object,"Options","convop",int,[0,1,2],allowconversion=False)
+    object.boundop    = tryread(object,"Options","boundop",int,[1,2],allowconversion=False)
+    object.usegamtfix = tryread(object,"Options","usegamtfix",bool)
 
     #Filenames
-    object.restartfile = object.config["Filenames"]["restartfile"]
+    object.fromrestart = tryread(object,"Initialisation","fromrestart",bool)
+    if object.fromrestart:
+        object.restartfile = tryread(object,"Initialisation","restartfile",str)
+    else:
+        object.Dinit    = tryread(object,"Initialisation","Dinit",float)
+        object.dTinit   = tryread(object,"Initialisation","dTinit",float)
+        object.dSinit   = tryread(object,"Initialisation","dSinit",float,(-100,0))
 
     #Parameters
-    object.Dinit    = object.config["Initialisation"]["Dinit"]
+    object.utide    = tryread(object,"Parameters","utide",float,(0,1e20))
+    object.Ti       = tryread(object,"Parameters","Ti",float)
+    object.f        = tryread(object,"Parameters","f",float)
+    object.rhofw    = tryread(object,"Parameters","rhofw",float,(0,1e20))
+    object.rho0     = tryread(object,"Parameters","rho0",float,(0,1e20))
+    object.rhoi     = tryread(object,"Parameters","rhoi",float,(0,1e20))
+    object.gamTfix  = tryread(object,"Parameters","gamTfix",float,(0,1e20))
+    object.Cd       = tryread(object,"Parameters","Cd",float,(0,1e20))
+    object.Cdtop    = tryread(object,"Parameters","Cdtop",float,(0,1e20))
+    object.Ah       = tryread(object,"Parameters","Ah",float,(0,1e20))
+    object.Kh       = tryread(object,"Parameters","Kh",float,(0,1e20))
+    object.entpar   = tryread(object,"Parameters","entpar",str,['Holland','Gaspar'])
+    object.mu       = tryread(object,"Parameters","mu",float,(0,1e20))
+    object.maxdetr  = tryread(object,"Parameters","maxdetr",float,(0,1e20))
+    object.minD     = tryread(object,"Parameters","minD",float,(0,1e20))
+    object.vcut     = tryread(object,"Parameters","vcut",float,(0,1e20)) 
     
-    object.utide    = object.config["Parameters"]["utide"]
-    object.Ti       = object.config["Parameters"]["Ti"]
-    object.f        = object.config["Parameters"]["f"]
-    object.rhofw    = object.config["Parameters"]["rhofw"]
-    object.rho0     = object.config["Parameters"]["rho0"]
-    object.rhoi     = object.config["Parameters"]["rhoi"]
-    object.gamTfix  = object.config["Parameters"]["gamTfix"]
-    object.Cd       = object.config["Parameters"]["Cd"]
-    object.Cdtop    = object.config["Parameters"]["Cdtop"]
-    object.Ah       = object.config["Parameters"]["Ah"]
-    object.Kh       = object.config["Parameters"]["Kh"]
-    object.entpar   = object.config["Parameters"]["entpar"]
-    assert object.entpar in ['Holland','Gaspar'], "Invalid option for entpar"
-    object.mu       = object.config["Parameters"]["mu"]
-    object.maxdetr  = object.config["Parameters"]["maxdetr"]
-    object.minD     = object.config["Parameters"]["minD"]
-    object.vcut     = object.config["Parameters"]["vcut"]
-    
-    object.alpha    = object.config["EOS"]["alpha"]
-    object.beta     = object.config["EOS"]["beta"]
-    object.l1       = object.config["EOS"]["l1"]
-    object.l2       = object.config["EOS"]["l2"]
-    object.l3       = object.config["EOS"]["l3"]
+    object.alpha    = tryread(object,"EOS","alpha",float,(0,1e20))
+    object.beta     = tryread(object,"EOS","beta",float,(0,1e20))
+    object.l1       = tryread(object,"EOS","l1",float,(-1e20,0),default=-5.73e-2)
+    object.l2       = tryread(object,"EOS","l2",float,(0,1e20),default=8.32e-2)
+    object.l3       = tryread(object,"EOS","l3",float,(0,1e20),default=7.61e-4)
 
-    object.g        = object.config["Constants"]["g"]
-    object.L        = object.config["Constants"]["L"]
-    object.cp       = object.config["Constants"]["cp"]
-    object.ci       = object.config["Constants"]["ci"]
-    object.CG       = object.config["Constants"]["CG"]
-    object.Pr       = object.config["Constants"]["Pr"]
-    object.Sc       = object.config["Constants"]["Sc"]
-    object.nu0      = object.config["Constants"]["nu0"]
+    object.g        = tryread(object,"Constants","g",float,(0,1e20),default=9.81)
+    object.L        = tryread(object,"Constants","L",float,(0,1e20),default=3.34e5)
+    object.cp       = tryread(object,"Constants","cp",float,(0,1e20),default=3.974e3)
+    object.ci       = tryread(object,"Constants","ci",float,(0,1e20),default=2009)
+    object.CG       = tryread(object,"Constants","CG",float,(0,1e20),default=5.9e-4)
+    object.Pr       = tryread(object,"Constants","Pr",float,(0,1e20),default=13.8)
+    object.Sc       = tryread(object,"Constants","Sc",float,(0,1e20),default=2432.0)
+    object.nu0      = tryread(object,"Constants","nu0",float,(0,1e20),default=1.95e-6)
 
-    object.nu       = object.config["Numerics"]["nu"]
-    object.spy      = object.config["Numerics"]["spy"]
-    object.dpm      = object.config["Numerics"]["dpm"]
+    object.nu       = tryread(object,"Numerics","nu",float,(0,1))
+    object.spy      = tryread(object,"Numerics","spy",int,(0,1e20),default=31536000)
+    object.dpm      = tryread(object,"Numerics","dpm",list,default=[31,28,31,30,31,30,31,31,30,31,30,31])
 
-    object.mindrho  = object.config["Convection"]["mindrho"]
-    object.convtime = object.config["Convection"]["convtime"]
+    if object.convop == 0:
+        object.mindrho = tryread(object,"Convection","mindrho",float,(0,1e20))
+    #if object.convop == 2:
+    object.convtime = tryread(object,"Convection","convtime",float,(0,1e20))
 
-    object.print2log("Finished reading config. All input correct")
+    object.print2log("============= Finished reading config. All input correct =======")
 
     return
 
+def tryread(object,category,parameter,reqtype,valid=None,allowconversion=True,checkfile=False,checkdir=False,default=None):
+    """Function to read values from config-file, check type and values, and aborting or defaulting if missing"""
 
+    #Make sure integers 0 or 1 are not interpreted as boolean
+    if reqtype==bool:
+        allowconversion=False
 
+    #Check whether input parameter exists
+    try:
+        out = object.config[category][parameter]
+    except:
+        if default == None:
+            print(f"INPUT ERROR: missing input parameter '{parameter}' in [{category}]. Please add to config-file")
+            sys.exit()
+        else:
+            object.print2log(f"Note: missing input parameter '{parameter}' in [{category}], using default value {default}")
+            out = default
 
+    #Check whether input parameter is of the correct type
+    if isinstance(out,reqtype) == False:
+        if allowconversion:
+            try:
+                #Convert to required type, for example float to int or vice versa
+                out2 = reqtype(out)
+                object.print2log(f"Note: changing input parameter '{parameter}' from {type(out)} to {reqtype}")
+                out = out2
+            except:
+                if default == None:
+                    print(f"INPUT ERROR: input parameter '{parameter}' in [{category}] is of wrong type. Is {type(out)}, should be {reqtype}")
+                    sys.exit()
+                else:
+                    print(f"WARNING: wrong type '{parameter}' in [{category}], using default value {default}")
+                    out = default
+        else:
+            if default == None:
+                print(f"INPUT ERROR: input parameter '{parameter}' in [{category}] is of wrong type. Is {type(out)}, should be {reqtype}")
+                sys.exit()            
+            else:
+                print(f"WARNING: wrong type '{parameter}' in [{category}], using default value {default}")
+                out = default          
 
+    #Check whether value of input is valid
+    if valid != None:
+        if isinstance(valid,list):
+            if out not in valid:
+                if default == None:
+                    print(f"INPUT ERROR: invalid value for '{parameter}' in [{category}]; choose from {valid}")
+                    sys.exit()
+                else:
+                    print(f"WARNING: invalid value '{parameter}' in [{category}], using default value {default}")
+                    out = default
+        if isinstance(valid,tuple):
+            if out < valid[0]:
+                if default == None:
+                    print(f"INPUT ERROR: invalid value for '{parameter}' in [{category}]; should be >= {valid[0]} ")
+                    sys.exit()
+                else:
+                    print(f"WARNING: invalid value '{parameter}' in [{category}]; should be >= {valid[0]}, using default value {default}")
+                    out = default
+            if out > valid[1]:
+                if default == None:
+                    print(f"INPUT ERROR: invalid value for '{parameter}' in [{category}]; should be <= {valid[1]} ")
+                    sys.exit()
+                else:
+                    print(f"WARNING: invalid value '{parameter}' in [{category}]; should be <= {valid[1]}, using default value {default}")
+                    out = default
+
+    #Check whether file exists
+    if checkfile:
+        if os.path.isfile(out) == False:
+            print(f"INPUT ERROR: non-existing file for '{parameter}' in [{category}]; check filename")
+            sys.exit()
+        if out[-3:] != ".nc":
+            print(f"INPUT ERROR: file '{parameter}' in [{category}] must be '.nc'; check filename")
+            sys.exit()
+
+    #Check whether directory exists
+    if checkdir:
+        if os.path.isdir(out) == False:
+            try:
+                os.mkdir(out)
+                print('WARNING: making a new results directory')
+            except:
+                print(f"INPUT ERROR: could not create directory '{parameter}' in [{category}]; check directory name")
+                sys.exit()
+
+    return out
 
 def create_mask(object):
     """Create mask
@@ -386,7 +481,8 @@ def initialise_vars(object):
     object.dzdx = np.gradient(object.zb,object.dx,axis=1)
     object.dzdy = np.gradient(object.zb,object.dy,axis=0)
 
-    object.print2log(f'Restart file: {object.restartfile}')
+    if object.fromrestart:
+        object.print2log(f'Restart file: {object.restartfile}')
 
     try:
         dsinit = xr.open_dataset(object.restartfile)
@@ -404,8 +500,8 @@ def initialise_vars(object):
            
         object.D += object.Dinit
         for n in range(3):
-            object.T[n,:,:] = object.Ta
-            object.S[n,:,:] = object.Sa-.1
+            object.T[n,:,:] = object.Ta + object.dTinit
+            object.S[n,:,:] = object.Sa + object.dSinit
         object.print2log(f'Starting from scratch with zero velocity and uniform thickness {object.Dinit:.0f} m')
         
         #Perform first integration step with 1 dt
