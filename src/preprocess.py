@@ -117,7 +117,10 @@ def read_config(object):
     object.Ah       = tryread(object,"Parameters","Ah",float,(0,1e20))
     object.Kh       = tryread(object,"Parameters","Kh",float,(0,1e20))
     object.entpar   = tryread(object,"Parameters","entpar",str,['Holland','Gaspar'])
-    object.mu       = tryread(object,"Parameters","mu",float,(0,1e20))
+    if object.entpar == 'Gaspar':
+        object.mu       = tryread(object,"Parameters","mu",float,(0,1e20))
+    if object.entpar == 'Holland':
+        object.cl   = tryread(object,"Parameters","cl",float,(0,1e20),default=.01775)
     object.maxdetr  = tryread(object,"Parameters","maxdetr",float,(0,1e20))
     object.minD     = tryread(object,"Parameters","minD",float,(0,1e20))
     object.vcut     = tryread(object,"Parameters","vcut",float,(0,1e20),default=1.414) 

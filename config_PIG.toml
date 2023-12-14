@@ -1,5 +1,5 @@
 [Run]
-name = "iceberg"   # Run name
+name = "novisc"   # Run name
 days = 1        # [days] run duration
 
 [Time]
@@ -9,21 +9,21 @@ saveday = 1    # [days] interval to save model output
 diagday = 0.01   # [days] interval to spit out diagnostics
 
 [Geometry]
-filename = "./input/PIG_bm3.nc"  # File containing geometry input
-maskoption = "BM"                # Choice for mask definition, choose from 'BM', 'UFEMISM', and 'ISOMIP'
-#filename = "./input/Ocean1_input_geom_v1.01.nc"
-#maskoption = "ISOMIP"
+#filename = "./input/PIG_bm3.nc"  # File containing geometry input
+#maskoption = "BM"                # Choice for mask definition, choose from 'BM', 'UFEMISM', and 'ISOMIP'
+filename = "./input/Ocean1_input_geom_v1.01.nc"
+maskoption = "ISOMIP"
 #filename = "./input/ufe_bmbinv_amu_dot_relax000.nc"
 #maskoption = "UFEMISM"
 
 #geomyear = 0      			# Time index of geometry input
-#lonlat = true               # Include longitude latitude in output files
-#projection = "epsg:3031"  # Projection to use for computing longitude, latitude; only required if lonlat = true
-coarsen = 1               # Factor to coarsen geometry
-calvthresh = 100          # [m] Thickness threshold for calving
-removebergs = true        # Remove icebergs
-correctisf = false    #             Remove ice shelf grids sticking out
-fillisolated = false  #             Fill isolated ice shelf points, change to grounded
+#lonlat = true              # Include longitude latitude in output files
+#projection = "epsg:3031"   # Projection to use for computing longitude, latitude; only required if lonlat = true
+#coarsen = 1                # Factor to coarsen geometry. 1 uses clean input (no effect)
+calvthresh = 100            # [m] Thickness threshold for calving. 0 uses clean input (no effect)
+removebergs = true          # Remove icebergs
+correctisf = false          # Remove ice shelf grids sticking out
+fillisolated = false        # Fill isolated ice shelf points, change to grounded
 
 [Forcing]
 option = "isomip" # Available options: 'file', 'tanh', 'linear', 'linear2', 'isomip'
@@ -67,10 +67,11 @@ gamTfix   = 0.00018    # []          Turbulent exchange coefficient. Used only i
 #Tuning
 Cd        = 2.5e-3    # []          drag coefficient
 Cdtop     = 1.1e-3    # []          Drag coefficient in Ustar
-Ah        = 6        # [m^2/s]     Laplacian viscosity
-Kh        = 1        # [m^2/s]     Diffusivity
-entpar    = "Gaspar"  #             Entrainment parameterisation, either 'Holland' or 'Gaspar'
+Ah        = 0#6        # [m^2/s]     Laplacian viscosity
+Kh        = 0#1        # [m^2/s]     Diffusivity
+entpar    = "Gaspar"  #             Entrainment parameterisation, either 'Gaspar' or 'Holland'
 mu        = 2.5       # []          Parameter in Gaspar entrainment. Gaspar: 0.5; Gladish: 2.5
+#cl        = 0.01775   # []          Parameter in Holland entrainment. 
 maxdetr   = 0.5        # [m/s]       Cutoff detrainment rate, only effective when O(1e-3)
 #Numerical parameters
 minD      = 1.0        # [m]         Cutoff thickness
@@ -84,7 +85,7 @@ beta  = 7.843e-4  # [1/psu]     Haline contraction coefficient
 #l2    = 8.32e-2   # [degC]      freezing point offset
 #l3    = 7.61e-4   # [degC/m]    freezing point depth coefficient
 
-#[Constants]
+[Constants]
 #Physical parameters that are usually kept constant
 #g  = 9.81      # [m/s^2]     gravitational acceleration
 #L  = 3.34e5    # [J/kg]      Latent heat of fusion for ice

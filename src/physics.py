@@ -132,9 +132,12 @@ def updatesecondary(object):
 
     #Entrainment
     if object.entpar == 'Holland':
+        #Holland et al (2006) doi:10.1175/JPO2970.1
         object.entr = object.cl*object.Kh/object.Ah**2*(np.maximum(0,im(object.U[1,:,:])**2+jm(object.V[1,:,:])**2-object.g*object.drho*object.Kh/object.Ah*object.D[1,:,:]))**.5 * object.tmask
         object.detr = 0.*object.entr
     elif object.entpar == 'Gaspar':
+        #Gaspar et al (1988) doi:10.1175/1520-0485(1988)018<0161:MTSCOT>2.0.CO;2
+        #Gladish et al (2012) doi:10.3189/2012JoG12J003
         object.Sb = (object.Tb-object.l2-object.l3*object.zb).values/object.l1
         object.drhob = (object.beta*(object.S[1,:,:]-object.Sb) - object.alpha*(object.T[1,:,:]-object.Tb)) * object.tmask
         object.ent = 2*object.mu/object.g * div0(object.ustar**3,object.D[1,:,:]*np.maximum(.0001,object.drho)) - div0(object.drhob,np.maximum(.0001,object.drho))*object.melt * object.tmask
