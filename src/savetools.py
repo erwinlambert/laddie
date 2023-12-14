@@ -19,15 +19,15 @@ def savefields(object):
 
     if object.t in np.arange(object.saveint,object.nt+object.saveint,object.saveint):
         """Output average fields"""
-        object.dsav['U'] *= 1./object.count
-        object.dsav['V'] *= 1./object.count
-        object.dsav['D'] *= 1./object.count
-        object.dsav['S'] *= 1./object.count
-        object.dsav['T'] *= 1./object.count
-        object.dsav['melt'] *= 3600*24*365.25/object.count
-        object.dsav['entr'] *= 3600*24*365.25/object.count
-        object.dsav['ent2'] *= 3600*24*365.25/object.count
-        object.dsav['detr'] *= 3600*24*365.25/object.count        
+        object.dsav['U'] *= 1./object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['V'] *= 1./object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['D'] *= 1./object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['S'] *= 1./object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['T'] *= 1./object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['melt'] *= 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['entr'] *= 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['ent2'] *= 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['detr'] *= 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
 
         object.dsav['mav']  = 3600*24*365.25*(object.dsav.melt*object.dx*object.dy).sum()/(object.tmask*object.dx*object.dy).sum()
         object.dsav['mmax'] = 3600*24*365.25*object.dsav.melt.max()            

@@ -1,5 +1,5 @@
 [Run]
-name = "PIG"   # Run name
+name = "iceberg"   # Run name
 days = 1        # [days] run duration
 
 [Time]
@@ -10,12 +10,20 @@ diagday = 0.01   # [days] interval to spit out diagnostics
 
 [Geometry]
 filename = "./input/PIG_bm3.nc"  # File containing geometry input
+maskoption = "BM"                # Choice for mask definition, choose from 'BM', 'UFEMISM', and 'ISOMIP'
+#filename = "./input/Ocean1_input_geom_v1.01.nc"
+#maskoption = "ISOMIP"
+#filename = "./input/ufe_bmbinv_amu_dot_relax000.nc"
+#maskoption = "UFEMISM"
+
 #geomyear = 0      			# Time index of geometry input
 #lonlat = true               # Include longitude latitude in output files
 #projection = "epsg:3031"  # Projection to use for computing longitude, latitude; only required if lonlat = true
 coarsen = 1               # Factor to coarsen geometry
 calvthresh = 100          # [m] Thickness threshold for calving
 removebergs = true        # Remove icebergs
+correctisf = false    #             Remove ice shelf grids sticking out
+fillisolated = false  #             Fill isolated ice shelf points, change to grounded
 
 [Forcing]
 option = "isomip" # Available options: 'file', 'tanh', 'linear', 'linear2', 'isomip'
@@ -28,14 +36,13 @@ drho0 = 0.01    # [kg/m3 /m2] Scaling factor for quadratic density profile
 isomipcond = "warm" # ISOMIP condition, either 'warm' or 'cold'
 
 [Options]
-correctisf = false    #             Remove ice shelf grids sticking out and isolated points
 slip      = 1         # [0...2]     Factor free slip: 0, no slip: 2, partial no slip: between 0 and 2
-convop    = 1         # [0,1,2]     Option for convection when stratification is unstable 0: prescribe mindrho | 1: instantaneous convection | 2: restoring convection
-boundop   = 1         # [0,1]       Option for boundary conditions. Should be set to 1
-usegamtfix = false    #             Use fixed gamma_T rather than computing it
+convop    = 1         # [0,1,2]     Option for convection when stratification is unstable 0: prescribe mindrho | 1: instantaneous convection | 2: restoring convection (experimental)
+boundop   = 1         # [1,2]     Option for dealing with ice shelf front inflow. 1: zero gradient in D, T, and S. 2: no inflow
+usegamtfix = false    #             Use fixed gamma_T rather than computing it. Should be false, only included for ISOMIP+ experiments
 
 [Directories]
-results = "./output2/"  # Main results directory in which rundirs are placed
+results = "./output/"  # Main results directory in which rundirs are placed
 
 [Filenames]
 logfile = "log.txt" # Log file
@@ -55,8 +62,8 @@ Ti        = -25       # [degC]      Ice shelf temperature
 f         = -1.37e-4  # [1/s]       Coriolis parameter
 rhofw     = 1000.0     # [kg/m^3]    Density of freshwater
 rho0      = 1028.0     # [kg/m^3]    Reference density of seawater 
-rhoi      = 918.0      # [kg/m^3]    Density of ice
-gamTfix   = 0.00018    # []          Turbulent exchange coefficient. If False: computed online
+rhoi      = 910.0      # [kg/m^3]    Density of ice
+gamTfix   = 0.00018    # []          Turbulent exchange coefficient. Used only if usegamtfix = true
 #Tuning
 Cd        = 2.5e-3    # []          drag coefficient
 Cdtop     = 1.1e-3    # []          Drag coefficient in Ustar
@@ -67,7 +74,7 @@ mu        = 2.5       # []          Parameter in Gaspar entrainment. Gaspar: 0.5
 maxdetr   = 0.5        # [m/s]       Cutoff detrainment rate, only effective when O(1e-3)
 #Numerical parameters
 minD      = 1.0        # [m]         Cutoff thickness
-vcut      = 1.414     # [m/s]       Cutoff velocity U and V
+#vcut      = 1.414     # [m/s]       Cutoff velocity U and V
 
 [EOS]
 #Parameters related to the equation of state and the freezing point
@@ -96,7 +103,7 @@ nu = 0.8        # []          Factor for Robert Asselin time filter
 [Convection]
 #Parameters specific to convection scheme
 mindrho   = 0.005     # [kg/m^3]    Used for convop = 0 | Minimum density difference with ambient water
-convtime  = 1000      # [s]         Used for convop = 2 | Restoring time scale towards ambient S and T where unstable
+convtime  = 10000      # [s]         Used for convop = 2 | Restoring time scale towards ambient S and T where unstable
 
 [Output]
 #Choose variables to save
