@@ -111,7 +111,8 @@ def read_config(object):
     object.rhofw    = tryread(object,"Parameters","rhofw",float,(0,1e20))
     object.rho0     = tryread(object,"Parameters","rho0",float,(0,1e20))
     object.rhoi     = tryread(object,"Parameters","rhoi",float,(0,1e20))
-    object.gamTfix  = tryread(object,"Parameters","gamTfix",float,(0,1e20))
+    if object.usegamtfix:
+        object.gamTfix  = tryread(object,"Parameters","gamTfix",float,(0,1e20))
     object.Cd       = tryread(object,"Parameters","Cd",float,(0,1e20))
     object.Cdtop    = tryread(object,"Parameters","Cdtop",float,(0,1e20))
     object.Ah       = tryread(object,"Parameters","Ah",float,(0,1e20))
