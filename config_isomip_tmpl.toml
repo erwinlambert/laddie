@@ -1,0 +1,105 @@
+[Run]
+name = "isomip3"#_@GEOMYEAR"   # Run name
+days = @NDAYS        # [days] run duration
+
+[Time]
+dt = 120        # [s] timestep
+restday = 1    # [days] interval to save restartfile
+saveday = 1    # [days] interval to save model output
+diagday = 0.01   # [days] interval to spit out diagnostics
+
+[Geometry]
+filename = "./input/Ocean3_input_geom_v1.01.nc"
+maskoption = "ISOMIP"
+
+geomyear = @GEOMYEAR      			# Time index of geometry input
+#coarsen = 1                # Factor to coarsen geometry. 1 uses clean input (no effect)
+calvthresh = 100            # [m] Thickness threshold for calving. 0 uses clean input (no effect)
+removebergs = false          # Remove icebergs
+correctisf = false          # Remove ice shelf grids sticking out
+fillisolated = false        # Fill isolated ice shelf points, change to grounded
+
+[Forcing]
+option = "isomip" # Available options: 'file', 'tanh', 'linear', 'linear2', 'isomip'
+z0    = -450    # [m] Reference depth used in 'tanh' and 'linear', 'isomip', and 'linear2'
+S0    = 34.0    # [psu] Surface salinity used in 'tanh'
+S1    = 35.0    # [psu] Salinity at depth z0 used in 'linear', 'linear2'
+T1    = 1.0     # [degC] Temperature at depth used in 'tanh'
+z1    = 250     # [m] Depth scale used in 'tanh'
+drho0 = 0.01    # [kg/m3 /m2] Scaling factor for quadratic density profile 
+isomipcond = "warm" # ISOMIP condition, either 'warm' or 'cold'
+
+[Options]
+slip      = 1         # [0...2]     Factor free slip: 0, no slip: 2, partial no slip: between 0 and 2
+convop    = 1         # [0,1,2]     Option for convection when stratification is unstable 0: prescribe mindrho | 1: instantaneous convection | 2: restoring convection (experimental)
+boundop   = 1         # [1,2]     Option for dealing with ice shelf front inflow. 1: zero gradient in D, T, and S. 2: no inflow
+usegamtfix = false    #             Use fixed gamma_T rather than computing it. Should be false, only included for ISOMIP+ experiments
+
+[Directories]
+results = "./output/"  # Main results directory in which rundirs are placed
+forcenewdir = false     # Make sure output is written to a non-existing output directory. For continuing runs, set to false
+
+[Filenames]
+logfile = "log.txt" # Log file
+
+[Initialisation]
+fromrestart = @BOOLREST    # Try starting from an existing restart file
+restartfile = "@RESTFILE"       #"./results/restart/CrossDots_0.5_tanh_Tdeep0.4_ztcl-500_001.nc"  # Restartfile
+Dinit = 10.0           # [m]         Initial uniform thickness D if not from restart
+dTinit = 0.0          # [degC] Initial uniform difference from Ta
+dSinit = -0.1         # [psu]  Initial uniform difference from Sa
+
+[Parameters]
+#External forcing
+utide     = 0.01      # [m/s]       RMS tidal velocity
+Ti        = -25       # [degC]      Ice shelf temperature
+#Physical parameters
+f         = -1.37e-4  # [1/s]       Coriolis parameter
+rhofw     = 1000.0     # [kg/m^3]    Density of freshwater
+rho0      = 1028.0     # [kg/m^3]    Reference density of seawater 
+rhoi      = 910.0      # [kg/m^3]    Density of ice
+gamTfix   = 0.00018    # []          Turbulent exchange coefficient. Used only if usegamtfix = true
+#Tuning
+Cd        = 2.5e-3    # []          drag coefficient
+Cdtop     = 1.1e-3    # []          Drag coefficient in Ustar
+Ah        = 0#6        # [m^2/s]     Laplacian viscosity
+Kh        = 0#1        # [m^2/s]     Diffusivity
+entpar    = "Gaspar"  #             Entrainment parameterisation, either 'Gaspar' or 'Holland'
+mu        = 2.5       # []          Parameter in Gaspar entrainment. Gaspar: 0.5; Gladish: 2.5
+#cl        = 0.01775   # []          Parameter in Holland entrainment. 
+maxdetr   = 0.5        # [m/s]       Cutoff detrainment rate, only effective when O(1e-3)
+#Numerical parameters
+minD      = 1.0        # [m]         Cutoff thickness
+#vcut      = 1.414     # [m/s]       Cutoff velocity U and V
+
+[EOS]
+#Parameters related to the equation of state and the freezing point
+alpha = 3.733e-5  # [1/degC]    Thermal expansion coefficient
+beta  = 7.843e-4  # [1/psu]     Haline contraction coefficient
+#l1    = -5.73e-2  # [degC/psu]  freezing point salinity coefficient
+#l2    = 8.32e-2   # [degC]      freezing point offset
+#l3    = 7.61e-4   # [degC/m]    freezing point depth coefficient
+
+[Constants]
+#Physical parameters that are usually kept constant
+#g  = 9.81      # [m/s^2]     gravitational acceleration
+#L  = 3.34e5    # [J/kg]      Latent heat of fusion for ice
+#cp = 3.974e3   # [J/kg/degC] specific heat capacity of ocean
+#ci = 2009      # [J/kg/degC] specific heat capacity of ice
+#CG = 5.9e-4    # []          effective thermal Stanton number
+#Pr = 13.8      # []          Prandtl number
+#Sc = 2432.0     # []          Schmidt number
+#nu0 = 1.95e-6   # [m^2/s]     Molecular viscosity
+
+[Numerics]
+nu = 0.8        # []          Factor for Robert Asselin time filter
+#spy = 31536000  # [s/yr]      seconds per year
+#dpm = [31,28,31,30,31,30,31,31,30,31,30,31] # days per month
+
+[Convection]
+#Parameters specific to convection scheme
+mindrho   = 0.005     # [kg/m^3]    Used for convop = 0 | Minimum density difference with ambient water
+convtime  = 10000      # [s]         Used for convop = 2 | Restoring time scale towards ambient S and T where unstable
+
+[Output]
+#Choose variables to save
