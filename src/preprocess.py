@@ -4,7 +4,7 @@ import xarray as xr
 import datetime as dt
 
 from integrate import updatesecondary,intD,intU,intV,intT,intS
-from tools import div0, div0_NN, tryread
+from tools import compute_average_NN, tryread
 
 def create_rundir(object,configfile):
     """Create run directory and logfile"""
@@ -13,27 +13,34 @@ def create_rundir(object,configfile):
     object.name = tryread(object,"Run","name",str)
     #Read directory to store output
     object.resultdir = tryread(object,"Directories","results",str,checkdir=True)
+    #Read flag to force new folder
+    object.forcenewdir = tryread(object,"Directories","forcenewdir",bool,default=True)
     #Read logfile
     object.logfilename = tryread(object,"Filenames","logfile",str,default="log.txt")
 
-    try:
-        #Create rundirectory
-        object.rundir = os.path.join(object.config["Directories"]["results"],object.name)
-        os.mkdir(object.rundir)
-    except:
+    #Derive desired run directory:
+    object.rundir = os.path.join(object.resultdir,object.name)
+    if object.forcenewdir or os.path.isdir(object.rundir) == False:
         try:
-            #Create rundirectory with current date
-            object.rundir = os.path.join(object.config["Directories"]["results"],dt.datetime.today().strftime(f"{object.name}_%Y-%m-%d"))
+            #Create rundirectory
             os.mkdir(object.rundir)
         except:
-            for n in range(100):
-                try:
-                    #Create rundirectory with current date and incremental number. Give up after 100 tries
-                    object.rundir = os.path.join(object.config["Directories"]["results"],dt.datetime.today().strftime(f"{object.name}_%Y-%m-%d_{n}"))
-                    os.mkdir(object.rundir)
-                    break
-                except:
-                    continue
+            try:
+                #Create rundirectory with current date
+                object.rundir = os.path.join(object.resultdir,dt.datetime.today().strftime(f"{object.name}_%Y-%m-%d"))
+                os.mkdir(object.rundir)
+            except:
+                for n in range(100):
+                    try:
+                        #Create rundirectory with current date and incremental number. Give up after 100 tries
+                        object.rundir = os.path.join(object.resultdir,dt.datetime.today().strftime(f"{object.name}_%Y-%m-%d_{n}"))
+                        os.mkdir(object.rundir)
+                        break
+                    except:
+                        continue
+        result = f"Created new run directory {object.rundir}"
+    else:
+        result = f"Continuing run in existing directory {object.rundir}"
 
     #Create log file
     object.logfile = os.path.join(object.rundir,object.logfilename)
@@ -41,7 +48,7 @@ def create_rundir(object,configfile):
     #Copy config file to run directory
     os.system(f"cp {configfile} {object.rundir}")
 
-    object.print2log("Rundir created")
+    object.print2log(result)
 
     return
 
@@ -289,8 +296,8 @@ def create_grid(object):
     #Spatial parameters
     object.nx = len(object.x)
     object.ny = len(object.y)
-    object.dx = (object.x[1]-object.x[0]).values
-    object.dy = (object.y[1]-object.y[0]).values
+    object.dx = (object.x[1]-object.x[0])
+    object.dy = (object.y[1]-object.y[0])
     object.xu = object.x + 0.5*object.dx
     object.yv = object.y + 0.5*object.dy
 
@@ -307,36 +314,6 @@ def create_grid(object):
     object.print2log("Finished creating grid")
 
     return
-
-### Nearest neighbour function
-def compute_average_NN(object_variable, mask):
-    """
-    Compute the average of nearest neighbouring cells
-    
-    object_variable: variable for which the NN average is to be computed, for example: object.T
-    mask: mask that corresponds to object_variable, either object.tmask, object.umask, or object.vmask
-
-    """
-
-    # Create nn_average array to store average nearest neighbour values
-    nn_average = object_variable * 0
-
-    for i in range(3):
-        var = object_variable[i,:,:]
-
-        # Only take values from cells within shelf mask
-        vari = np.where(mask==1, var, 0)
-
-        # Take the sum of the values in neighbouring cells for nt = 1 
-        nn_total = np.roll(vari,-1,axis=0)+ np.roll(vari,1,axis=0) + np.roll(vari,-1,axis=1) + np.roll(vari,1,axis=1)
-
-        # Compute the weight using the mask (the weight is the number of neighbouring cells which contain values within the shelf mask)
-        weight = np.roll(mask,-1, axis=0)+ np.roll(mask,1, axis=0) + np.roll(mask,-1, axis=1) + np.roll(mask,1, axis=1)
-
-        # Divide sum of neighbours by the weight and fill nn_average array
-        nn_average[i,:,:] = div0_NN(nn_total,weight)
-
-    return nn_average
 
 def dsinit_to_new_geometry(object, dsinit):
 
@@ -361,7 +338,7 @@ def dsinit_to_new_geometry(object, dsinit):
         object.S = dsinit.S.values
 
     else:
-        # In input geometry and restart geometry do not match
+        # If input geometry and restart geometry do not match
         object.print2log(f'Input file geometry does not match restart file geometry: (dtmask + dumask + dvmask) = {totaldiff:.0f} cells. Extrapolate restart file variables to mask from input file.')
 
         # Inherit values for variables in grid cells that were already marked as iceshelf
@@ -425,10 +402,10 @@ def initialise_vars(object):
     object.S = np.zeros((3,object.ny,object.nx)).astype('float64')
     
     #Include ice shelf front gradient
-    object.zb = xr.where(object.isf,0,object.zb)
+    object.zb = np.where(object.isf,0,object.zb)
     
     #Remove positive values. Set shallowest ice shelf draft to 10 meters
-    object.zb = xr.where(np.logical_and(object.tmask==1,object.zb>-10),-10,object.zb)
+    object.zb = np.where(np.logical_and(object.tmask==1,object.zb>-10),-10,object.zb)
     
     #Draft dz/dx and dz/dy on t-grid
     object.dzdx = np.gradient(object.zb,object.dx,axis=1)
@@ -484,54 +461,75 @@ def prepare_output(object):
     object.dsav = object.dsav.assign_coords({'x':object.x,'y':object.y})
     if object.lonlat:
         object.dsav = object.dsav.assign_coords({'lon':object.lon,'lat':object.lat})
-    object.dsav['U'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
-    object.dsav['V'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
-    object.dsav['D'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
-    object.dsav['T'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
-    object.dsav['S'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
-    object.dsav['melt'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
-    object.dsav['entr'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
-    object.dsav['ent2'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))
-    object.dsav['detr'] = (['y','x'], np.zeros((object.ny,object.nx)).astype('float64'))    
-    object.dsav['tmask'] = (['y','x'], object.tmask)
-    object.dsav['umask'] = (['y','x'], object.umask)
-    object.dsav['vmask'] = (['y','x'], object.vmask)
-    object.dsav['mask']  = (['y','x'], object.mask.data)
-    object.dsav['zb'] = (['y','x'], object.zb.data)
-    if object.readsavebed:
-        object.dsav['B'] = (['y','x'], object.B.data)
 
-
-    #Add attributes
+    object.Uav = np.zeros((object.ny,object.nx))
+    object.dsav['U'] = (['y','x'], object.Uav.astype('float64'))
     object.dsav['U'].attrs['name'] = 'Ocean velocity in x-direction'
     object.dsav['U'].attrs['units'] = 'm/s'
+
+    object.Vav = np.zeros((object.ny,object.nx))
+    object.dsav['V'] = (['y','x'], object.Vav.astype('float64'))
     object.dsav['V'].attrs['name'] = 'Ocean velocity in y-direction'
     object.dsav['V'].attrs['units'] = 'm/s'
+
+    object.Dav = np.zeros((object.ny,object.nx))
+    object.dsav['D'] = (['y','x'], object.Dav.astype('float64'))
     object.dsav['D'].attrs['name'] = 'Mixed layer thickness'
     object.dsav['D'].attrs['units'] = 'm'
+
+    object.Tav = np.zeros((object.ny,object.nx))
+    object.dsav['T'] = (['y','x'], object.Tav.astype('float64'))
     object.dsav['T'].attrs['name'] = 'Layer-averaged potential temperature'
     object.dsav['T'].attrs['units'] = 'degrees C'
+
+    object.Sav = np.zeros((object.ny,object.nx))
+    object.dsav['S'] = (['y','x'], object.Sav.astype('float64'))
     object.dsav['S'].attrs['name'] = 'Layer-averaged salinity'
     object.dsav['S'].attrs['units'] = 'psu'
+
+    object.meltav = np.zeros((object.ny,object.nx))
+    object.dsav['melt'] = (['y','x'], object.meltav.astype('float64'))
     object.dsav['melt'].attrs['name'] = 'Basal melt rate'
     object.dsav['melt'].attrs['units'] = 'm/yr'
+
+    object.entrav = np.zeros((object.ny,object.nx))
+    object.dsav['entr'] = (['y','x'], object.entrav.astype('float64'))
     object.dsav['entr'].attrs['name'] = 'Entrainment rate of ambient water'
     object.dsav['entr'].attrs['units'] = 'm/yr'
+
+    object.ent2av = np.zeros((object.ny,object.nx))
+    object.dsav['ent2'] = (['y','x'], object.ent2av.astype('float64'))
     object.dsav['ent2'].attrs['name'] = 'Additional entrainment to ensure minimum layer thickness'
     object.dsav['ent2'].attrs['units'] = 'm/yr'
+
+    object.detrav = np.zeros((object.ny,object.nx))
+    object.dsav['detr'] = (['y','x'], object.detrav.astype('float64'))
     object.dsav['detr'].attrs['name'] = 'Detrainment rate'
     object.dsav['detr'].attrs['units'] = 'm/yr'
+
+    object.dsav['tmask'] = (['y','x'], object.tmask)
     object.dsav['tmask'].attrs['name'] = 'Mask at grid center (t-grid)'
+    
+    object.dsav['umask'] = (['y','x'], object.umask)
     object.dsav['umask'].attrs['name'] = 'Mask at grid side + 1/2 dx (u-grid)'
+
+    object.dsav['vmask'] = (['y','x'], object.vmask)
     object.dsav['vmask'].attrs['name'] = 'Mask at grid side + 1/2 dy (v-grid)'
+
+    object.dsav['mask']  = (['y','x'], object.mask)
     object.dsav['mask'].attrs['name'] = 'Mask at grid center (t-grid)'
     object.dsav['mask'].attrs['values'] = '0: open ocean. 1 and 2: grounded ice or bare rock. 3: ice shelf and cavity'
+    
+    object.dsav['zb'] = (['y','x'], object.zb)
     object.dsav['zb'].attrs['name'] = 'Ice shelf draft depth'
     object.dsav['zb'].attrs['units'] = 'm'    
+
     if object.readsavebed:
+        object.dsav['B'] = (['y','x'], object.B)
         object.dsav['B'].attrs['name'] = 'Bedrock depth'
         object.dsav['B'].attrs['units'] = 'm'  
 
+    #Add attributes
     object.dsav.attrs['model_name'] = 'LADDIE'
     object.dsav.attrs['model_version'] = object.modelversion
     object.dsav.attrs['time_start'] = object.tstart
@@ -542,10 +540,10 @@ def prepare_output(object):
     object.dsre['tmask'] = (['y','x'], object.tmask)
     object.dsre['umask'] = (['y','x'], object.umask)
     object.dsre['vmask'] = (['y','x'], object.vmask)
-    object.dsre['mask']  = (['y','x'], object.mask.data)
-    object.dsre['zb'] = (['y','x'], object.zb.data)
+    object.dsre['mask']  = (['y','x'], object.mask)
+    object.dsre['zb'] = (['y','x'], object.zb)
     if object.readsavebed:
-        object.dsre['B'] = (['y','x'], object.B.data)
+        object.dsre['B'] = (['y','x'], object.B)
     object.dsre.attrs['name_model'] = 'LADDIE'
     object.dsre.attrs['model_version'] = object.modelversion
 

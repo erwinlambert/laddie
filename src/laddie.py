@@ -98,10 +98,13 @@ class Laddie():
     def print2log(self,text):
         """Function to print a line to the log file"""
 
-        #Compute time since start of run
-        hours, rem = divmod(process_time()-self.startwalltime, 3600)
-        minutes, seconds = divmod(rem, 60)
+        #Ignore if logfile is not defined yet
+        if hasattr(self,'logfile'):
 
-        with open(self.logfile,"a") as file:
-            file.write(f"[{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f}] {text}\n")
-        return
+            #Compute time since start of run
+            hours, rem = divmod(process_time()-self.startwalltime, 3600)
+            minutes, seconds = divmod(rem, 60)
+
+            with open(self.logfile,"a") as file:
+                file.write(f"[{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f}] {text}\n")
+            return

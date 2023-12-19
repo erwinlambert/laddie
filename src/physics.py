@@ -95,7 +95,7 @@ def updatesecondary(object):
         object.Ta = object.Tz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
         object.Sa = object.Sz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
         
-    object.Tf   = (object.l1*object.S[1,:,:]+object.l2+object.l3*object.zb).values
+    object.Tf   = (object.l1*object.S[1,:,:]+object.l2+object.l3*object.zb)
     
     object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
 
@@ -120,7 +120,7 @@ def updatesecondary(object):
         object.gamT = object.ustar/(2.12*np.log(object.ustar*np.maximum(object.D[1,:,:],object.minD)/object.nu0+1e-12)+12.5*object.Pr**(2./3)-8.68) * object.tmask
         object.gamS = object.ustar/(2.12*np.log(object.ustar*np.maximum(object.D[1,:,:],object.minD)/object.nu0+1e-12)+12.5*object.Sc**(2./3)-8.68) * object.tmask
 
-    That = (object.l2+object.l3*object.zb).values
+    That = (object.l2+object.l3*object.zb)
     Chat = object.cp/(object.L-object.ci*object.Ti)
     Ctil = object.ci/object.cp
 
@@ -138,7 +138,7 @@ def updatesecondary(object):
     elif object.entpar == 'Gaspar':
         #Gaspar et al (1988) doi:10.1175/1520-0485(1988)018<0161:MTSCOT>2.0.CO;2
         #Gladish et al (2012) doi:10.3189/2012JoG12J003
-        object.Sb = (object.Tb-object.l2-object.l3*object.zb).values/object.l1
+        object.Sb = (object.Tb-object.l2-object.l3*object.zb)/object.l1
         object.drhob = (object.beta*(object.S[1,:,:]-object.Sb) - object.alpha*(object.T[1,:,:]-object.Tb)) * object.tmask
         object.ent = 2*object.mu/object.g * div0(object.ustar**3,object.D[1,:,:]*np.maximum(.0001,object.drho)) - div0(object.drhob,np.maximum(.0001,object.drho))*object.melt * object.tmask
         object.entr = np.maximum(object.ent,0)

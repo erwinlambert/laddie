@@ -5,32 +5,32 @@ from preprocess import *
 
 def savefields(object):
     """Store time-average fields and save"""
-    object.dsav['U'] += im(object.U[1,:,:])
-    object.dsav['V'] += jm(object.V[1,:,:])
-    object.dsav['D'] += object.D[1,:,:]
-    object.dsav['T'] += object.T[1,:,:]
-    object.dsav['S'] += object.S[1,:,:]
-    object.dsav['melt'] += object.melt
-    object.dsav['entr'] += object.entr
-    object.dsav['ent2'] += object.ent2
-    object.dsav['detr'] += object.detr    
+    object.Uav += im(object.U[1,:,:])
+    object.Vav += jm(object.V[1,:,:])
+    object.Dav += object.D[1,:,:]
+    object.Tav += object.T[1,:,:]
+    object.Sav += object.S[1,:,:]
+    object.meltav += object.melt
+    object.entrav += object.entr
+    object.ent2av += object.ent2
+    object.detrav += object.detr    
     
     object.count += 1
 
     if object.t in np.arange(object.saveint,object.nt+object.saveint,object.saveint):
         """Output average fields"""
-        object.dsav['U'] *= 1./object.count * np.where(object.tmask,1,np.nan)
-        object.dsav['V'] *= 1./object.count * np.where(object.tmask,1,np.nan)
-        object.dsav['D'] *= 1./object.count * np.where(object.tmask,1,np.nan)
-        object.dsav['S'] *= 1./object.count * np.where(object.tmask,1,np.nan)
-        object.dsav['T'] *= 1./object.count * np.where(object.tmask,1,np.nan)
-        object.dsav['melt'] *= 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
-        object.dsav['entr'] *= 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
-        object.dsav['ent2'] *= 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
-        object.dsav['detr'] *= 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['U'][:] = object.Uav/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['V'][:] = object.Vav/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['D'][:] = object.Dav/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['T'][:] = object.Tav/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['S'][:] = object.Sav/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['melt'][:] = object.meltav * 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['entr'][:] = object.entrav * 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['ent2'][:] = object.ent2av * 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
+        object.dsav['detr'][:] = object.detrav * 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
 
-        object.dsav['mav']  = 3600*24*365.25*(object.dsav.melt*object.dx*object.dy).sum()/(object.tmask*object.dx*object.dy).sum()
-        object.dsav['mmax'] = 3600*24*365.25*object.dsav.melt.max()            
+        object.dsav['mav']  = 3600*24*365.25*(object.meltav*object.dx*object.dy).sum()/(object.tmask*object.dx*object.dy).sum()
+        object.dsav['mmax'] = 3600*24*365.25*object.meltav.max()            
 
         object.dsav.attrs['time_end'] = object.time[object.t]
 
@@ -46,15 +46,15 @@ def savefields(object):
 
         """Set to zero"""
         object.count = 0
-        object.dsav['U'] *= 0
-        object.dsav['V'] *= 0
-        object.dsav['D'] *= 0
-        object.dsav['T'] *= 0
-        object.dsav['S'] *= 0
-        object.dsav['melt'] *= 0
-        object.dsav['entr'] *= 0
-        object.dsav['ent2'] *= 0
-        object.dsav['detr'] *= 0        
+        object.Uav *= 0
+        object.Vav *= 0
+        object.Dav *= 0
+        object.Tav *= 0
+        object.Sav *= 0
+        object.meltav *= 0
+        object.entrav *= 0
+        object.ent2av *= 0
+        object.detrav *= 0        
         
         object.dsav.attrs['time_start'] = object.time[object.t]
         

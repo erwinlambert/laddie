@@ -53,7 +53,7 @@ def intD(object,delt):
                     +  object.ent2 \
                     -  object.detr \
                     ) * object.tmask * delt    
-    
+
 def intU(object,delt):
     """Integrate U"""
     object.U[2,:,:] = object.U[0,:,:] \
@@ -81,7 +81,7 @@ def intV(object,delt):
                     + object.Ah*lapV(object) \
                     +  -object.detr* object.V[1,:,:] \
                     ),jp_t(object,object.D[1,:,:])) * object.vmask * delt
-    
+
 def intT(object,delt):
     """Integrate T"""
     object.T[2,:,:] = object.T[0,:,:] \

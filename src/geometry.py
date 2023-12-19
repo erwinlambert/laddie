@@ -36,24 +36,24 @@ def read_geom(object):
             ds = add_lonlat(ds,object.projection)
 
         #Read variables
-        object.x    = ds.x
-        object.y    = ds.y
+        object.x    = ds.x.values
+        object.y    = ds.y.values
 
         #Read mask and convert to BedMachine standard (0: ocean, 1 and/or 2: grounded, 3: ice shelf)
         if object.maskoption == "BM":
-            object.mask = ds.mask
+            object.mask = ds.mask.values
         elif object.maskoption == "UFEMISM":
-            object.mask = ds.mask
-            object.mask = xr.where(object.mask==1,3,object.mask)
+            object.mask = ds.mask.values
+            object.mask = np.where(object.mask==1,3,object.mask)
         elif object.maskoption == "ISOMIP":
-            object.mask = ds.groundedMask
-            object.mask = xr.where(ds.floatingMask,3,object.mask)
+            object.mask = ds.groundedMask.values
+            object.mask = np.where(ds.floatingMask,3,object.mask)
 
         #Try to read draft
         gotdraft = False
         for v in ['draft','Hib','zb','lowerSurface']:
             if v in ds.variables:
-                object.zb = ds[v]
+                object.zb = ds[v].values
                 gotdraft = True
                 object.print2log(f"Got ice shelf draft from '{v}'")
        
@@ -64,12 +64,12 @@ def read_geom(object):
             #Get thickness
             for v in ['thickness','Hi']:
                 if v in ds.variables:
-                    object.H = ds[v]
+                    object.H = ds[v].values
                     gotthick = True
             #Get thickness
             for v in ['surface','Hs']:
                 if v in ds.variables:
-                    object.zs = ds[v]
+                    object.zs = ds[v].values
                     gotsurf = True
 
             if gotthick and gotsurf:
@@ -86,7 +86,7 @@ def read_geom(object):
         object.readsavebed = False
         for v in ['bed','Hb','bedrockTopography']:
             if v in ds.variables:
-                object.B = ds[v]
+                object.B = ds[v].values
                 object.readsavebed = True
         if object.readsavebed == False:
             object.print2log("Warning: no Bed included in input file, so omitted from output")
@@ -95,8 +95,8 @@ def read_geom(object):
 
         #Apply calving threshold
         draftlim = -object.rhoi/object.rho0*object.calvthresh
-        ncalv = sum(sum(np.logical_and(object.mask.values==3,object.zb.values>draftlim)))
-        object.mask = xr.where(np.logical_and(object.mask.values==3,object.zb.values>draftlim),0,object.mask.values)
+        ncalv = sum(sum(np.logical_and(object.mask==3,object.zb>draftlim)))
+        object.mask = np.where(np.logical_and(object.mask==3,object.zb>draftlim),0,object.mask)
         object.print2log(f"Removed {ncalv} grid points with thickness below {object.calvthresh} m")
        
         #Remove icebergs
@@ -104,13 +104,13 @@ def read_geom(object):
             remove_icebergs(object)
 
         #Set draft to 0 at new ocean grid points
-        object.zb = xr.where(object.mask==0,0,object.zb)
+        object.zb = np.where(object.mask==0,0,object.zb)
 
     except:
         print(f"INPUT ERROR, cannot read geometry file {object.geomfile}. Check whether it exists and contains the correct variables")
         sys.exit()
 
-    object.res = (object.x[1]-object.x[0]).values/1000
+    object.res = (object.x[1]-object.x[0])/1000
     object.print2log(f"Finished reading geometry {object.geomfile} at resolution {object.res} km. All good")
 
     return
