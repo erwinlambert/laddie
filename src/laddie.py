@@ -21,7 +21,7 @@ class Laddie():
 
         self.startwalltime = process_time()
 
-        self.modelversion = '1.0'
+        self.modelversion = '1.1'
 
         #Load configuration file
         with open(configfile,'rb') as f:
@@ -91,7 +91,7 @@ class Laddie():
         #Compute time since start of run
         hours, rem = divmod(process_time()-self.startwalltime, 3600)
         minutes, seconds = divmod(rem, 60)
-        print(f"Run completed in [{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f}]")
+        #print(f"Run completed in [{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f}]")
 
         return
 

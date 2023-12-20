@@ -74,10 +74,10 @@ def read_config(object):
     if object.lonlat:
         object.projection = tryread(object,"Geometry","projection",str,default="epsg:3031")
     object.coarsen        = tryread(object,"Geometry","coarsen",int,default=1)
-    object.calvthresh     = tryread(object,"Geometry","calvthresh",float,(0,1e20))
-    object.removebergs    = tryread(object,"Geometry","removebergs",bool)
-    object.correctisf     = tryread(object,"Geometry","correctisf",bool)
-    object.fillisolated   = tryread(object,"Geometry","fillisolated",bool)
+    object.calvthresh     = tryread(object,"Geometry","calvthresh",float,(0,1e20),default=0)
+    object.removebergs    = tryread(object,"Geometry","removebergs",bool,default=False)
+    object.correctisf     = tryread(object,"Geometry","correctisf",bool,default=False)
+    object.fillisolated   = tryread(object,"Geometry","fillisolated",bool,default=False)
 
     #Forcing
     object.forcop         = tryread(object,"Forcing","option",str,["tanh","linear","linear2","isomip","file"])
@@ -105,11 +105,11 @@ def read_config(object):
     #Filenames
     object.fromrestart      = tryread(object,"Initialisation","fromrestart",bool)
     if object.fromrestart:
-        object.restartfile  = tryread(object,"Initialisation","restartfile",str)
+        object.restartfile  = tryread(object,"Filenames","restartfile",str)
     else:
-        object.Dinit        = tryread(object,"Initialisation","Dinit",float)
-        object.dTinit       = tryread(object,"Initialisation","dTinit",float)
-        object.dSinit       = tryread(object,"Initialisation","dSinit",float,(-100,0))
+        object.Dinit        = tryread(object,"Initialisation","Dinit",float,default=10.0)
+        object.dTinit       = tryread(object,"Initialisation","dTinit",float,default=0.0)
+        object.dSinit       = tryread(object,"Initialisation","dSinit",float,(-100,0),default=-0.1)
 
     #Parameters
     object.utide    = tryread(object,"Parameters","utide",float,(0,1e20))
