@@ -83,14 +83,16 @@ def read_geom(object):
                 sys.exit()
 
         #Try to read bed
-        object.readsavebed = False
-        for v in ['bed','Hb','bedrockTopography']:
-            if v in ds.variables:
-                object.B = ds[v].values
-                object.readsavebed = True
-        if object.readsavebed == False:
-            object.print2log("Warning: no Bed included in input file, so omitted from output")
-  
+        if object.save_B:
+            gotbed = False
+            for v in ['bed','Hb','bedrockTopography']:
+                if v in ds.variables:
+                    object.B = ds[v].values
+                    gotbed = True
+            if gotbed == False:
+                object.save_B = False
+                object.print2log("Warning: no Bed included in input file, so omitted from output")
+    
         ds.close()
 
         #Apply calving threshold

@@ -5,6 +5,7 @@
 ### **!! Relevant for workflow !!**
 
 - To restart, must include config parameter `Initialisation.fromrestart = true`
+- Output variables U and V are changed to Ut and Vt (to note that they are on the tgrid)
 
 ### Speed up
 

@@ -80,3 +80,26 @@ convtime  = 10000      # [s]         Used for convop = 2 | Restoring time scale 
 
 [Output]
 #Choose variables to save
+#Velocities on original grid
+#save_Uu   = true
+#save_Vv   = true
+#Velocities on tgrid
+#save_Ut   = true
+#save_Vt   = true
+#Main variables on tgrid
+#save_D    = true
+#save_T    = true
+#save_S    = true
+#Main fluxes
+#save_melt = true
+#save_entr = false
+#save_ent2 = false
+#save_detr = false
+#Masks
+#save_mask  = true
+#save_tmask = true
+#save_umask = false
+#save_vmask = false
+#Geometry
+#save_zb    = true
+#save_B     = true

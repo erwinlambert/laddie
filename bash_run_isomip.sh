@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Experiment variables
-export RUNNAME='isomip3b' #Run name
+export RUNNAME='isomip3c' #Run name
 export NDAYS=1 #Number of days to run for each year
 
 # Variables that do not need to be changed
@@ -20,7 +20,7 @@ fi
 export OLDFOLDER=$HOMEFOLDER'/output/'$RUNNAME'/'
 
 # Loop over ice shelves
-for GEOMYEAR in {0..3}
+for GEOMYEAR in {0..2}
 do
 
     #Temporary configuration file
