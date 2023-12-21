@@ -2,13 +2,13 @@ import numpy as np
 from physics import *
 from tools import *
 
-def integrate(object):
-    """Integration of 2 time steps, now-centered Leapfrog scheme"""
-    intD(object,2*object.dt)
-    intU(object,2*object.dt)
-    intV(object,2*object.dt) 
-    intT(object,2*object.dt)
-    intS(object,2*object.dt)        
+def integrate(object,nsteps=2):
+    """Integration of N time steps. During normal integration, nsteps = 2 (now-centered Leapfrog scheme)"""
+    intD(object,nsteps*object.dt)
+    intU(object,nsteps*object.dt)
+    intV(object,nsteps*object.dt) 
+    intT(object,nsteps*object.dt)
+    intS(object,nsteps*object.dt)        
 
 def timefilter(object):
     """Time filter, Robert Asselin scheme"""

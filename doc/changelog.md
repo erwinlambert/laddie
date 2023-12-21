@@ -6,6 +6,7 @@
 
 - To restart, must include config parameter `Initialisation.fromrestart = true`
 - Output variables U and V are changed to Ut and Vt (to note that they are on the tgrid)
+- Output fields are masked, so melt = NaN outside ice shelf etc
 
 ### Speed up
 
@@ -16,6 +17,7 @@
 - Allow configuration file without unused parameters
 - Allow omission of some basic parameters, for which default values are used
 - Check whether input parameters are of the correct type and of reasonable value. Otherwise, provide error or warning.
+- Allow choice of output variables
 
 ### Run continuation
 

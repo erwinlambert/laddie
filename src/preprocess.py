@@ -3,8 +3,8 @@ import numpy as np
 import xarray as xr
 import datetime as dt
 
-from integrate import updatesecondary,intD,intU,intV,intT,intS
-from tools import compute_average_NN, tryread
+from integrate import updatesecondary,integrate
+from tools import tryread, extrapolate_initvals
 
 def create_rundir(object,configfile):
     """Create run directory and logfile"""
@@ -38,9 +38,9 @@ def create_rundir(object,configfile):
                         break
                     except:
                         continue
-        result = f"Created new run directory {object.rundir}"
+        object.newdir = True
     else:
-        result = f"Continuing run in existing directory {object.rundir}"
+        object.newdir = False
 
     #Create log file
     object.logfile = os.path.join(object.rundir,object.logfilename)
@@ -48,7 +48,10 @@ def create_rundir(object,configfile):
     #Copy config file to run directory
     os.system(f"cp {configfile} {object.rundir}")
 
-    object.print2log(result)
+    if object.newdir:
+        object.print2log(f"Created new run directory {object.rundir}")
+    else:
+        object.print2log(f"Continuing run in existing directory {object.rundir}")
 
     return
 
@@ -105,7 +108,7 @@ def read_config(object):
     #Filenames
     object.fromrestart      = tryread(object,"Initialisation","fromrestart",bool)
     if object.fromrestart:
-        object.restartfile  = tryread(object,"Filenames","restartfile",str)
+        object.restartfile  = tryread(object,"Filenames","restartfile",str,checkfile=True)
     else:
         object.Dinit        = tryread(object,"Initialisation","Dinit",float,default=10.0)
         object.dTinit       = tryread(object,"Initialisation","dTinit",float,default=0.0)
@@ -336,7 +339,51 @@ def create_grid(object):
 
     return
 
-def dsinit_to_new_geometry(object, dsinit):
+def initialise_vars(object):
+    """Initialise variables, either from a restart file or from scratch"""
+
+    #Major variables. Three arrays for storage of previous timestep, current timestep, and next timestep
+    object.U = np.zeros((3,object.ny,object.nx)).astype('float64')
+    object.V = np.zeros((3,object.ny,object.nx)).astype('float64')
+    object.D = np.zeros((3,object.ny,object.nx)).astype('float64')
+    object.T = np.zeros((3,object.ny,object.nx)).astype('float64')
+    object.S = np.zeros((3,object.ny,object.nx)).astype('float64')
+    
+    #Set draft depth to 0 just outside ice shelf, to include strong dz/dx and dz/dy gradients across ice shelf front
+    object.zb = np.where(object.isf,0,object.zb)
+    
+    #Remove positive values of ice shelf draft. Set shallowest ice shelf draft to 10 meters
+    object.zb = np.where(np.logical_and(object.tmask==1,object.zb>-10),-10,object.zb)
+    
+    #Draft dz/dx and dz/dy on t-grid
+    object.dzdx = np.gradient(object.zb,object.dx,axis=1)
+    object.dzdy = np.gradient(object.zb,object.dy,axis=0)
+
+    #Choose whether to start from restart or from scratch
+    if object.fromrestart:
+        
+        object.print2log(f'Reading restart file: {object.restartfile}')
+
+        try:
+            #Initialise from restart
+            init_from_restart(object)
+
+            object.print2log(f'Starting from restart file at day {object.tstart:.0f}')
+        except:
+            print(f'ERROR: Tried to start from restart, but failed. Something went wrong')
+            sys.exit()
+    
+    else:
+        #Start from scratch with provided initial conditions
+        init_from_scratch(object)
+
+    return
+
+def init_from_restart(object):
+    """Initialise variables from restartfile. If needed, apply extrapolation into new cells"""
+
+    #Open restartfile
+    dsinit = xr.open_dataset(object.restartfile)
 
     #Inherit start time from restart file
     object.tstart = dsinit.time
@@ -349,7 +396,7 @@ def dsinit_to_new_geometry(object, dsinit):
     totaldiff = difftmask.values+diffumask.values+diffvmask.values
     
     if totaldiff==0:
-        # If input geometry and restart geometry match
+        # Geometry and restart geometry match, so can directly take restart variables
         object.print2log('Input file geometry matches restart file geometry.')
 
         object.U = dsinit.U.values
@@ -359,113 +406,53 @@ def dsinit_to_new_geometry(object, dsinit):
         object.S = dsinit.S.values
 
     else:
-        # If input geometry and restart geometry do not match
-        object.print2log(f'Input file geometry does not match restart file geometry: (dtmask + dumask + dvmask) = {totaldiff:.0f} cells. Extrapolate restart file variables to mask from input file.')
+        # Geometry and restart geometry do not match, due to retreat/advance of grounding line and/or ice shelf front
+        # Need to extrapolate restart variables into new ice shelf grid cells
+        object.print2log('========== Extrapolating restart fields into new grid cells ====')
+        object.print2log(f'Total (tmask+umask+vmask): {totaldiff:.0f} new cells. Extrapolating...')
 
-        # Inherit values for variables in grid cells that were already marked as iceshelf
-        object.T[:] = np.where(np.logical_and(object.tmask==1, dsinit.tmask==1), dsinit.T[:], object.T[:])
-        object.S[:] = np.where(np.logical_and(object.tmask==1, dsinit.tmask==1), dsinit.S[:], object.S[:])
-        object.D[:] = np.where(np.logical_and(object.tmask==1, dsinit.tmask==1), dsinit.D[:], object.D[:])
-        object.U[:] = np.where(np.logical_and(object.umask==1, dsinit.umask==1), dsinit.U[:], object.U[:])
-        object.V[:] = np.where(np.logical_and(object.vmask==1, dsinit.vmask==1), dsinit.V[:], object.V[:]) 
-  
-        # Find new ice shelf cells and fill them with np.nan
-        object.T[:] = np.where(np.logical_and(object.tmask[:]==1, dsinit.tmask[:]==0), np.nan, object.T[:])
-        object.S[:] = np.where(np.logical_and(object.tmask[:]==1, dsinit.tmask[:]==0), np.nan, object.S[:])
-        object.D[:] = np.where(np.logical_and(object.tmask[:]==1, dsinit.tmask[:]==0), np.nan, object.D[:])
-        object.U[:] = np.where(np.logical_and(object.umask[:]==1, dsinit.umask[:]==0), np.nan, object.U[:])
-        object.V[:] = np.where(np.logical_and(object.vmask[:]==1, dsinit.vmask[:]==0), np.nan, object.V[:])    
+        object.D[:] = extrapolate_initvals(object,object.D,object.tmask,dsinit.D,dsinit.tmask)
+        object.T[:] = extrapolate_initvals(object,object.T,object.tmask,dsinit.T,dsinit.tmask)
+        object.S[:] = extrapolate_initvals(object,object.S,object.tmask,dsinit.S,dsinit.tmask)
+        object.U[:] = extrapolate_initvals(object,object.U,object.umask,dsinit.U,dsinit.umask)
+        object.V[:] = extrapolate_initvals(object,object.V,object.vmask,dsinit.V,dsinit.vmask)
+
+        object.print2log('==================== Finished extrapolation ====================')
+        object.print2log('=========================================== ====================')
+    return
+
+def init_from_scratch(object):
+    """Initialise variables from scratch, without restart file"""
+
+    #Time = 0
+    object.tstart = 0.
+
+    #Get ambient temperature and salinity at base of the mixed layer
+    if len(object.Tz.shape)==1:
+        object.Ta = np.interp(object.zb,object.z,object.Tz)
+        object.Sa = np.interp(object.zb,object.z,object.Sz)
+    elif len(object.Tz.shape)==3:
+        object.Ta = object.Tz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
+        object.Sa = object.Sz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
     
-        # Count empty cells in different masks 
-        N_empty_cells_tmask = np.sum(np.isnan(object.T[1]))
-        N_empty_cells_umask = np.sum(np.isnan(object.U[1]))
-        N_empty_cells_vmask = np.sum(np.isnan(object.V[1]))
+    #Initialise thickness D
+    object.D += object.Dinit
 
-        # Fill new cells with NN average, use a while loop to make sure every cell is filled
-        object.print2log(f'empty tmask: {N_empty_cells_tmask:.0f}')
-        while N_empty_cells_tmask > 0:
-            conditiont = np.logical_and(object.tmask[:]==1, dsinit.tmask[:]==0)
-            object.T[:] = np.where(conditiont, compute_average_NN(object.T, dsinit.tmask), object.T[:])
-            object.S[:] = np.where(conditiont, compute_average_NN(object.S, dsinit.tmask), object.S[:])
-            object.D[:] = np.where(conditiont, compute_average_NN(object.D, dsinit.tmask), object.D[:])
-            # Update tmask
-            dsinit.tmask[:] = np.where(np.logical_and(np.isnan(object.T[1])==False, dsinit.tmask[:]==0), 1, dsinit.tmask[:])
-            N_empty_cells_tmask = np.sum(np.isnan(object.T[1]))
-            object.print2log(f'empty tmask: {N_empty_cells_tmask:.0f}')
+    #Initialise temperature and salinity
+    for n in range(3):
+        object.T[n,:,:] = object.Ta + object.dTinit
+        object.S[n,:,:] = object.Sa + object.dSinit
 
-        object.print2log(f'empty umask: {N_empty_cells_umask:.0f}')
-        while N_empty_cells_umask > 0:
-            conditionu = np.logical_and(object.umask[:]==1, dsinit.umask[:]==0)
-            object.U[:] = np.where(conditionu, compute_average_NN(object.U, dsinit.umask),object.U[:])
-            # Update umask
-            dsinit.umask[:] = np.where(np.logical_and(np.isnan(object.U[1])==False, dsinit.umask[:]==0), 1, dsinit.umask[:])
-            N_empty_cells_umask = np.sum(np.isnan(object.U[1]))
-            object.print2log(f'empty umask: {N_empty_cells_umask:.0f}')
-
-        object.print2log(f'empty vmask: {N_empty_cells_vmask:.0f}')
-        while N_empty_cells_vmask > 0:
-            conditionv = np.logical_and(object.vmask[:]==1, dsinit.vmask[:]==0)
-            object.V[:] = np.where(conditionv, compute_average_NN(object.V, dsinit.vmask),object.V[:])
-            # Update vmask
-            dsinit.vmask[:] = np.where(np.logical_and(np.isnan(object.V[1])==False, dsinit.vmask[:]==0), 1, dsinit.vmask[:])
-            N_empty_cells_vmask = np.sum(np.isnan(object.V[1]))
-            object.print2log(f'empty vmask: {N_empty_cells_vmask:.0f}')
-
-    return object
-
-def initialise_vars(object):
+    object.print2log(f'Starting from scratch with zero velocity and uniform thickness {object.Dinit:.0f} m')
     
-    #Major variables. Three arrays for storage of previous timestep, current timestep, and next timestep
-    object.U = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.V = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.D = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.T = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.S = np.zeros((3,object.ny,object.nx)).astype('float64')
-    
-    #Include ice shelf front gradient
-    object.zb = np.where(object.isf,0,object.zb)
-    
-    #Remove positive values. Set shallowest ice shelf draft to 10 meters
-    object.zb = np.where(np.logical_and(object.tmask==1,object.zb>-10),-10,object.zb)
-    
-    #Draft dz/dx and dz/dy on t-grid
-    object.dzdx = np.gradient(object.zb,object.dx,axis=1)
-    object.dzdy = np.gradient(object.zb,object.dy,axis=0)
-
-    if object.fromrestart:
-        object.print2log(f'Restart file: {object.restartfile}')
-
-    try:
-        dsinit = xr.open_dataset(object.restartfile)
-        dsinit_to_new_geometry(object, dsinit)
-
-        object.print2log(f'Starting from restart file at day {object.tstart:.0f}')
-    except:    
-        object.tstart = 0.
-        if len(object.Tz.shape)==1:
-            object.Ta = np.interp(object.zb,object.z,object.Tz)
-            object.Sa = np.interp(object.zb,object.z,object.Sz)
-        elif len(object.Tz.shape)==3:
-            object.Ta = object.Tz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
-            object.Sa = object.Sz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
-           
-        object.D += object.Dinit
-        for n in range(3):
-            object.T[n,:,:] = object.Ta + object.dTinit
-            object.S[n,:,:] = object.Sa + object.dSinit
-        object.print2log(f'Starting from scratch with zero velocity and uniform thickness {object.Dinit:.0f} m')
-        
-        #Perform first integration step with 1 dt
-        updatesecondary(object)
-        intD(object,object.dt)
-        intU(object,object.dt)
-        intV(object,object.dt)
-        intT(object,object.dt)
-        intS(object,object.dt)
+    #Perform first integration step with 1 dt
+    updatesecondary(object)
+    integrate(object,nsteps=1)
 
     return
 
 def prepare_output(object):
+    """Prepare variables in which to store time-average fields and prepare datasets for writing time-average output and restart files"""
 
     #Temporal parameters
     object.nt = int(object.days*24*3600/object.dt)+1    # Number of time steps
@@ -611,6 +598,7 @@ def prepare_output(object):
     object.dsre['vmask'] = (['y','x'], object.vmask)
     object.dsre['mask']  = (['y','x'], object.mask)
     object.dsre['zb'] = (['y','x'], object.zb)
+    #Bedrock not currently used, but may be used in the future, so saving it as well
     if object.save_B:
         object.dsre['B'] = (['y','x'], object.B)
     object.dsre.attrs['name_model'] = 'LADDIE'

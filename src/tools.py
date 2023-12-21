@@ -72,7 +72,8 @@ def tryread(object,category,parameter,reqtype,valid=None,allowconversion=True,ch
             print(f"INPUT ERROR: missing input parameter '{parameter}' in [{category}]. Please add to config-file")
             sys.exit()
         else:
-            object.print2log(f"Note: missing input parameter '{parameter}' in [{category}], using default value {default}")
+            if object.newdir:
+                object.print2log(f"Note: missing input parameter '{parameter}' in [{category}], using default value {default}")
             out = default
 
     #Check whether input parameter is of the correct type
@@ -81,7 +82,8 @@ def tryread(object,category,parameter,reqtype,valid=None,allowconversion=True,ch
             try:
                 #Convert to required type, for example float to int or vice versa
                 out2 = reqtype(out)
-                object.print2log(f"Note: changing input parameter '{parameter}' from {type(out)} to {reqtype}")
+                if object.newdir:
+                    object.print2log(f"Note: changing input parameter '{parameter}' from {type(out)} to {reqtype}")
                 out = out2
             except:
                 if default == None:
@@ -144,6 +146,41 @@ def tryread(object,category,parameter,reqtype,valid=None,allowconversion=True,ch
                 sys.exit()
 
     return out
+
+def extrapolate_initvals(object,object_variable,object_mask,init_variable,init_mask):
+    """Copy variable from restart file and extrapolate into new grid cells"""
+
+    #Get a temporary mask from restart file
+    imask = init_mask.copy()
+
+    #Copy restart field where valid
+    object_variable[:] = np.where(np.logical_and(object_mask==1, imask==1), init_variable, object_variable[:])
+
+    #Set to nan where values are missing (newly opened grid cells)
+    object_variable[:] = np.where(np.logical_and(object_mask[:]==1, imask[:]==0), np.nan, object_variable[:])
+
+    #Get number of empty cells
+    N_empty_cells = np.sum(np.isnan(object_variable[1]))
+
+    object.print2log(f'empty mask: {N_empty_cells:.0f}')
+
+    #Loop until no more empty cells
+    while N_empty_cells > 0:
+        #Field denoting where missing grid cells are
+        condition = np.logical_and(object_mask[:]==1, imask[:]==0)
+
+        #Extrapolate 1 neighbour using nearest neighbour averaging
+        object_variable[:] = np.where(condition, compute_average_NN(object_variable, imask), object_variable[:])
+
+        #Redefine temporary mask, setting 0 to 1 for cells that were just filled
+        imask[:] = np.where(np.logical_and(np.isnan(object_variable[1])==False, imask[:]==0), 1, imask[:])
+
+        #Get number of remaining empty cells
+        N_empty_cells = np.sum(np.isnan(object_variable[1]))
+        object.print2log(f'empty mask: {N_empty_cells:.0f}')
+
+    return object_variable
+
 
 def compute_average_NN(object_variable, mask):
     """
