@@ -1,5 +1,5 @@
 [Run]
-name = "novisc"   # Run name
+name = "PIG"   # Run name
 days = 1        # [days] run duration
 
 [Time]
@@ -9,10 +9,10 @@ saveday = 1    # [days] interval to save model output
 diagday = 0.01   # [days] interval to spit out diagnostics
 
 [Geometry]
-#filename = "./input/PIG_bm3.nc"  # File containing geometry input
-#maskoption = "BM"                # Choice for mask definition, choose from 'BM', 'UFEMISM', and 'ISOMIP'
-filename = "./input/Ocean1_input_geom_v1.01.nc"
-maskoption = "ISOMIP"
+filename = "./input/PIG_bm3.nc"  # File containing geometry input
+maskoption = "BM"                # Choice for mask definition, choose from 'BM', 'UFEMISM', and 'ISOMIP'
+#filename = "./input/Ocean1_input_geom_v1.01.nc"
+#maskoption = "ISOMIP"
 #filename = "./input/ufe_bmbinv_amu_dot_relax000.nc"
 #maskoption = "UFEMISM"
 

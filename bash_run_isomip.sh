@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Experiment variables
-export RUNNAME='isomip3g' #Run name
+export RUNNAME='isomip3' #Run name
 export NDAYS=1 #Number of days to run for each year
 
 # Variables that do not need to be changed

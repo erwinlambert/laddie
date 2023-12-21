@@ -18,15 +18,8 @@ def timefilter(object):
     object.T[1,:,:] += object.nu/2 * (object.T[0,:,:]+object.T[2,:,:]-2*object.T[1,:,:]) * object.tmask
     object.S[1,:,:] += object.nu/2 * (object.S[0,:,:]+object.S[2,:,:]-2*object.S[1,:,:]) * object.tmask
 
-    object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
-    if object.convop == 0:
-    #    #Prescribe minimum stratification
-        object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
-    elif object.convop == 1:        
-    #    #Apply instantaneous convection
-        object.T[1,:,:] = np.where(object.drho<0,object.Ta,object.T[1,:,:]) #Convective heating unlimited by available heat underneath layer. May overstimate convective melt
-        object.S[1,:,:] = np.where(object.drho<0,object.Sa,object.S[1,:,:])
-        object.drho = (object.beta*(object.Sa-object.S[1,:,:]) - object.alpha*(object.Ta-object.T[1,:,:])) * object.tmask
+    update_density(object)
+    update_convection(object)
 
 def updatevars(object):
     """Update temporary variables"""
@@ -35,6 +28,7 @@ def updatevars(object):
     object.V = np.roll(object.V,-1,axis=0)
     object.T = np.roll(object.T,-1,axis=0)
     object.S = np.roll(object.S,-1,axis=0)
+
     updatesecondary(object)
     
 def cutforstability(object):
@@ -45,7 +39,7 @@ def cutforstability(object):
     object.V = np.where(object.V<-object.vcut,-object.vcut,object.V)   
     
 def intD(object,delt):
-    """Integrate D"""
+    """Integrate D. Multipy RHS of dD/dt with delt (= 2x dt for LeapFrog)"""
     object.D[2,:,:] = object.D[0,:,:] \
                     + (convT(object,object.D[1,:,:]) \
                     +  object.melt \
@@ -55,7 +49,7 @@ def intD(object,delt):
                     ) * object.tmask * delt    
 
 def intU(object,delt):
-    """Integrate U"""
+    """Integrate U. Multipy RHS of dDU/dt, divided by D, with delt (= 2x dt for LeapFrog)"""
     object.U[2,:,:] = object.U[0,:,:] \
                     +div0((-object.U[1,:,:] * ip_t(object,(object.D[2,:,:]-object.D[0,:,:]))/(2*object.dt) \
                     +  convU(object) \
@@ -69,7 +63,7 @@ def intU(object,delt):
                     ),ip_t(object,object.D[1,:,:])) * object.umask * delt
 
 def intV(object,delt):
-    """Integrate V"""
+    """Integrate V. Multipy RHS of dDV/dt, divided by D, with delt (= 2x dt for LeapFrog)"""
     object.V[2,:,:] = object.V[0,:,:] \
                     +div0((-object.V[1,:,:] * jp_t(object,(object.D[2,:,:]-object.D[0,:,:]))/(2*object.dt) \
                     + convV(object) \
@@ -83,7 +77,7 @@ def intV(object,delt):
                     ),jp_t(object,object.D[1,:,:])) * object.vmask * delt
 
 def intT(object,delt):
-    """Integrate T"""
+    """Integrate T. Multipy RHS of dDT/dt, divided by D, with delt (= 2x dt for LeapFrog)"""
     object.T[2,:,:] = object.T[0,:,:] \
                     +div0((-object.T[1,:,:] * (object.D[2,:,:]-object.D[0,:,:])/(2*object.dt) \
                     +  convT(object,object.D[1,:,:]*object.T[1,:,:]) \
@@ -96,7 +90,7 @@ def intT(object,delt):
                     ),object.D[1,:,:]) * object.tmask * delt
 
 def intS(object,delt):
-    """Integrate S"""
+    """Integrate S. Multipy RHS of dDS/dt, divided by D, with delt (= 2x dt for LeapFrog)"""
     object.S[2,:,:] = object.S[0,:,:] \
                     +div0((-object.S[1,:,:] * (object.D[2,:,:]-object.D[0,:,:])/(2*object.dt) \
                     +  convT(object,object.D[1,:,:]*object.S[1,:,:]) \

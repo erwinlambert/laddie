@@ -132,7 +132,7 @@ def saverestart(object):
         object.print2log(f"Restarting from {object.restartfile}")
 
         #Do an actual restart from restartfile 
-        initialise_vars(object)        
+        #initialise_vars(object)        
         
 def printdiags(object):
     """Print diagnostics to log file"""

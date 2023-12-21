@@ -3,7 +3,7 @@ import numpy as np
 
 def div0(a,b):
     """Divide to variables allowing for divide by zero"""
-    return np.divide(a,b,out=np.zeros_like(a), where=b!=0)
+    return np.divide(a,b,out=np.zeros_like(a), where=b!=0) #Premake np.zeros_like(a) as 2D array
 
 def div0_NN(a,b):
     """Divide to variables allowing for divide by zero, set output to np.nan if divided by zero"""
@@ -27,35 +27,43 @@ def jp(var):
 
 def im_t(object,var):
     """Value at i-1/2, no gradient across boundary"""
-    return div0((var*object.tmask + np.roll(var*object.tmask, 1,axis=1)),object.tmask+object.tmaskxp1)
+    mvar = var*object.tmask #Check wether this is needed
+    return div0((mvar+ np.roll(mvar, 1,axis=1)),object.tmask_im)
 
 def ip_t(object,var):
-    """Value at i+1/2, no gradient across boundary"""   
-    return div0((var*object.tmask + np.roll(var*object.tmask,-1,axis=1)),object.tmask+object.tmaskxm1)
+    """Value at i+1/2, no gradient across boundary"""
+    mvar = var*object.tmask
+    return div0((mvar + np.roll(mvar,-1,axis=1)),object.tmask_ip)
 
 def jm_t(object,var):
     """Value at j-1/2, no gradient across boundary"""
-    return div0((var*object.tmask + np.roll(var*object.tmask, 1,axis=0)),object.tmask+object.tmaskyp1)
+    mvar = var*object.tmask
+    return div0((mvar + np.roll(mvar, 1,axis=0)),object.tmask_jm)
 
 def jp_t(object,var):
     """Value at j+1/2, no gradient across boundary"""
-    return div0((var*object.tmask + np.roll(var*object.tmask,-1,axis=0)),object.tmask+object.tmaskym1)
+    mvar = var*object.tmask
+    return div0((mvar + np.roll(mvar,-1,axis=0)),object.tmask_jp)
 
 def im_(var,mask):
     """Value at i-1/2, no gradient across boundary"""
-    return div0((var*mask + np.roll(var*mask, 1,axis=1)),(mask+np.roll(mask, 1,axis=1)))
+    mvar = var*mask
+    return div0((mvar + np.roll(mvar, 1,axis=1)),(mask+np.roll(mask, 1,axis=1))) #Precompute these masks
 
 def ip_(var,mask):
     """Value at i+1/2, no gradient across boundary"""
-    return div0((var*mask + np.roll(var*mask,-1,axis=1)),(mask+np.roll(mask,-1,axis=1)))
+    mvar = var*mask
+    return div0((mvar + np.roll(mvar,-1,axis=1)),(mask+np.roll(mask,-1,axis=1)))
 
 def jm_(var,mask):
     """Value at j-1/2, no gradient across boundary"""
-    return div0((var*mask + np.roll(var*mask, 1,axis=0)),(mask+np.roll(mask, 1,axis=0)))
+    mvar = var*mask
+    return div0((mvar + np.roll(mvar, 1,axis=0)),(mask+np.roll(mask, 1,axis=0)))
 
 def jp_(var,mask):
     """Value at j+1/2, no gradient across boundary"""
-    return div0((var*mask + np.roll(var*mask,-1,axis=0)),(mask+np.roll(mask,-1,axis=0)))    
+    mvar = var*mask
+    return div0((mvar + np.roll(mvar,-1,axis=0)),(mask+np.roll(mask,-1,axis=0)))    
 
 def tryread(object,category,parameter,reqtype,valid=None,allowconversion=True,checkfile=False,checkdir=False,default=None):
     """Function to read values from config-file, check type and values, and aborting or defaulting if missing"""

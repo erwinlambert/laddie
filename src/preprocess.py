@@ -5,9 +5,13 @@ import datetime as dt
 
 from integrate import updatesecondary,integrate
 from tools import tryread, extrapolate_initvals
+from physics import update_ambientfields
 
 def create_rundir(object,configfile):
     """Create run directory and logfile"""
+
+    #First assume new dir is created
+    object.newdir = True
 
     #Read run name
     object.name = tryread(object,"Run","name",str)
@@ -38,8 +42,8 @@ def create_rundir(object,configfile):
                         break
                     except:
                         continue
-        object.newdir = True
     else:
+        #No new directory is created, but using existing directory to continue run
         object.newdir = False
 
     #Create log file
@@ -253,6 +257,12 @@ def create_mask(object):
     
     object.print2log("Finished creating mask")
 
+    #Masks for ip,im,jp,jm
+    object.tmask_im = object.tmask+object.tmaskxp1
+    object.tmask_ip = object.tmask+object.tmaskxm1
+    object.tmask_jm = object.tmask+object.tmaskyp1
+    object.tmask_jp = object.tmask+object.tmaskym1
+
     return
 
 def apply_correct_isf(object):
@@ -428,13 +438,8 @@ def init_from_scratch(object):
     object.tstart = 0.
 
     #Get ambient temperature and salinity at base of the mixed layer
-    if len(object.Tz.shape)==1:
-        object.Ta = np.interp(object.zb,object.z,object.Tz)
-        object.Sa = np.interp(object.zb,object.z,object.Sz)
-    elif len(object.Tz.shape)==3:
-        object.Ta = object.Tz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
-        object.Sa = object.Sz[np.maximum(0,np.minimum(4999,np.int_(5000+(object.zb-object.D[1,:,:])))),object.Tax1,object.Tax2]
-    
+    update_ambientfields(object)
+
     #Initialise thickness D
     object.D += object.Dinit
 
