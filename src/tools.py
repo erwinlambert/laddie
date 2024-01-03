@@ -29,65 +29,53 @@ def jp(var):
 
 def im_t(object,var):
     """Value at i-1/2 on tmask, no gradient across boundary"""
-    mvar = var*object.tmask #Check wether this is needed
-    return div0((mvar + np.roll(mvar, 1,axis=1)),object.tmask_im)
+    return div0((var + np.roll(var, 1,axis=1)),object.tmask_im)
 
 def ip_t(object,var):
     """Value at i+1/2 on tmask, no gradient across boundary"""
-    mvar = var*object.tmask
-    return div0((mvar + np.roll(mvar,-1,axis=1)),object.tmask_ip)
+    return div0((var + np.roll(var,-1,axis=1)),object.tmask_ip)
 
 def jm_t(object,var):
     """Value at j-1/2 on tmask, no gradient across boundary"""
-    mvar = var*object.tmask
-    return div0((mvar + np.roll(mvar, 1,axis=0)),object.tmask_jm)
+    return div0((var + np.roll(var, 1,axis=0)),object.tmask_jm)
 
 def jp_t(object,var):
     """Value at j+1/2 on tmask, no gradient across boundary"""
-    mvar = var*object.tmask
-    return div0((mvar + np.roll(mvar,-1,axis=0)),object.tmask_jp)
+    return div0((var + np.roll(var,-1,axis=0)),object.tmask_jp)
 
 
 def im_u(object,var):
     """Value at i-1/2 on umask, no gradient across boundary"""
-    mvar = var*object.umask #Check wether this is needed
-    return div0((mvar + np.roll(mvar, 1,axis=1)),object.umask_im)
+    return div0((var + np.roll(var, 1,axis=1)),object.umask_im)
 
 def ip_u(object,var):
     """Value at i+1/2 on umask, no gradient across boundary"""
-    mvar = var*object.umask
-    return div0((mvar + np.roll(mvar,-1,axis=1)),object.umask_ip)
+    return div0((var + np.roll(var,-1,axis=1)),object.umask_ip)
 
 def jm_u(object,var):
     """Value at j-1/2 on umask, no gradient across boundary"""
-    mvar = var*object.umask
-    return div0((mvar + np.roll(mvar, 1,axis=0)),object.umask_jm)
+    return div0((var + np.roll(var, 1,axis=0)),object.umask_jm)
 
 def jp_u(object,var):
     """Value at j+1/2 on umask, no gradient across boundary"""
-    mvar = var*object.umask
-    return div0((mvar + np.roll(mvar,-1,axis=0)),object.umask_jp)
+    return div0((var + np.roll(var,-1,axis=0)),object.umask_jp)
 
 
 def im_v(object,var):
     """Value at i-1/2 on vmask, no gradient across boundary"""
-    mvar = var*object.vmask #Check wether this is needed
-    return div0((mvar + np.roll(mvar, 1,axis=1)),object.vmask_im)
+    return div0((var + np.roll(var, 1,axis=1)),object.vmask_im)
 
 def ip_v(object,var):
     """Value at i+1/2 on vmask, no gradient across boundary"""
-    mvar = var*object.vmask
-    return div0((mvar + np.roll(mvar,-1,axis=1)),object.vmask_ip)
+    return div0((var + np.roll(var,-1,axis=1)),object.vmask_ip)
 
 def jm_v(object,var):
     """Value at j-1/2 on vmask, no gradient across boundary"""
-    mvar = var*object.vmask
-    return div0((mvar + np.roll(mvar, 1,axis=0)),object.vmask_jm)
+    return div0((var + np.roll(var, 1,axis=0)),object.vmask_jm)
 
 def jp_v(object,var):
     """Value at j+1/2 on vmask, no gradient across boundary"""
-    mvar = var*object.vmask
-    return div0((mvar + np.roll(mvar,-1,axis=0)),object.vmask_jp)
+    return div0((var + np.roll(var,-1,axis=0)),object.vmask_jp)
 
 
 def tryread(object,category,parameter,reqtype,valid=None,allowconversion=True,checkfile=False,checkdir=False,default=None):

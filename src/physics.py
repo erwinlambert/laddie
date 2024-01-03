@@ -16,7 +16,7 @@ def lapU(object):
     """Laplacian operator for DU"""
 
     #Get D on U-grid
-    Dcent = ip_t(object,object.D[0,:,:])
+    Dcent = ip_t(object,object.D[0,:,:])*object.tmask
     var = object.U[0,:,:]
 
     #Operator at all four sides
@@ -31,7 +31,7 @@ def lapV(object):
     """Laplacian operator for DV"""
 
     #Get D on V-grid
-    Dcent = jp_t(object,object.D[0,:,:])
+    Dcent = jp_t(object,object.D[0,:,:])*object.tmask
     var = object.V[0,:,:]
     
     #Operator on all four sides

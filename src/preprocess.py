@@ -460,12 +460,12 @@ def init_from_scratch(object):
     update_ambientfields(object)
 
     #Initialise thickness D
-    object.D += object.Dinit
+    object.D += object.Dinit*object.tmask
 
     #Initialise temperature and salinity
     for n in range(3):
-        object.T[n,:,:] = object.Ta + object.dTinit
-        object.S[n,:,:] = object.Sa + object.dSinit
+        object.T[n,:,:] = (object.Ta + object.dTinit)*object.tmask
+        object.S[n,:,:] = (object.Sa + object.dSinit)*object.tmask
 
     object.print2log(f'Starting from scratch with zero velocity and uniform thickness {object.Dinit:.0f} m')
     
