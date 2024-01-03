@@ -56,7 +56,7 @@ def intU(object,delt):
                     +  -object.g*ip_t(object,object.drho*object.D[1,:,:])*(object.Dxm1-object.D[1,:,:])/object.dx \
                     +  object.g*ip_t(object,object.drho*object.D[1,:,:]*object.dzdx) \
                     +  -.5*object.g*ip_t(object,object.D[1,:,:])**2*(np.roll(object.drho,-1,axis=1)-object.drho)/object.dx \
-                    +  object.f*ip_t(object,object.D[1,:,:]*jm_(object.V[1,:,:],object.vmask)) \
+                    +  object.f*ip_t(object,object.D[1,:,:]*jm_v(object,object.V[1,:,:])) \
                     +  -object.Cd* object.U[1,:,:] *(object.U[1,:,:]**2 + ip(jm(object.V[1,:,:]))**2)**.5 \
                     +  object.Ah*lapU(object) \
                     +  -object.detr* object.U[1,:,:] \
@@ -70,7 +70,7 @@ def intV(object,delt):
                     + -object.g*jp_t(object,object.drho*object.D[1,:,:])*(object.Dym1-object.D[1,:,:])/object.dy \
                     + object.g*jp_t(object,object.drho*object.D[1,:,:]*object.dzdy) \
                     + -.5*object.g*jp_t(object,object.D[1,:,:])**2*(np.roll(object.drho,-1,axis=0)-object.drho)/object.dy \
-                    + -object.f*jp_t(object,object.D[1,:,:]*im_(object.U[1,:,:],object.umask)) \
+                    + -object.f*jp_t(object,object.D[1,:,:]*im_u(object,object.U[1,:,:])) \
                     + -object.Cd* object.V[1,:,:] *(object.V[1,:,:]**2 + jp(im(object.U[1,:,:]))**2)**.5 \
                     + object.Ah*lapV(object) \
                     +  -object.detr* object.V[1,:,:] \

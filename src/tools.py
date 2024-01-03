@@ -3,11 +3,12 @@ import numpy as np
 
 def div0(a,b):
     """Divide to variables allowing for divide by zero"""
-    return np.divide(a,b,out=np.zeros_like(a), where=b!=0) #Premake np.zeros_like(a) as 2D array
+    return np.divide(a,b,out=np.zeros(a.shape), where=b!=0)
 
 def div0_NN(a,b):
     """Divide to variables allowing for divide by zero, set output to np.nan if divided by zero"""
-    return np.divide(a,b,out=np.zeros_like(a)*np.nan, where=b!=0)
+    return np.divide(a,b,out=np.zeros(a.shape)*np.nan, where=b!=0)
+
 
 def im(var):
     """Value at i-1/2 """
@@ -25,45 +26,69 @@ def jp(var):
     """Value at j+1/2"""
     return .5*(var+np.roll(var,-1,axis=0))
 
+
 def im_t(object,var):
-    """Value at i-1/2, no gradient across boundary"""
+    """Value at i-1/2 on tmask, no gradient across boundary"""
     mvar = var*object.tmask #Check wether this is needed
-    return div0((mvar+ np.roll(mvar, 1,axis=1)),object.tmask_im)
+    return div0((mvar + np.roll(mvar, 1,axis=1)),object.tmask_im)
 
 def ip_t(object,var):
-    """Value at i+1/2, no gradient across boundary"""
+    """Value at i+1/2 on tmask, no gradient across boundary"""
     mvar = var*object.tmask
     return div0((mvar + np.roll(mvar,-1,axis=1)),object.tmask_ip)
 
 def jm_t(object,var):
-    """Value at j-1/2, no gradient across boundary"""
+    """Value at j-1/2 on tmask, no gradient across boundary"""
     mvar = var*object.tmask
     return div0((mvar + np.roll(mvar, 1,axis=0)),object.tmask_jm)
 
 def jp_t(object,var):
-    """Value at j+1/2, no gradient across boundary"""
+    """Value at j+1/2 on tmask, no gradient across boundary"""
     mvar = var*object.tmask
     return div0((mvar + np.roll(mvar,-1,axis=0)),object.tmask_jp)
 
-def im_(var,mask):
-    """Value at i-1/2, no gradient across boundary"""
-    mvar = var*mask
-    return div0((mvar + np.roll(mvar, 1,axis=1)),(mask+np.roll(mask, 1,axis=1))) #Precompute these masks
 
-def ip_(var,mask):
-    """Value at i+1/2, no gradient across boundary"""
-    mvar = var*mask
-    return div0((mvar + np.roll(mvar,-1,axis=1)),(mask+np.roll(mask,-1,axis=1)))
+def im_u(object,var):
+    """Value at i-1/2 on umask, no gradient across boundary"""
+    mvar = var*object.umask #Check wether this is needed
+    return div0((mvar + np.roll(mvar, 1,axis=1)),object.umask_im)
 
-def jm_(var,mask):
-    """Value at j-1/2, no gradient across boundary"""
-    mvar = var*mask
-    return div0((mvar + np.roll(mvar, 1,axis=0)),(mask+np.roll(mask, 1,axis=0)))
+def ip_u(object,var):
+    """Value at i+1/2 on umask, no gradient across boundary"""
+    mvar = var*object.umask
+    return div0((mvar + np.roll(mvar,-1,axis=1)),object.umask_ip)
 
-def jp_(var,mask):
-    """Value at j+1/2, no gradient across boundary"""
-    mvar = var*mask
-    return div0((mvar + np.roll(mvar,-1,axis=0)),(mask+np.roll(mask,-1,axis=0)))    
+def jm_u(object,var):
+    """Value at j-1/2 on umask, no gradient across boundary"""
+    mvar = var*object.umask
+    return div0((mvar + np.roll(mvar, 1,axis=0)),object.umask_jm)
+
+def jp_u(object,var):
+    """Value at j+1/2 on umask, no gradient across boundary"""
+    mvar = var*object.umask
+    return div0((mvar + np.roll(mvar,-1,axis=0)),object.umask_jp)
+
+
+def im_v(object,var):
+    """Value at i-1/2 on vmask, no gradient across boundary"""
+    mvar = var*object.vmask #Check wether this is needed
+    return div0((mvar + np.roll(mvar, 1,axis=1)),object.vmask_im)
+
+def ip_v(object,var):
+    """Value at i+1/2 on vmask, no gradient across boundary"""
+    mvar = var*object.vmask
+    return div0((mvar + np.roll(mvar,-1,axis=1)),object.vmask_ip)
+
+def jm_v(object,var):
+    """Value at j-1/2 on vmask, no gradient across boundary"""
+    mvar = var*object.vmask
+    return div0((mvar + np.roll(mvar, 1,axis=0)),object.vmask_jm)
+
+def jp_v(object,var):
+    """Value at j+1/2 on vmask, no gradient across boundary"""
+    mvar = var*object.vmask
+    return div0((mvar + np.roll(mvar,-1,axis=0)),object.vmask_jp)
+
 
 def tryread(object,category,parameter,reqtype,valid=None,allowconversion=True,checkfile=False,checkdir=False,default=None):
     """Function to read values from config-file, check type and values, and aborting or defaulting if missing"""

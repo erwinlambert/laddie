@@ -252,16 +252,35 @@ def create_mask(object):
     object.vmask = (object.tmask+object.isfS)*(1-np.roll(object.grlN,-1,axis=0))
 
     #Rolled u- and v- masks
-    object.umaskxp1 = np.roll(object.umask,1,axis=1)
-    object.vmaskyp1 = np.roll(object.vmask,1,axis=0)
+    object.umaskym1    = np.roll(object.umask,-1,axis=0)
+    object.umaskyp1    = np.roll(object.umask, 1,axis=0)
+    object.umaskxm1    = np.roll(object.umask,-1,axis=1)
+    object.umaskxp1    = np.roll(object.umask, 1,axis=1)  
+
+    object.vmaskym1    = np.roll(object.vmask,-1,axis=0)
+    object.vmaskyp1    = np.roll(object.vmask, 1,axis=0)
+    object.vmaskxm1    = np.roll(object.vmask,-1,axis=1)
+    object.vmaskxp1    = np.roll(object.vmask, 1,axis=1)  
     
     object.print2log("Finished creating mask")
 
-    #Masks for ip,im,jp,jm
+    #Masks for ip,im,jp,jm on tgrid
     object.tmask_im = object.tmask+object.tmaskxp1
     object.tmask_ip = object.tmask+object.tmaskxm1
     object.tmask_jm = object.tmask+object.tmaskyp1
     object.tmask_jp = object.tmask+object.tmaskym1
+
+    #Masks for ip,im,jp,jm on ugrid
+    object.umask_im = object.umask+object.umaskxp1
+    object.umask_ip = object.umask+object.umaskxm1
+    object.umask_jm = object.umask+object.umaskyp1
+    object.umask_jp = object.umask+object.umaskym1
+
+    #Masks for ip,im,jp,jm on ugrid
+    object.vmask_im = object.vmask+object.vmaskxp1
+    object.vmask_ip = object.vmask+object.vmaskxm1
+    object.vmask_jm = object.vmask+object.vmaskyp1
+    object.vmask_jp = object.vmask+object.vmaskym1
 
     return
 

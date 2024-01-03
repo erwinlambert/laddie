@@ -68,10 +68,10 @@ def convU(object):
     DE = object.Dxm1                   + object.ocnxm1 * object.D[1,:,:]*object.tmask
     DW = object.D[1,:,:]*object.tmask  + object.ocn    * object.Dxm1
     
-    tN = -DN *        ip_(object.V[1,:,:],object.vmask)           *(jp_(object.U[1,:,:],object.umask)-object.slip*object.U[1,:,:]*object.grdNu)                   /object.dy
-    tS =  DS *np.roll(ip_(object.V[1,:,:],object.vmask),1,axis=0) *(jm_(object.U[1,:,:],object.umask)-object.slip*object.U[1,:,:]*object.grdSu)                   /object.dy
-    tE = -DE *        ip_(object.U[1,:,:],object.umask)           *(ip_(object.U[1,:,:],object.umask)-object.ocnxm1*(1-np.sign(object.U[1,:,:]))*object.U[1,:,:]) /object.dx
-    tW =  DW *        im_(object.U[1,:,:],object.umask)           *(im_(object.U[1,:,:],object.umask)-object.ocn*np.sign(object.U[1,:,:])*object.U[1,:,:])        /object.dx
+    tN = -DN *        ip_v(object,object.V[1,:,:])           *(jp_u(object,object.U[1,:,:])-object.slip*object.U[1,:,:]*object.grdNu)                   /object.dy
+    tS =  DS *np.roll(ip_v(object,object.V[1,:,:]),1,axis=0) *(jm_u(object,object.U[1,:,:])-object.slip*object.U[1,:,:]*object.grdSu)                   /object.dy
+    tE = -DE *        ip_u(object,object.U[1,:,:])           *(ip_u(object,object.U[1,:,:])-object.ocnxm1*(1-np.sign(object.U[1,:,:]))*object.U[1,:,:]) /object.dx
+    tW =  DW *        im_u(object,object.U[1,:,:])           *(im_u(object,object.U[1,:,:])-object.ocn*np.sign(object.U[1,:,:])*object.U[1,:,:])        /object.dx
     
     return (tN+tS+tE+tW) * object.umask
 
@@ -84,10 +84,10 @@ def convV(object):
     DN = object.Dym1                   + object.ocnym1 * object.D[1,:,:]*object.tmask
     DS = object.D[1,:,:]*object.tmask  + object.ocn    * object.Dym1 
     
-    tN = -DN *        jp_(object.V[1,:,:],object.vmask)           *(jp_(object.V[1,:,:],object.vmask)-object.ocnym1*(1-np.sign(object.V[1,:,:]))*object.V[1,:,:]) /object.dy
-    tS =  DS *        jm_(object.V[1,:,:],object.vmask)           *(jm_(object.V[1,:,:],object.vmask)-object.ocn*np.sign(object.V[1,:,:])*object.V[1,:,:])        /object.dy
-    tE = -DE *        jp_(object.U[1,:,:],object.umask)           *(ip_(object.V[1,:,:],object.vmask)-object.slip*object.V[1,:,:]*object.grdEv)                   /object.dx
-    tW =  DW *np.roll(jp_(object.U[1,:,:],object.umask),1,axis=1) *(im_(object.V[1,:,:],object.vmask)-object.slip*object.V[1,:,:]*object.grdWv)                   /object.dx
+    tN = -DN *        jp_v(object,object.V[1,:,:])           *(jp_v(object,object.V[1,:,:])-object.ocnym1*(1-np.sign(object.V[1,:,:]))*object.V[1,:,:]) /object.dy
+    tS =  DS *        jm_v(object,object.V[1,:,:])           *(jm_v(object,object.V[1,:,:])-object.ocn*np.sign(object.V[1,:,:])*object.V[1,:,:])        /object.dy
+    tE = -DE *        jp_u(object,object.U[1,:,:])           *(ip_v(object,object.V[1,:,:])-object.slip*object.V[1,:,:]*object.grdEv)                   /object.dx
+    tW =  DW *np.roll(jp_u(object,object.U[1,:,:]),1,axis=1) *(im_v(object,object.V[1,:,:])-object.slip*object.V[1,:,:]*object.grdWv)                   /object.dx
     
     return (tN+tS+tE+tW) * object.vmask     
 
