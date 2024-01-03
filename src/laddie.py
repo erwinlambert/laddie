@@ -70,11 +70,11 @@ class Laddie():
             #Integrate main variables
             it.integrate(self)
 
+            #Limit velocities through threshold cutoff
+            it.cutforstability(self)   
+
             #Apply time-filter 
             it.timefilter(self)
-
-            #Limit velocities through threshold cutoff
-            it.cutforstability(self)       
 
             #If required, compute and print diagnostics to log file
             st.printdiags(self)

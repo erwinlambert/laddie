@@ -37,9 +37,16 @@ def read_forcing(object):
 def check_inputforcing(object):
     """Check validity of input """
 
-    """To be filled """
+    #Check whether step in z is 1 meter throughout, required for interpolation to find Ta and Sa. More flexibility or pre-interpolation to be added
+    dz = object.z[1:]-object.z[:-1]
+    if (dz != 1).any():
+        print('FORCING ERROR: input variable z must be incremental with steps 1')
+        sys.exit()
 
-    object.print2log(f"Finished checking forcing input file {object.forcfile}")
+    object.zmin = min(object.z)
+    """To be expanded """
+
+    object.print2log(f"Finished checking forcing. All OK")
 
     return
 
@@ -58,6 +65,9 @@ def create_forcing(object):
         isomip(object)
     elif object.forcop == "linear2":
         linear2(object)    
+
+    #Do checks on validity
+    check_inputforcing(object)
 
     object.print2log(f"Finished creating forcing {object.forcname}")
 

@@ -159,7 +159,7 @@ def printdiags(object):
         #Integrated detrainment [Sv]
         d_DEtot = 1e-6*(object.detr*object.tmask*object.dx*object.dy).sum()
         #Integrated volume thickness convergence == net in/outflow [Sv]
-        d_PSI = -1e-6*(convT(object,object.D[1,:,:])*object.tmask*object.dx*object.dy).sum()
+        d_PSI = -1e-6*(object.convD*object.tmask*object.dx*object.dy).sum()
         #Average temperature [degC]
         #d_Tav = div0((object.D[1,:,:]*object.T[1,:,:]*object.tmask).sum(),(object.D[1,:,:]*object.tmask).sum())
         #Average salinity [psu]
