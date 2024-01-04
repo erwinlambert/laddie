@@ -29,7 +29,7 @@ def read_geom(object):
 
         #If required, coarsen grid by given factor
         if object.coarsen>1:
-            ds = apply_coarsen(ds,object.coarsen)
+            ds = apply_coarsen(object,ds)
 
         #If required, include longitude and latitude
         if object.lonlat:
@@ -118,26 +118,28 @@ def read_geom(object):
     return
 
 
-def apply_coarsen(ds,N):
-    """Coarsen grid resolution by a factor N"""
+def apply_coarsen(object,ds):
+    """Coarsen grid resolution by a factor given by object.coarsen"""
 
-    """Note: only works for bedmachine-like input"""
-    if object.maskoption != "BM":
-        object.print2log("WARNING: coarsening required, which only works for BedMachine-like input. If the run does not crash, double-check the masks to make sure things went well")
+    #Check whether maskoption is BM (bedmachine), otherwise: ignore coarsening request
+    if object.maskoption == "BM":
+        ds['mask'] = xr.where(ds.mask==0,np.nan,ds.mask)
+        ds['thickness'] = xr.where(np.isnan(ds.mask),np.nan,ds.thickness)
+        ds['surface'] = xr.where(np.isnan(ds.mask),np.nan,ds.surface)
+        ds['bed'] = xr.where(np.isnan(ds.mask),np.nan,ds.bed)
+        ds = ds.coarsen(x=object.coarsen,y=object.coarsen,boundary='trim').median()
+        ds['mask'] = np.round(ds.mask)
+        ds['mask'] = xr.where(np.isnan(ds.mask),0,ds.mask)
+        ds['thickness'] = xr.where(ds.mask==0,0,ds.thickness)
+        ds['surface'] = xr.where(ds.mask==0,0,ds.surface)
+        ds['thickness'] = xr.where(np.isnan(ds.thickness),0,ds.thickness)
+        ds['surface'] = xr.where(np.isnan(ds.surface),0,ds.surface)
 
-    ds['mask'] = xr.where(ds.mask==0,np.nan,ds.mask)
-    ds['thickness'] = xr.where(np.isnan(ds.mask),np.nan,ds.thickness)
-    ds['surface'] = xr.where(np.isnan(ds.mask),np.nan,ds.surface)
-    ds['bed'] = xr.where(np.isnan(ds.mask),np.nan,ds.bed)
-    ds = ds.coarsen(x=N,y=N,boundary='trim').median()
-    ds['mask'] = np.round(ds.mask)
-    ds['mask'] = xr.where(np.isnan(ds.mask),0,ds.mask)
-    ds['thickness'] = xr.where(ds.mask==0,0,ds.thickness)
-    ds['surface'] = xr.where(ds.mask==0,0,ds.surface)
-    ds['thickness'] = xr.where(np.isnan(ds.thickness),0,ds.thickness)
-    ds['surface'] = xr.where(np.isnan(ds.surface),0,ds.surface)
+        object.print2log(f"Coarsened geometry by a factor of {object.coarsen}")
+    else:
+        print("WARNING: coarsening required, which only works for BedMachine-like input. So proceeding without coarsening")
 
-    object.print2log(f"Coarsened geometry by a factor of {object.coarsen}")
+    """To be expanded for other mask options"""
 
     return ds
 
