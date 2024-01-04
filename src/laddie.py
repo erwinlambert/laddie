@@ -36,13 +36,7 @@ class Laddie():
         #Read input geometry from external file
         ge.read_geom(self)
 
-        #Read or create forcing
-        if self.forcop == "file":
-            #Read forcing from external file
-            fo.read_forcing(self)
-        else:
-            #Create forcing using an internal routine
-            fo.create_forcing(self)
+        fo.get_forcing(self)
         
         #Create grid based on provided geometry
         pp.create_grid(self)

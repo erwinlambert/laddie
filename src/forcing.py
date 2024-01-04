@@ -2,6 +2,25 @@ import sys
 import numpy as np
 import xarray as xr
 
+def get_forcing(object):
+    if object.newdir: object.print2log("================= Starting preparing forcing ======================")
+
+    #Read or create forcing
+    if object.forcop == "file":
+        #Read forcing from external file
+        read_forcing(object)
+    else:
+        #Create forcing using an internal routine
+        create_forcing(object)
+
+    #Do checks on validity
+    check_inputforcing(object)
+
+    object.print2log(f"================= Successfully got forcing {object.forcname} ==========================")
+    if object.newdir: object.print2log(f"===========================================================================")
+
+    return
+
 def read_forcing(object):
     """Read external forcing file"""
 
@@ -9,7 +28,7 @@ def read_forcing(object):
         ds = xr.open_dataset(object.forcfile)
 
         #Read temperature and salinity fields or profiles
-        object.z = ds.z
+        object.z = ds.z.values
         object.Tz = ds.T.values
         object.Sz = ds.S.values
 
@@ -21,32 +40,13 @@ def read_forcing(object):
         ds.close()
 
     except:
-        object.print2log(f"Error: could not open forcing input file {object.forcfile}. Check whether filename is correct and file contains variables z, T and S")
+        print(f"INPUT ERROR: could not open forcing input file {object.forcfile}. Check whether filename is correct and file contains variables z, T and S")
         sys.exit()
-
-    #Do checks on validity
-    check_inputforcing(object)
 
     #Save forcing name to store in output
     object.forcname = object.forcfile
 
-    object.print2log(f"Succesfully read forcing input file {object.forcfile}")
-
-    return
-
-def check_inputforcing(object):
-    """Check validity of input """
-
-    #Check whether step in z is 1 meter throughout, required for interpolation to find Ta and Sa. More flexibility or pre-interpolation to be added
-    dz = object.z[1:]-object.z[:-1]
-    if (dz != 1).any():
-        print('FORCING ERROR: input variable z must be incremental with steps 1')
-        sys.exit()
-
-    object.zmin = min(object.z)
-    """To be expanded """
-
-    object.print2log(f"Finished checking forcing. All OK")
+    if object.newdir: object.print2log(f"Finished reading forcing from input file")
 
     return
 
@@ -69,7 +69,7 @@ def create_forcing(object):
     #Do checks on validity
     check_inputforcing(object)
 
-    object.print2log(f"Finished creating forcing {object.forcname}")
+    if object.newdir: object.print2log(f"Finished creating forcing from internal routine {object.forcop}")
 
     return
 
@@ -151,5 +151,48 @@ def isomip(object):
 
     #Save forcing name to store in output
     object.forcname = f"{object.forcop}_{object.isomipcond}"
+
+    return
+
+def check_inputforcing(object):
+    """Check validity of input. Only functions for 1D input forcing for now """
+
+    if object.newdir: object.print2log(f"Started checking forcing")
+
+    #Skip check if 3D input
+    if len(object.Tz.shape)==3:
+        object.print2log(f"WARNING: 3D input forcing is not checked. Big chance that something goes wrong. Trying to proceed anyway..")
+        return
+
+    #Check whether z, Tz and Sz are of equal length
+    if len(object.Tz) != len(object.z):
+        print('FORCING ERROR: input variable Tz must be of equal length as input variable z. Check and correct input forcing file')
+        sys.exit()
+    if len(object.Sz) != len(object.z):
+        print('FORCING ERROR: input variable Sz must be of equal length as input variable z. Check and correct input forcing file')
+        sys.exit()
+
+    #Check whether step in z is 1 meter throughout, required for interpolation to find Ta and Sa. More flexibility or pre-interpolation to be added
+    dz = object.z[1:]-object.z[:-1]
+    if (dz != 1).any():
+        #Not equal steps of 1m, try interpolation
+        try:
+            zin = object.z.copy()
+            Tzin = object.Tz.copy()
+            Szin = object.Sz.copy()
+            object.z = np.arange(-5000.,0,1)
+            object.Tz = np.interp(object.z,zin,Tzin)
+            object.Sz = np.interp(object.z,zin,Szin)
+            if object.newdir: object.print2log(f"NOTE: modified input forcing through inteprolation to 1m grid. Provide 1m grid as input to prevent this.")
+        except:
+            print('FORCING ERROR: input variable z must be incremental with steps 1 meter, could not interpolate. Check whether z is monotonic')
+            sys.exit()
+
+    #Extract minimum value in z for interpolation
+    object.zmin = min(object.z)
+
+    """To be expanded """
+
+    if object.newdir: object.print2log(f"Finished checking forcing. All OK")
 
     return

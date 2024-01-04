@@ -90,7 +90,7 @@ def tryread(object,category,parameter,reqtype,valid=None,allowconversion=True,ch
         out = object.config[category][parameter]
     except:
         if default == None:
-            print(f"INPUT ERROR: missing input parameter '{parameter}' in [{category}]. Please add to config-file")
+            print(f"INPUT ERROR: missing input parameter '{parameter}' in [{category}]. Please add to config-file of type {reqtype}")
             sys.exit()
         else:
             if object.newdir:

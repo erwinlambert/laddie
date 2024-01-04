@@ -1,10 +1,17 @@
 # Changelog
 
-## 1.1.0 (2023-12-xx)
+## 1.1.0 (2024-01-xx)
 
 ### **!! Relevant for workflow !!**
 
-- To restart, must include config parameter `Initialisation.fromrestart = true`
+#### Config file
+
+- Config file must include parameter `Geometry.maskoption` to indicate how the mask is provided. Use `BM` (Bedmachine) when switching from Laddie 1.0 and/or using Bedmachine input. Other options: `ISOMIP` and `UFEMISM`
+- Config file must include parameter `Initialisation.fromrestart`. Set `true` if starting from restart file. Set `false` if starting from scratch
+- Parameter `correctisf` moved from `[Options]` to `[Geometry]`. If not moved, default option `Geometry.correctisf = false` will be used.
+
+#### Output
+
 - Output variables U and V are changed to Ut and Vt (to stress that they are on the tgrid)
 - Output fields are masked, so melt = NaN outside ice shelf etc
 
@@ -32,10 +39,13 @@
 - Increased flexibility for input geometry with several options for input parameter names
 - Read and use thickness and surface only if draft is not provided
 - Can choose typical input styles for mask: `Geometry.maskoption = ['ISOMIP','BM','UFEMISM']`
+- Included some checks on input forcing
 
 ### Forcing
 
 - Can set `Forcing.drho0` for tanh-forcing in config file. Default = 0.01 (was hardcoded in previous version).
+- Included pre-run interpolation to 1m vertical grid
+- **Note: 3D forcing does not work yet**
 
 ### Code structure
 
@@ -50,4 +60,5 @@
 ### Log file
 
 - Run time included
-- Also spitting out warnings when using default. Will probably change this
+- Also spitting out warnings when using default values. Will probably change this
+- Continous log file when restarting a run within the same directory

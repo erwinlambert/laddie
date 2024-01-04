@@ -75,7 +75,7 @@ def read_config(object):
 
     #Geometry
     object.geomfile       = tryread(object,"Geometry","filename",str,checkfile=True)
-    object.maskoption     = tryread(object,"Geometry","maskoption",str,["BM","UFEMISM","ISOMIP"],default="BM")
+    object.maskoption     = tryread(object,"Geometry","maskoption",str,["BM","UFEMISM","ISOMIP"])
     object.geomyear       = tryread(object,"Geometry","geomyear",int,(0,1e20),allowconversion=False,default=0)
     object.lonlat         = tryread(object,"Geometry","lonlat",bool,default=False)
     if object.lonlat:

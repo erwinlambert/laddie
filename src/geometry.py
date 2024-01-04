@@ -33,7 +33,7 @@ def read_geom(object):
 
         #If required, include longitude and latitude
         if object.lonlat:
-            ds = add_lonlat(ds,object.projection)
+            ds = add_lonlat(object,ds,object.projection)
 
         #Read variables
         object.x    = ds.x.values
