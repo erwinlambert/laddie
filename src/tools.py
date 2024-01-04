@@ -90,35 +90,35 @@ def tryread(object,category,parameter,reqtype,valid=None,allowconversion=True,ch
         out = object.config[category][parameter]
     except:
         if default == None:
-            print(f"INPUT ERROR: missing input parameter '{parameter}' in [{category}]. Please add to config-file of type {reqtype}")
+            print(f"INPUT ERROR: missing input parameter '{parameter}' in [{category}]. Please add to config-file of type {reqtype.__name__}")
             sys.exit()
         else:
             if object.newdir:
                 object.print2log(f"Note: missing input parameter '{parameter}' in [{category}], using default value {default}")
             out = default
 
-    #Check whether input parameter is of the correct type
-    if isinstance(out,reqtype) == False:
+    #Check whether input parameter is of the correct type. Second criterium because bool is treated as subtype of integer in python
+    if (isinstance(out,reqtype) == False or (isinstance(out,bool) and reqtype == int)):
         if allowconversion:
             try:
                 #Convert to required type, for example float to int or vice versa
                 out2 = reqtype(out)
                 if object.newdir:
-                    object.print2log(f"Note: changing input parameter '{parameter}' from {type(out)} to {reqtype}")
+                    object.print2log(f"Note: changing input parameter '{parameter}' from {type(out).__name__} to {reqtype.__name__}")
                 out = out2
             except:
                 if default == None:
-                    print(f"INPUT ERROR: input parameter '{parameter}' in [{category}] is of wrong type. Is {type(out)}, should be {reqtype}")
+                    print(f"INPUT ERROR: input parameter '{parameter}' in [{category}] is of wrong type. Is {type(out).__name__}, should be {reqtype.__name__}")
                     sys.exit()
                 else:
                     print(f"WARNING: wrong type '{parameter}' in [{category}], using default value {default}")
                     out = default
         else:
             if default == None:
-                print(f"INPUT ERROR: input parameter '{parameter}' in [{category}] is of wrong type. Is {type(out)}, should be {reqtype}")
+                print(f"INPUT ERROR: input parameter '{parameter}' in [{category}] is of wrong type. Is {type(out).__name__}, should be {reqtype.__name__}")
                 sys.exit()            
             else:
-                print(f"WARNING: wrong type '{parameter}' in [{category}], using default value {default}")
+                print(f"WARNING: wrong type '{parameter}' in [{category}]. Is {type(out).__name__}, should be {reqtype.__name__}, using default value {default}")
                 out = default          
 
     #Check whether value of input is valid

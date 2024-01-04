@@ -30,9 +30,9 @@
 
 ### Run continuation
 
-- Allow continuation of old run through config param `Directories.forcenewdir = true`
+- Allow continuation of old run through config param `Directories.forcenewdir = false`
 - This allows storing output in existing directory
-- Will also append existing log-file
+- Will also append existing log-file when restarting in existing directory
 
 ### Input files
 
