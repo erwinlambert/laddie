@@ -92,7 +92,7 @@ def read_config(object):
     if object.forcop == "file": 
         object.forcfile   = tryread(object,"Forcing","filename",str,checkfile=True)
     if object.forcop == "tanh":
-        object.z1         = tryread(object,"Forcing","z1",float,(-5000,0))
+        object.z1         = tryread(object,"Forcing","z1",float,(0,5000))
         object.drho0      = tryread(object,"Forcing","drho0",float,(0,100))
     if object.forcop in ["tanh","linear","linear2"]:
         object.z0         = tryread(object,"Forcing","z0",float,(-5000,0))

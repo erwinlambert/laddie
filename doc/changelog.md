@@ -5,12 +5,14 @@
 ### **!! Relevant for workflow !!**
 
 - To restart, must include config parameter `Initialisation.fromrestart = true`
-- Output variables U and V are changed to Ut and Vt (to note that they are on the tgrid)
+- Output variables U and V are changed to Ut and Vt (to stress that they are on the tgrid)
 - Output fields are masked, so melt = NaN outside ice shelf etc
 
 ### Speed up
 
-- Change savefields from xr data-array to np array. Reduced computation time by approx 25%
+- In total: computation time reduced by 50%
+- Change savefields from xr data-array to np array. Reduced computation time by approx 30%
+- Optimise code in a number of places, reduction by another 20%
 
 ### Configuration
 
