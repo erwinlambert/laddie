@@ -17,9 +17,9 @@
 
 ### Speed up
 
-- In total: computation time reduced by 50%
-- Change savefields from xr data-array to np array. Reduced computation time by approx 30%
-- Optimise code in a number of places, reduction by another 20%
+- In total: computation time reduced by a factor of 1.5 (very large domains) to 6 (very small domains)
+- Change savefields from xr data-array to np array
+- Optimise code in a number of places
 
 ### Configuration
 
