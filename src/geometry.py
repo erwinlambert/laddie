@@ -9,8 +9,11 @@ def read_geom(object):
         ds = xr.open_dataset(object.geomfile)
 
         #Check for time dimension
-        if len(ds.dims) ==3:
-            ds = ds.isel(t=object.geomyear)
+        if len(ds.dims) >2:
+            if object.maskoption == "ISOMIP":
+                ds = ds.isel(t=object.geomyear)
+            elif object.maskoption == "UFEMISM":
+                ds = ds.isel(time=object.geomyear)
             object.print2log(f'selecting geometry time index {object.geomyear}')
 
         #Get grid cell size
@@ -38,16 +41,6 @@ def read_geom(object):
         #Read variables
         object.x    = ds.x.values
         object.y    = ds.y.values
-
-        #Read mask and convert to BedMachine standard (0: ocean, 1 and/or 2: grounded, 3: ice shelf)
-        if object.maskoption == "BM":
-            object.mask = ds.mask.values
-        elif object.maskoption == "UFEMISM":
-            object.mask = ds.mask.values
-            object.mask = np.where(object.mask==1,3,object.mask)
-        elif object.maskoption == "ISOMIP":
-            object.mask = ds.groundedMask.values
-            object.mask = np.where(ds.floatingMask,3,object.mask)
 
         #Try to read draft
         gotdraft = False
@@ -92,7 +85,18 @@ def read_geom(object):
             if gotbed == False:
                 object.save_B = False
                 object.print2log("Warning: no Bed included in input file, so omitted from output")
-    
+
+        #Read mask and convert to BedMachine standard (0: ocean, 1 and/or 2: grounded, 3: ice shelf)
+        if object.maskoption == "BM":
+            object.mask = ds.mask.values
+        elif object.maskoption == "UFEMISM":
+            object.mask = 0.*object.zb
+            object.mask = np.where(ds.Hi.values>0,1,0)
+            object.mask = np.where(ds.Hib.values>ds.Hb.values+.1,3,object.mask)
+        elif object.maskoption == "ISOMIP":
+            object.mask = ds.groundedMask.values
+            object.mask = np.where(ds.floatingMask,3,object.mask)
+
         ds.close()
 
         #Apply calving threshold
