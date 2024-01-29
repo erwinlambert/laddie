@@ -92,7 +92,7 @@ def read_geom(object):
         elif object.maskoption == "UFEMISM":
             object.mask = 0.*object.zb
             object.mask = np.where(ds.Hi.values>0,1,0)
-            object.mask = np.where(ds.Hib.values>ds.Hb.values+.1,3,object.mask)
+            object.mask = np.where(np.logical_and(object.mask==1,ds.Hib.values>ds.Hb.values+.1),3,object.mask)
         elif object.maskoption == "ISOMIP":
             object.mask = ds.groundedMask.values
             object.mask = np.where(ds.floatingMask,3,object.mask)
