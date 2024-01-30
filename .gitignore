@@ -133,5 +133,8 @@ data/
 input/
 output/
 results/
+videos/
+notebooks/Klooi_*
+*.lprof
 .DS_Store
 laddie.code-workspace
