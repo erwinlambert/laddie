@@ -16,6 +16,8 @@ geomyear = @GEOMYEAR      			# Time index of geometry input
 coarsen = 1                # Factor to coarsen geometry. 1 uses clean input (no effect)
 calvthresh = 100            # [m] Thickness threshold for calving. 0 uses clean input (no effect)
 
+cutdomain = true           # Cut out minimal domain around ice shelf for computation
+
 [Forcing]
 option = "isomip" # Available options: 'file', 'tanh', 'linear', 'linear2', 'isomip'
 isomipcond = "warm" # ISOMIP condition, either 'warm' or 'cold'
