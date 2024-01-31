@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.1.1 (2024-01-31)
+
+Extended options for ice sheet model coupling + internal routine to cut out a minimum domain
+
+### **!! Relevant for workflow !!**
+
+- Everything should work as before, but some pre-processing steps can be skipped like preventing periodic boundary conditions or copying output files
+
+### Cut domain
+
+- Included a routine to cut out a minimum domain by removing borders without ice shelf points.
+- Allows for optimal runtime and more flexibility in defining input regions.
+- Set in config file: `[Geometry] cutdomain` to `true`. Default: `true`.
+
+### Boundary conditions
+
+- Removed periodic boundary conditions. Replaced with option for each NSEW boundary: open ocean or closed (grounded).
+- Define in config file: `[Options] border_N` etc. Default for each boundary: 1 (grounded).
+
+### Input options
+
+- Included option to run on IMAUICE output
+
+### Output options
+
+- Included option to save a file with BMB data from the latest time period. Save by setting `[BMB] save_BMB` to `true`.
+- Now: two variables `BMB` (converted melt to kg/m2/s) and `BMBext` (same as BMB, but extrapolated 1 grid cell below the grounded ice).
+- Option to extend the domain of the BMB output file by N grid cells (defiled by `[BMB] bordercells`). To be used for UFEMISM forcing. Default: 0
+- Option to spit out a file `laddieready` to signal the run is finished. Toggle by setting `[BMB] create_readyfile` to `true`. Default: `false`
+
 ## 1.1.0 (2024-01-xx)
 
 ### **!! Relevant for workflow !!**
