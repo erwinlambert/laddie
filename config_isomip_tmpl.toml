@@ -28,6 +28,11 @@ convop    = 1         # [0,1,2]     Option for convection when stratification is
 boundop   = 1         # [1,2]     Option for dealing with ice shelf front inflow. 1: zero gradient in D, T, and S. 2: no inflow
 usegamtfix = true     #             Use fixed gamma_T rather than computing it. Should be false, only included for ISOMIP+ experiments
 
+border_N  = 1         # Boundary condition North: 0 (open ocean) or 1 (closed)
+border_S  = 1         # Boundary condition South: 0 (open ocean) or 1 (closed)
+border_E  = 1         # Boundary condition East : 0 (open ocean) or 1 (closed)
+border_W  = 1         # Boundary condition West : 0 (open ocean) or 1 (closed)
+
 [Directories]
 results = "./output/"  # Main results directory in which rundirs are placed
 forcenewdir = false     # Make sure output is written to a non-existing output directory. For continuing runs, set to false

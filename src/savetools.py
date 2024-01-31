@@ -8,27 +8,27 @@ def savefields(object):
 
     #Accumulate value each timestep
     if object.save_Ut:
-        object.Uav[object.jmin:object.jmax+1,object.imin:object.imax+1] += im(object.U[1,:,:]) #U on tgrid
+        object.Uav[object.jmin:object.jmax+1,object.imin:object.imax+1] += im(object.U[1,1:-1,1:-1]) #U on tgrid
     if object.save_Uu:
-        object.Uuav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.U[1,:,:]    #U on ugrid
+        object.Uuav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.U[1,1:-1,1:-1]    #U on ugrid
     if object.save_Vt:
-        object.Vav[object.jmin:object.jmax+1,object.imin:object.imax+1] += jm(object.V[1,:,:]) #V on tgrid
+        object.Vav[object.jmin:object.jmax+1,object.imin:object.imax+1] += jm(object.V[1,1:-1,1:-1]) #V on tgrid
     if object.save_Vv:
-        object.Vvav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.V[1,:,:]    #V on vgrid
+        object.Vvav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.V[1,1:-1,1:-1]    #V on vgrid
     if object.save_D:
-        object.Dav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.D[1,:,:]
+        object.Dav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.D[1,1:-1,1:-1]
     if object.save_T:
-        object.Tav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.T[1,:,:]
+        object.Tav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.T[1,1:-1,1:-1]
     if object.save_S:
-        object.Sav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.S[1,:,:]
+        object.Sav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.S[1,1:-1,1:-1]
     if object.save_melt:
-        object.meltav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.melt
+        object.meltav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.melt[1:-1,1:-1]
     if object.save_entr:
-        object.entrav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.entr
+        object.entrav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.entr[1:-1,1:-1]
     if object.save_ent2:
-        object.ent2av[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.ent2
+        object.ent2av[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.ent2[1:-1,1:-1]
     if object.save_detr:
-        object.detrav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.detr    
+        object.detrav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.detr[1:-1,1:-1]
     
     #Counter for the number of timesteps added
     object.count += 1
@@ -112,11 +112,11 @@ def saverestart(object):
         """Output restart file"""
 
         #Save full fields necessary to start a run from restart file
-        object.dsre['U'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.U
-        object.dsre['V'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.V
-        object.dsre['D'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.D
-        object.dsre['T'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.T
-        object.dsre['S'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.S
+        object.dsre['U'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.U[:,1:-1,1:-1]
+        object.dsre['V'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.V[:,1:-1,1:-1]
+        object.dsre['D'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.D[:,1:-1,1:-1]
+        object.dsre['T'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.T[:,1:-1,1:-1]
+        object.dsre['S'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.S[:,1:-1,1:-1]
         object.dsre.attrs['time'] = object.time[object.t]
 
         #Name of the restartfile

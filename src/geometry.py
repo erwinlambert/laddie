@@ -106,8 +106,6 @@ def read_geom(object):
 
         ds.close()
 
-        #Optionally grow domain
-
         #Cut out minimal region
         if object.cutdomain:
             cut_domain(object)
@@ -121,9 +119,8 @@ def read_geom(object):
             object.imax = object.nx_full
             object.jmax = object.ny_full
 
-        #Add optional boundaries here to prevent effects of periodic boundary conditions
-        if object.addborder:
-            add_border(object)            
+        #Add boundaries here to prevent effects of periodic boundary conditions
+        add_border(object)            
 
         #Apply calving threshold
         draftlim = -object.rhoi/object.rho0*object.calvthresh
@@ -147,7 +144,6 @@ def read_geom(object):
 
     return
 
-
 def cut_domain(object):
     """Determine boundaries around ice shelf and shrink domain for computation"""
 
@@ -169,8 +165,11 @@ def cut_domain(object):
     object.x    = object.x_full[object.imin:object.imax+1]
     object.y    = object.y_full[object.jmin:object.jmax+1]
 
+    object.nx = len(object.x)
+    object.ny = len(object.y)
+
     #Print reduced size
-    reducedsize = 100*(1-(object.mask.shape[0]*object.mask.shape[1])/(object.mask_full.shape[0]*object.mask_full.shape[1]))
+    reducedsize = 100*(1-(object.nx*object.ny)/(object.nx_full*object.ny_full))
     object.print2log(f"Finished cutting domain. Reduced size by {reducedsize:.0f} percent")
 
     return
@@ -178,11 +177,23 @@ def cut_domain(object):
 def add_border(object):
     """Add border along all sides of 1 grid cell of specified mask value"""
 
-    #Modify mask
-    #Modify zb
+    #Add north
+    object.mask = np.append(object.mask,object.borderN+np.zeros((1,object.nx)),axis=0)
+    object.zb   = np.append(object.zb,np.zeros((1,object.nx)),axis=0)
+
+    #Add south
+    object.mask = np.append(object.borderS+np.zeros((1,object.nx)),object.mask,axis=0)
+    object.zb   = np.append(np.zeros((1,object.nx)),object.zb,axis=0)
+
+    #Add east
+    object.mask = np.append(object.mask,object.borderE+np.zeros((object.ny+2,1)),axis=1)
+    object.zb   = np.append(object.zb,np.zeros((object.ny+2,1)),axis=1)
+
+    #Add west
+    object.mask = np.append(object.borderW+np.zeros((object.ny+2,1)),object.mask,axis=1)
+    object.zb   = np.append(np.zeros((object.ny+2,1)),object.zb,axis=1)
 
     return
-
 
 def apply_coarsen(object,ds):
     """Coarsen grid resolution by a factor given by object.coarsen"""

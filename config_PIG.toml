@@ -25,6 +25,8 @@ removebergs = true          # Remove icebergs
 correctisf = false          # Remove ice shelf grids sticking out
 fillisolated = false        # Fill isolated ice shelf points, change to grounded
 
+cutdomain = false
+
 [Forcing]
 option = "isomip" # Available options: 'file', 'tanh', 'linear', 'linear2', 'isomip'
 z0    = -450    # [m] Reference depth used in 'tanh' and 'linear', 'isomip', and 'linear2'

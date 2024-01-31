@@ -86,12 +86,6 @@ def read_config(object):
     object.correctisf     = tryread(object,"Geometry","correctisf",bool,default=False)
     object.fillisolated   = tryread(object,"Geometry","fillisolated",bool,default=False)
     object.cutdomain      = tryread(object,"Geometry","cutdomain",bool,default=False)
-    object.addborder      = tryread(object,"Geometry","addborder",bool,default=True)
-    if object.addborder:
-        object.borderN        = tryread(object,"Geometry","border_N",int,[0,1],default=1)
-        object.borderS        = tryread(object,"Geometry","border_S",int,[0,1],default=1)
-        object.borderE        = tryread(object,"Geometry","border_E",int,[0,1],default=1)
-        object.borderW        = tryread(object,"Geometry","border_W",int,[0,1],default=1)
 
     #Forcing
     object.forcop         = tryread(object,"Forcing","option",str,["tanh","linear","linear2","isomip","file"])
@@ -115,6 +109,11 @@ def read_config(object):
     if object.convop == 2: object.print2log("WARNING: convop = 2 (convective restoring) is experimental and may lead to instabilities. Consider using convop = 0 or 1")
     object.boundop        = tryread(object,"Options","boundop",int,[1,2],allowconversion=False)
     object.usegamtfix     = tryread(object,"Options","usegamtfix",bool)
+
+    object.borderN        = tryread(object,"Options","border_N",int,[0,1],default=1)
+    object.borderS        = tryread(object,"Options","border_S",int,[0,1],default=1)
+    object.borderE        = tryread(object,"Options","border_E",int,[0,1],default=1)
+    object.borderW        = tryread(object,"Options","border_W",int,[0,1],default=1)
 
     #Filenames
     object.fromrestart      = tryread(object,"Initialisation","fromrestart",bool)
@@ -354,8 +353,6 @@ def create_grid(object):
     """Create some grid parameters"""
 
     #Spatial parameters
-    object.nx = len(object.x)
-    object.ny = len(object.y)
     object.xu = object.x + 0.5*object.dx
     object.yv = object.y + 0.5*object.dy
 
@@ -377,11 +374,11 @@ def initialise_vars(object):
     """Initialise variables, either from a restart file or from scratch"""
 
     #Major variables. Three arrays for storage of previous timestep, current timestep, and next timestep
-    object.U = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.V = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.D = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.T = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.S = np.zeros((3,object.ny,object.nx)).astype('float64')
+    object.U = np.zeros((3,object.ny+2,object.nx+2)).astype('float64')
+    object.V = np.zeros((3,object.ny+2,object.nx+2)).astype('float64')
+    object.D = np.zeros((3,object.ny+2,object.nx+2)).astype('float64')
+    object.T = np.zeros((3,object.ny+2,object.nx+2)).astype('float64')
+    object.S = np.zeros((3,object.ny+2,object.nx+2)).astype('float64')
     
     #Set draft depth to 0 just outside ice shelf, to include strong dz/dx and dz/dy gradients across ice shelf front
     object.zb = np.where(object.isf,0,object.zb)
@@ -424,9 +421,9 @@ def init_from_restart(object):
     object.tstart = dsinit.time
 
     # Check whether object geometry matches restart file geometry
-    difftmask = np.sum(np.abs(object.tmask - dsinit.tmask))
-    diffumask = np.sum(np.abs(object.umask - dsinit.umask))
-    diffvmask = np.sum(np.abs(object.vmask - dsinit.vmask))
+    difftmask = np.sum(np.abs(object.tmask[1:-1,1:-1] - dsinit.tmask))
+    diffumask = np.sum(np.abs(object.umask[1:-1,1:-1] - dsinit.umask))
+    diffvmask = np.sum(np.abs(object.vmask[1:-1,1:-1] - dsinit.vmask))
     
     totaldiff = difftmask.values+diffumask.values+diffvmask.values
     
@@ -434,11 +431,11 @@ def init_from_restart(object):
         # Geometry and restart geometry match, so can directly take restart variables
         object.print2log('Input file geometry matches restart file geometry.')
 
-        object.U = dsinit.U.values
-        object.V = dsinit.V.values
-        object.D = dsinit.D.values
-        object.T = dsinit.T.values
-        object.S = dsinit.S.values
+        object.U[:,1:-1,1:-1] = dsinit.U.values
+        object.V[:,1:-1,1:-1] = dsinit.V.values
+        object.D[:,1:-1,1:-1] = dsinit.D.values
+        object.T[:,1:-1,1:-1] = dsinit.T.values
+        object.S[:,1:-1,1:-1] = dsinit.S.values
 
     else:
         # Geometry and restart geometry do not match, due to retreat/advance of grounding line and/or ice shelf front
@@ -446,11 +443,11 @@ def init_from_restart(object):
         object.print2log('========== Extrapolating restart fields into new grid cells ====')
         object.print2log(f'Total (tmask+umask+vmask): {totaldiff:.0f} new cells. Extrapolating...')
 
-        object.D[:] = extrapolate_initvals(object,object.D,object.tmask,dsinit.D,dsinit.tmask)
-        object.T[:] = extrapolate_initvals(object,object.T,object.tmask,dsinit.T,dsinit.tmask)
-        object.S[:] = extrapolate_initvals(object,object.S,object.tmask,dsinit.S,dsinit.tmask)
-        object.U[:] = extrapolate_initvals(object,object.U,object.umask,dsinit.U,dsinit.umask)
-        object.V[:] = extrapolate_initvals(object,object.V,object.vmask,dsinit.V,dsinit.vmask)
+        object.D[:,1:-1,1:-1] = extrapolate_initvals(object,object.D[:,1:-1,1:-1],object.tmask[1:-1,1:-1],dsinit.D,dsinit.tmask)
+        object.T[:,1:-1,1:-1] = extrapolate_initvals(object,object.T[:,1:-1,1:-1],object.tmask[1:-1,1:-1],dsinit.T,dsinit.tmask)
+        object.S[:,1:-1,1:-1] = extrapolate_initvals(object,object.S[:,1:-1,1:-1],object.tmask[1:-1,1:-1],dsinit.S,dsinit.tmask)
+        object.U[:,1:-1,1:-1] = extrapolate_initvals(object,object.U[:,1:-1,1:-1],object.umask[1:-1,1:-1],dsinit.U,dsinit.umask)
+        object.V[:,1:-1,1:-1] = extrapolate_initvals(object,object.V[:,1:-1,1:-1],object.vmask[1:-1,1:-1],dsinit.V,dsinit.vmask)
 
         object.print2log('==================== Finished extrapolation ====================')
         object.print2log('=========================================== ====================')
@@ -496,12 +493,13 @@ def prepare_output(object):
     object.restint = int(object.restday*3600*24/object.dt)
 
     #Full masks
+    object.mask_full[object.jmin:object.jmax+1,object.imin:object.imax+1] = object.mask[1:-1,1:-1]    
     object.tmask_full = np.zeros((object.ny_full,object.nx_full))
-    object.tmask_full[object.jmin:object.jmax+1,object.imin:object.imax+1] = object.tmask
+    object.tmask_full[object.jmin:object.jmax+1,object.imin:object.imax+1] = object.tmask[1:-1,1:-1]
     object.umask_full = np.zeros((object.ny_full,object.nx_full))
-    object.umask_full[object.jmin:object.jmax+1,object.imin:object.imax+1] = object.umask
+    object.umask_full[object.jmin:object.jmax+1,object.imin:object.imax+1] = object.umask[1:-1,1:-1]
     object.vmask_full = np.zeros((object.ny_full,object.nx_full))
-    object.vmask_full[object.jmin:object.jmax+1,object.imin:object.imax+1] = object.vmask
+    object.vmask_full[object.jmin:object.jmax+1,object.imin:object.imax+1] = object.vmask[1:-1,1:-1]
 
     #Data set to save time-average fields
     object.dsav = xr.Dataset()
@@ -630,7 +628,7 @@ def prepare_output(object):
 
     #For storing restart file
     object.dsre = xr.Dataset()
-    object.dsre = object.dsav.assign_coords({'x':object.x_full,'y':object.y_full,'n':np.array([0,1,2])})
+    object.dsre = object.dsre.assign_coords({'x':object.x_full,'y':object.y_full,'n':np.array([0,1,2])})
     object.dsre['mask']  = (['y','x'], object.mask_full)
     object.dsre['zb']    = (['y','x'], object.zb_full)
     object.dsre['tmask'] = (['y','x'], object.tmask_full)
