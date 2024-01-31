@@ -18,6 +18,12 @@ calvthresh = 100            # [m] Thickness threshold for calving. 0 uses clean 
 
 cutdomain = true           # Cut out minimal domain around ice shelf for computation
 
+[BMB]
+save_BMB    = true          # Whether to save latest BMB in a separate file
+bordercells = 0             # Number of grid cells to add around domain in BMB output file
+filename = "output_BMB.nc"  # Filename to save latest BMB output
+create_readyfile = true     # Create a dummy file to signal that the run is finished
+
 [Forcing]
 option = "isomip" # Available options: 'file', 'tanh', 'linear', 'linear2', 'isomip'
 isomipcond = "warm" # ISOMIP condition, either 'warm' or 'cold'

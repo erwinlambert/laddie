@@ -79,6 +79,26 @@ def savefields(object):
         object.print2log(f"{object.time[object.t]:8.0f} days || Average fields saved as {filename}")
         object.print2log(f'-------------------------------------------------------------------------------------')
 
+        if object.save_BMB:
+
+            #Convert to kg/m2/s
+            BMBn = -object.rhofw / object.count * object.meltav[object.jmin:object.jmax+1,object.imin:object.imax+1]
+
+            #Extrapolate below grounded ice
+            BMBext = object.grd[1:-1,1:-1]*compute_average_NN_2D(BMBn,object.tmask[1:-1,1:-1])+object.tmask[1:-1,1:-1]*BMBn
+            BMBext = np.where(np.isnan(BMBext),0,BMBext)
+
+            object.dsbmb['BMB'][object.jmin+object.BMBborder:object.jmax+1+object.BMBborder,object.imin+object.BMBborder:object.imax+1+object.BMBborder] = BMBn
+            object.dsbmb['BMBext'][object.jmin+object.BMBborder:object.jmax+1+object.BMBborder,object.imin+object.BMBborder:object.imax+1+object.BMBborder] = BMBext
+
+            object.dsbmb.attrs['time_end'] = object.time[object.t]
+
+            object.dsbmb.to_netcdf(os.path.join(object.rundir,object.BMBfilename))
+
+            object.print2log(f"{object.time[object.t]:8.0f} days || Updated BMB in {object.BMBfilename}")
+            object.print2log(f'-------------------------------------------------------------------------------------')
+
+
         #Set all fields used for accumulation back to zero
         object.count = 0
         if object.save_Ut:
@@ -106,6 +126,9 @@ def savefields(object):
         
         #Start time for next time-average 
         object.dsav.attrs['time_start'] = object.time[object.t]
+
+        if object.save_BMB:
+            object.dsbmb.attrs['time_start'] = object.time[object.t]
         
 def saverestart(object):
     if object.t in np.arange(object.restint,object.nt+object.restint,object.restint):

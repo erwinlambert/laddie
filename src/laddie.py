@@ -1,3 +1,4 @@
+import os
 import preprocess as pp
 import integrate as it
 import savetools as st
@@ -85,7 +86,11 @@ class Laddie():
         #Compute time since start of run
         hours, rem = divmod(process_time()-self.startwalltime, 3600)
         minutes, seconds = divmod(rem, 60)
-        #print(f"Run completed in [{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f}]")
+        print(f"Run completed in [{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f}]")
+
+        if self.create_readyfile:
+            with open(os.path.join(self.rundir,"laddieready"),"a") as file:
+                file.write(" ")
 
         return
 

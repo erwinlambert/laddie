@@ -12,7 +12,7 @@ def read_geom(object):
         if len(ds.dims) >2:
             if object.maskoption == "ISOMIP":
                 ds = ds.isel(t=object.geomyear)
-            elif object.maskoption == "UFEMISM":
+            elif object.maskoption in ["UFEMISM","IMAUICE"]:
                 ds = ds.isel(time=object.geomyear)
             object.print2log(f'selecting geometry time index {object.geomyear}')
 
@@ -57,21 +57,23 @@ def read_geom(object):
                 gotdraft = True
                 object.print2log(f"Got ice shelf draft from '{v}'")
 
-        #If this failed, try to get draft from thickness and surface
-        if gotdraft == False:
+        #Get ice thickness to compute mask and, if needed, draft
+        if gotdraft == False or object.maskoption in ["UFEMISM","IMAUICE"]:
             gotthick = False
-            gotsurf  = False
             #Get thickness
             for v in ['thickness','Hi']:
                 if v in ds.variables:
                     object.H = ds[v].values
                     gotthick = True
-            #Get thickness
+
+        #If reading draft failed, try to get draft from thickness and surface
+        if gotdraft == False:
+            gotsurf  = False
+            #Get surface
             for v in ['surface','Hs']:
                 if v in ds.variables:
                     object.zs = ds[v].values
                     gotsurf = True
-
             if gotthick and gotsurf:
                 #Extract draft
                 object.zb_full = object.zs-object.H
@@ -82,24 +84,26 @@ def read_geom(object):
                 print(f"Need either draft ('draft', 'Hb','zb',or 'lowerSurface') or thickness ('thickness' or 'Hi') and surface ('surface' or 'Hs')")
                 sys.exit()
 
-        #Try to read bed
-        if object.save_B:
+        #Try to read bed if requested for saving or needed to compute mask
+        if object.save_B or object.maskoption in ["UFEMISM","IMAUICE"]:
             gotbed = False
             for v in ['bed','Hb','bedrockTopography']:
                 if v in ds.variables:
                     object.B = ds[v].values
                     gotbed = True
             if gotbed == False:
+                if object.maskoption in ["UFEMISM","IMAUICE"]:
+                    print(f"INPUT ERROR: Could not find Bed in input file, needed to compute mask. Check variable names")
+                    sys.exit()
                 object.save_B = False
                 object.print2log("Warning: no Bed included in input file, so omitted from output")
 
         #Read mask and convert to BedMachine standard (0: ocean, 1 and/or 2: grounded, 3: ice shelf)
         if object.maskoption == "BM":
             object.mask_full = ds.mask.values
-        elif object.maskoption == "UFEMISM":
-            object.mask_ful = 0.*object.zb
-            object.mask_full = np.where(ds.Hi.values>0,1,0)
-            object.mask_full = np.where(np.logical_and(object.mask_full==1,ds.Hib.values>ds.Hb.values+.1),3,object.mask_full)
+        elif object.maskoption in ["UFEMISM","IMAUICE"]:
+            object.mask_full = np.where(object.H>0,1,0)
+            object.mask_full = np.where(np.logical_and(object.mask_full==1,object.zb_full>object.B+.1),3,object.mask_full)
         elif object.maskoption == "ISOMIP":
             object.mask_full = ds.groundedMask.values
             object.mask_full = np.where(ds.floatingMask,3,object.mask_full)
@@ -116,8 +120,10 @@ def read_geom(object):
             object.y    = object.y_full.copy()
             object.imin = 0
             object.jmin = 0
-            object.imax = object.nx_full
-            object.jmax = object.ny_full
+            object.imax = object.nx_full-1
+            object.jmax = object.ny_full-1
+            object.nx   = len(object.x)
+            object.ny   = len(object.y)
 
         #Add boundaries here to prevent effects of periodic boundary conditions
         add_border(object)            

@@ -75,7 +75,7 @@ def read_config(object):
 
     #Geometry
     object.geomfile       = tryread(object,"Geometry","filename",str,checkfile=True)
-    object.maskoption     = tryread(object,"Geometry","maskoption",str,["BM","UFEMISM","ISOMIP"])
+    object.maskoption     = tryread(object,"Geometry","maskoption",str,["BM","UFEMISM","IMAUICE","ISOMIP"])
     object.geomyear       = tryread(object,"Geometry","geomyear",int,(-1,1e20),allowconversion=False,default=0)
     object.lonlat         = tryread(object,"Geometry","lonlat",bool,default=False)
     if object.lonlat:
@@ -85,7 +85,14 @@ def read_config(object):
     object.removebergs    = tryread(object,"Geometry","removebergs",bool,default=False)
     object.correctisf     = tryread(object,"Geometry","correctisf",bool,default=False)
     object.fillisolated   = tryread(object,"Geometry","fillisolated",bool,default=False)
-    object.cutdomain      = tryread(object,"Geometry","cutdomain",bool,default=False)
+    object.cutdomain      = tryread(object,"Geometry","cutdomain",bool,default=True)
+
+    #BMB
+    object.save_BMB   = tryread(object,"BMB","save_BMB",bool,default=False)
+    if object.save_BMB:
+        object.BMBborder      = tryread(object,"BMB","bordercells",int,(0,10),default=0)
+        object.BMBfilename    = tryread(object,"BMB","filename",str,checkfile=False,default="output_BMB.nc")
+    object.create_readyfile   = tryread(object,"BMB","create_readyfile",bool,default=False)
 
     #Forcing
     object.forcop         = tryread(object,"Forcing","option",str,["tanh","linear","linear2","isomip","file"])
@@ -169,6 +176,7 @@ def read_config(object):
         object.mindrho  = tryread(object,"Convection","mindrho",float,(0,1e20))
     object.convtime     = tryread(object,"Convection","convtime",float,(0,1e20),default=1000)
 
+    #Output
     object.save_Uu    = tryread(object,"Output","save_Uu",bool,default=False)
     object.save_Ut    = tryread(object,"Output","save_Ut",bool,default=True)
     object.save_Vv    = tryread(object,"Output","save_Vv",bool,default=False)
@@ -626,6 +634,32 @@ def prepare_output(object):
     object.dsav.attrs['model_version'] = object.modelversion
     object.dsav.attrs['time_start'] = object.tstart
 
+    ############################
+    #BMB output file for ice sheet model
+    if object.save_BMB:
+        object.x_bmb = object.x_full.copy()
+        object.y_bmb = object.y_full.copy()
+        #Extend x and y
+        for n in range(object.BMBborder):
+            object.x_bmb = np.append(object.x_bmb[0]-object.dx,object.x_bmb)
+            object.x_bmb = np.append(object.x_bmb,object.x_bmb[-1]+object.dx)
+            object.y_bmb = np.append(object.y_bmb[0]-object.dy,object.y_bmb)
+            object.y_bmb = np.append(object.y_bmb,object.y_bmb[-1]+object.dy)
+
+        #Create dataset
+        object.dsbmb = xr.Dataset()
+        object.dsbmb = object.dsbmb.assign_coords({'x':object.x_bmb,'y':object.y_bmb})
+
+        object.BMBav = np.zeros((len(object.y_bmb),len(object.x_bmb)))
+        object.dsbmb['BMB']     = (['y','x'], object.BMBav)
+
+        object.BMBextav = np.zeros((len(object.y_bmb),len(object.x_bmb)))
+        object.dsbmb['BMBext']     = (['y','x'], object.BMBextav)
+
+        #Create mask including grounded grid cells along grounding line
+        #object.BMBmask = object.tmask+object.grd
+
+    ############################
     #For storing restart file
     object.dsre = xr.Dataset()
     object.dsre = object.dsre.assign_coords({'x':object.x_full,'y':object.y_full,'n':np.array([0,1,2])})
