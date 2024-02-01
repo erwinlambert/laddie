@@ -147,6 +147,7 @@ def saverestart(object):
 
         #Save restartfile
         object.dsre.to_netcdf(object.restartfile)
+        object.dsre.to_netcdf(os.path.join(object.rundir,f"restart_latest.nc"))
 
         object.print2log(f'-------------------------------------------------------------------------------------')
         object.print2log(f"{object.time[object.t]:8.0f} days || Restart file saved as {object.restartfile}")
