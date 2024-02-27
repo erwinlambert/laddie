@@ -391,8 +391,8 @@ def initialise_vars(object):
     #Set draft depth to 0 just outside ice shelf, to include strong dz/dx and dz/dy gradients across ice shelf front
     object.zb = np.where(object.isf,0,object.zb)
     
-    #Remove positive values of ice shelf draft. Set shallowest ice shelf draft to 10 meters
-    object.zb = np.where(np.logical_and(object.tmask==1,object.zb>-10),-10,object.zb)
+    #Remove positive values of ice shelf draft. Set shallowest ice shelf draft to 1 meters
+    object.zb = np.where(np.logical_and(object.tmask==1,object.zb>-1),-1,object.zb)
     
     #Draft dz/dx and dz/dy on t-grid
     object.dzdx = np.gradient(object.zb,object.dx,axis=1)
