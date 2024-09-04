@@ -25,6 +25,7 @@ def read_forcing(object):
     """Read external forcing file"""
 
     try:
+        """Both T and S in single forcing file"""
         ds = xr.open_dataset(object.forcfile)
 
         #Read temperature and salinity fields or profiles
@@ -32,16 +33,52 @@ def read_forcing(object):
         object.Tz = ds.T.values
         object.Sz = ds.S.values
 
-        #Extract required info on x,y-dimensions of 3D external 
         if len(object.Tz.shape)==3:
-            object.Tax1 = np.arange(object.Tz.shape[1])[:,None]
-            object.Tax2 = np.arange(object.Tz.shape[2])[:,None]
+            object.xT = ds.x.values
+            object.yT = ds.y.values
 
         ds.close()
 
     except:
-        print(f"INPUT ERROR: could not open forcing input file {object.forcfile}. Check whether filename is correct and file contains variables z, T and S")
-        sys.exit()
+
+        try:
+            """T and S in separate forcing files"""
+            dsT = xr.open_dataset(object.forcfile_T)
+            dsS = xr.open_dataset(object.forcfile_S)
+            
+            #Read temperature and salinity fields or profiles
+            object.z = dsT.z.values
+            object.Tz = dsT.temperature.values
+            object.Sz = dsS.salinity.values
+            
+            if len(object.Tz.shape)==3:
+                object.xT = dsT.x.values
+                object.yT = dsT.y.values
+
+            dsT.close()
+            dsS.close()
+            
+        except: 
+            """Forcing files invalid"""
+            print(f"INPUT ERROR: could not open forcing input file {object.forcfile}. Check whether filename is correct and file contains variables z, T and S")
+            sys.exit()
+
+    #Set fill values to 0
+    object.Tz = np.where(np.isnan(object.Tz),0.,object.Tz)
+    object.Sz = np.where(np.isnan(object.Sz),34.,object.Sz)
+
+    #Extract required info on x,y-dimensions of 3D external 
+    if len(object.Tz.shape)==3:
+        #Indices on x and y dimensions through nearest neighbour
+        object.Tax1 = np.argmin((object.yT[None,:]-np.repeat(object.y[:,None],len(object.yT),axis=1))**2,axis=1)[:,None]
+        object.Tax2 = np.argmin((object.xT[None,:]-np.repeat(object.x[:,None],len(object.xT),axis=1))**2,axis=1)[None,:]
+
+        #Vertical grid info to get index on z dimension
+        dzz = object.z[:-1]-object.z[1:]
+        if max(dzz) == min(dzz):
+            object.dz = dzz[0]
+        else: 
+            print(f"INPUT ERROR: vertical grid should be monotonically spaced. Modify z-dimension in 3D forcing field")
 
     #Save forcing name to store in output
     object.forcname = object.forcfile
@@ -55,6 +92,7 @@ def create_forcing(object):
 
     #Create depth dimension
     object.z    = np.arange(-5000.,0,1)
+    object.dz   = 1.
 
     #Call forcing-specific function
     if object.forcop == "tanh":

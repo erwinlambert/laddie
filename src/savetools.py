@@ -131,7 +131,7 @@ def savefields(object):
             object.dsbmb.attrs['time_start'] = object.time[object.t]
         
 def saverestart(object):
-    if object.t in np.arange(object.restint,object.nt+object.restint,object.restint):
+    if object.t in np.arange(0,object.nt+object.restint,object.restint):
         """Output restart file"""
 
         #Save full fields necessary to start a run from restart file
@@ -162,7 +162,7 @@ def printdiags(object):
     """Print diagnostics to log file"""
 
     #Check whether current time step overlaps with required interval for printing diagnostics
-    if object.t in np.arange(object.diagint,object.nt+object.diagint,object.diagint):
+    if object.t in np.arange(0,object.nt+object.diagint,object.diagint):
 
         #Maximum thickness [m]
         d_Dmax = (object.D[1,:,:]*object.tmask).max()
