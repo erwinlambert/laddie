@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.1 (2024-01-31)
+## 1.1.1 (2024-09-04)
 
 Extended options for ice sheet model coupling + internal routine to cut out a minimum domain
 
@@ -26,7 +26,7 @@ Extended options for ice sheet model coupling + internal routine to cut out a mi
 ### Output options
 
 - Included option to save a file with BMB data from the latest time period. Save by setting `[BMB] save_BMB` to `true`.
-- Now: two variables `BMB` (converted melt to kg/m2/s) and `BMBext` (same as BMB, but extrapolated 1 grid cell below the grounded ice).
+- Now: two variables `BMB` (converted to m.i.e./yr; negative = mass loss = net melting) and `BMBext` (same as BMB, but extrapolated 1 grid cell below the grounded ice).
 - Option to extend the domain of the BMB output file by N grid cells (defiled by `[BMB] bordercells`). To be used for UFEMISM forcing. Default: 0
 - Option to spit out a file `laddieready` to signal the run is finished. Toggle by setting `[BMB] create_readyfile` to `true`. Default: `false`
 
