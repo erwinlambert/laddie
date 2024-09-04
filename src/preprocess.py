@@ -75,7 +75,7 @@ def read_config(object):
 
     #Geometry
     object.geomfile       = tryread(object,"Geometry","filename",str,checkfile=True)
-    object.maskoption     = tryread(object,"Geometry","maskoption",str,["BM","UFEMISM","ISOMIP"])
+    object.maskoption     = tryread(object,"Geometry","maskoption",str,["BM","UFEMISM","IMAUICE","ISOMIP"])
     object.geomyear       = tryread(object,"Geometry","geomyear",int,(-1,1e20),allowconversion=False,default=0)
     object.lonlat         = tryread(object,"Geometry","lonlat",bool,default=False)
     if object.lonlat:
@@ -85,6 +85,14 @@ def read_config(object):
     object.removebergs    = tryread(object,"Geometry","removebergs",bool,default=False)
     object.correctisf     = tryread(object,"Geometry","correctisf",bool,default=False)
     object.fillisolated   = tryread(object,"Geometry","fillisolated",bool,default=False)
+    object.cutdomain      = tryread(object,"Geometry","cutdomain",bool,default=True)
+
+    #BMB
+    object.save_BMB   = tryread(object,"BMB","save_BMB",bool,default=False)
+    if object.save_BMB:
+        object.BMBborder      = tryread(object,"BMB","bordercells",int,(0,10),default=0)
+        object.BMBfilename    = tryread(object,"BMB","filename",str,checkfile=False,default="output_BMB.nc")
+    object.create_readyfile   = tryread(object,"BMB","create_readyfile",bool,default=False)
 
     #Forcing
     object.forcop         = tryread(object,"Forcing","option",str,["tanh","linear","linear2","isomip","file"])
@@ -108,6 +116,11 @@ def read_config(object):
     if object.convop == 2: object.print2log("WARNING: convop = 2 (convective restoring) is experimental and may lead to instabilities. Consider using convop = 0 or 1")
     object.boundop        = tryread(object,"Options","boundop",int,[1,2],allowconversion=False)
     object.usegamtfix     = tryread(object,"Options","usegamtfix",bool)
+
+    object.borderN        = tryread(object,"Options","border_N",int,[0,1],default=1)
+    object.borderS        = tryread(object,"Options","border_S",int,[0,1],default=1)
+    object.borderE        = tryread(object,"Options","border_E",int,[0,1],default=1)
+    object.borderW        = tryread(object,"Options","border_W",int,[0,1],default=1)
 
     #Filenames
     object.fromrestart      = tryread(object,"Initialisation","fromrestart",bool)
@@ -163,6 +176,7 @@ def read_config(object):
         object.mindrho  = tryread(object,"Convection","mindrho",float,(0,1e20))
     object.convtime     = tryread(object,"Convection","convtime",float,(0,1e20),default=1000)
 
+    #Output
     object.save_Uu    = tryread(object,"Output","save_Uu",bool,default=False)
     object.save_Ut    = tryread(object,"Output","save_Ut",bool,default=True)
     object.save_Vv    = tryread(object,"Output","save_Vv",bool,default=False)
@@ -347,10 +361,6 @@ def create_grid(object):
     """Create some grid parameters"""
 
     #Spatial parameters
-    object.nx = len(object.x)
-    object.ny = len(object.y)
-    object.dx = (object.x[1]-object.x[0])
-    object.dy = (object.y[1]-object.y[0])
     object.xu = object.x + 0.5*object.dx
     object.yv = object.y + 0.5*object.dy
 
@@ -372,17 +382,17 @@ def initialise_vars(object):
     """Initialise variables, either from a restart file or from scratch"""
 
     #Major variables. Three arrays for storage of previous timestep, current timestep, and next timestep
-    object.U = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.V = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.D = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.T = np.zeros((3,object.ny,object.nx)).astype('float64')
-    object.S = np.zeros((3,object.ny,object.nx)).astype('float64')
+    object.U = np.zeros((3,object.ny+2,object.nx+2)).astype('float64')
+    object.V = np.zeros((3,object.ny+2,object.nx+2)).astype('float64')
+    object.D = np.zeros((3,object.ny+2,object.nx+2)).astype('float64')
+    object.T = np.zeros((3,object.ny+2,object.nx+2)).astype('float64')
+    object.S = np.zeros((3,object.ny+2,object.nx+2)).astype('float64')
     
     #Set draft depth to 0 just outside ice shelf, to include strong dz/dx and dz/dy gradients across ice shelf front
     object.zb = np.where(object.isf,0,object.zb)
     
-    #Remove positive values of ice shelf draft. Set shallowest ice shelf draft to 10 meters
-    object.zb = np.where(np.logical_and(object.tmask==1,object.zb>-10),-10,object.zb)
+    #Remove positive values of ice shelf draft. Set shallowest ice shelf draft to 1 meters
+    object.zb = np.where(np.logical_and(object.tmask==1,object.zb>-1),-1,object.zb)
     
     #Draft dz/dx and dz/dy on t-grid
     object.dzdx = np.gradient(object.zb,object.dx,axis=1)
@@ -413,14 +423,15 @@ def init_from_restart(object):
 
     #Open restartfile
     dsinit = xr.open_dataset(object.restartfile)
+    dsinit = dsinit.isel(x=slice(object.imin,object.imax+1),y=slice(object.jmin,object.jmax+1))
 
     #Inherit start time from restart file
     object.tstart = dsinit.time
 
     # Check whether object geometry matches restart file geometry
-    difftmask = np.sum(np.abs(object.tmask - dsinit.tmask))
-    diffumask = np.sum(np.abs(object.umask - dsinit.umask))
-    diffvmask = np.sum(np.abs(object.vmask - dsinit.vmask))
+    difftmask = np.sum(np.abs(object.tmask[1:-1,1:-1] - dsinit.tmask))
+    diffumask = np.sum(np.abs(object.umask[1:-1,1:-1] - dsinit.umask))
+    diffvmask = np.sum(np.abs(object.vmask[1:-1,1:-1] - dsinit.vmask))
     
     totaldiff = difftmask.values+diffumask.values+diffvmask.values
     
@@ -428,11 +439,11 @@ def init_from_restart(object):
         # Geometry and restart geometry match, so can directly take restart variables
         object.print2log('Input file geometry matches restart file geometry.')
 
-        object.U = dsinit.U.values
-        object.V = dsinit.V.values
-        object.D = dsinit.D.values
-        object.T = dsinit.T.values
-        object.S = dsinit.S.values
+        object.U[:,1:-1,1:-1] = dsinit.U.values
+        object.V[:,1:-1,1:-1] = dsinit.V.values
+        object.D[:,1:-1,1:-1] = dsinit.D.values
+        object.T[:,1:-1,1:-1] = dsinit.T.values
+        object.S[:,1:-1,1:-1] = dsinit.S.values
 
     else:
         # Geometry and restart geometry do not match, due to retreat/advance of grounding line and/or ice shelf front
@@ -440,11 +451,11 @@ def init_from_restart(object):
         object.print2log('========== Extrapolating restart fields into new grid cells ====')
         object.print2log(f'Total (tmask+umask+vmask): {totaldiff:.0f} new cells. Extrapolating...')
 
-        object.D[:] = extrapolate_initvals(object,object.D,object.tmask,dsinit.D,dsinit.tmask)
-        object.T[:] = extrapolate_initvals(object,object.T,object.tmask,dsinit.T,dsinit.tmask)
-        object.S[:] = extrapolate_initvals(object,object.S,object.tmask,dsinit.S,dsinit.tmask)
-        object.U[:] = extrapolate_initvals(object,object.U,object.umask,dsinit.U,dsinit.umask)
-        object.V[:] = extrapolate_initvals(object,object.V,object.vmask,dsinit.V,dsinit.vmask)
+        object.D[:,1:-1,1:-1] = extrapolate_initvals(object,object.D[:,1:-1,1:-1],object.tmask[1:-1,1:-1],dsinit.D,dsinit.tmask)
+        object.T[:,1:-1,1:-1] = extrapolate_initvals(object,object.T[:,1:-1,1:-1],object.tmask[1:-1,1:-1],dsinit.T,dsinit.tmask)
+        object.S[:,1:-1,1:-1] = extrapolate_initvals(object,object.S[:,1:-1,1:-1],object.tmask[1:-1,1:-1],dsinit.S,dsinit.tmask)
+        object.U[:,1:-1,1:-1] = extrapolate_initvals(object,object.U[:,1:-1,1:-1],object.umask[1:-1,1:-1],dsinit.U,dsinit.umask)
+        object.V[:,1:-1,1:-1] = extrapolate_initvals(object,object.V[:,1:-1,1:-1],object.vmask[1:-1,1:-1],dsinit.V,dsinit.vmask)
 
         object.print2log('==================== Finished extrapolation ====================')
         object.print2log('=========================================== ====================')
@@ -489,117 +500,126 @@ def prepare_output(object):
     object.diagint = int(object.diagday*3600*24/object.dt)
     object.restint = int(object.restday*3600*24/object.dt)
 
+    #Full masks
+    object.mask_full[object.jmin:object.jmax+1,object.imin:object.imax+1] = object.mask[1:-1,1:-1]    
+    object.tmask_full = np.zeros((object.ny_full,object.nx_full))
+    object.tmask_full[object.jmin:object.jmax+1,object.imin:object.imax+1] = object.tmask[1:-1,1:-1]
+    object.umask_full = np.zeros((object.ny_full,object.nx_full))
+    object.umask_full[object.jmin:object.jmax+1,object.imin:object.imax+1] = object.umask[1:-1,1:-1]
+    object.vmask_full = np.zeros((object.ny_full,object.nx_full))
+    object.vmask_full[object.jmin:object.jmax+1,object.imin:object.imax+1] = object.vmask[1:-1,1:-1]
+
     #Data set to save time-average fields
     object.dsav = xr.Dataset()
-    object.dsav = object.dsav.assign_coords({'x':object.x,'y':object.y})
+    object.dsav = object.dsav.assign_coords({'x':object.x_full,'y':object.y_full})
     if object.save_Uu:
-        object.dsav = object.dsav.assign_coords({'xu':object.xu})
+        object.dsav = object.dsav.assign_coords({'xu':object.xu_full})
     if object.save_Vv:
-        object.dsav = object.dsav.assign_coords({'yv':object.yv})
+        object.dsav = object.dsav.assign_coords({'yv':object.yv_full})
     if object.lonlat:
         object.dsav = object.dsav.assign_coords({'lon':object.lon,'lat':object.lat})
 
     #U velocity on tgrid
     if object.save_Ut:
-        object.Uav = np.zeros((object.ny,object.nx))
+        object.Uav = np.zeros((object.ny_full,object.nx_full))
         object.dsav['Ut'] = (['y','x'], object.Uav.astype('float64'))
         object.dsav['Ut'].attrs['name'] = 'Ocean velocity in x-direction on tgrid'
         object.dsav['Ut'].attrs['units'] = 'm/s'
 
     #U velocity on ugrid
     if object.save_Uu:
-        object.Uuav = np.zeros((object.ny,object.nx))
+        object.Uuav = np.zeros((object.ny_full,object.nx_full))
         object.dsav['Uu'] = (['y','xu'], object.Uuav.astype('float64'))
         object.dsav['Uu'].attrs['name'] = 'Ocean velocity in x-direction on ugrid'
         object.dsav['Uu'].attrs['units'] = 'm/s'
 
     #V velocity on tgrid
     if object.save_Vt:
-        object.Vav = np.zeros((object.ny,object.nx))
+        object.Vav = np.zeros((object.ny_full,object.nx_full))
         object.dsav['Vt'] = (['y','x'], object.Vav.astype('float64'))
         object.dsav['Vt'].attrs['name'] = 'Ocean velocity in y-direction'
         object.dsav['Vt'].attrs['units'] = 'm/s'
 
     #U velocity on ugrid
     if object.save_Vv:
-        object.Vvav = np.zeros((object.ny,object.nx))
+        object.Vvav = np.zeros((object.ny_full,object.nx_full))
         object.dsav['Vv'] = (['yv','x'], object.Vvav.astype('float64'))
         object.dsav['Vv'].attrs['name'] = 'Ocean velocity in y-direction on vgrid'
         object.dsav['Vv'].attrs['units'] = 'm/s'
 
     #Thickness D
     if object.save_D:
-        object.Dav = np.zeros((object.ny,object.nx))
+        object.Dav = np.zeros((object.ny_full,object.nx_full))
         object.dsav['D'] = (['y','x'], object.Dav.astype('float64'))
         object.dsav['D'].attrs['name'] = 'Mixed layer thickness'
         object.dsav['D'].attrs['units'] = 'm'
 
     #Temperature T
     if object.save_T:
-        object.Tav = np.zeros((object.ny,object.nx))
+        object.Tav = np.zeros((object.ny_full,object.nx_full))
         object.dsav['T'] = (['y','x'], object.Tav.astype('float64'))
         object.dsav['T'].attrs['name'] = 'Layer-averaged potential temperature'
         object.dsav['T'].attrs['units'] = 'degrees C'
 
     #Salinity S
     if object.save_S:
-        object.Sav = np.zeros((object.ny,object.nx))
+        object.Sav = np.zeros((object.ny_full,object.nx_full))
         object.dsav['S'] = (['y','x'], object.Sav.astype('float64'))
         object.dsav['S'].attrs['name'] = 'Layer-averaged salinity'
         object.dsav['S'].attrs['units'] = 'psu'
 
     #Melt rate melt
     if object.save_melt:
-        object.meltav = np.zeros((object.ny,object.nx))
+        object.meltav = np.zeros((object.ny_full,object.nx_full))
         object.dsav['melt'] = (['y','x'], object.meltav.astype('float64'))
         object.dsav['melt'].attrs['name'] = 'Basal melt rate'
         object.dsav['melt'].attrs['units'] = 'm/yr'
 
     #Entrainment entr
     if object.save_entr:
-        object.entrav = np.zeros((object.ny,object.nx))
+        object.entrav = np.zeros((object.ny_full,object.nx_full))
         object.dsav['entr'] = (['y','x'], object.entrav.astype('float64'))
         object.dsav['entr'].attrs['name'] = 'Entrainment rate of ambient water'
         object.dsav['entr'].attrs['units'] = 'm/yr'
 
     #Additional entrainment ent2
     if object.save_ent2:
-        object.ent2av = np.zeros((object.ny,object.nx))
+        object.ent2av = np.zeros((object.ny_full,object.nx_full))
         object.dsav['ent2'] = (['y','x'], object.ent2av.astype('float64'))
         object.dsav['ent2'].attrs['name'] = 'Additional entrainment to ensure minimum layer thickness'
         object.dsav['ent2'].attrs['units'] = 'm/yr'
 
     #Detrainment
     if object.save_detr:
-        object.detrav = np.zeros((object.ny,object.nx))
+        object.detrav = np.zeros((object.ny_full,object.nx_full))
         object.dsav['detr'] = (['y','x'], object.detrav.astype('float64'))
         object.dsav['detr'].attrs['name'] = 'Detrainment rate'
         object.dsav['detr'].attrs['units'] = 'm/yr'
 
     #Tmask
     if object.save_tmask:
-        object.dsav['tmask'] = (['y','x'], object.tmask)
+        object.dsav['tmask'] = (['y','x'], object.tmask_full)
         object.dsav['tmask'].attrs['name'] = 'Mask at grid center (t-grid)'
         
     #Umask
     if object.save_umask:
-        object.dsav['umask'] = (['y','x'], object.umask)
+        object.dsav['umask'] = (['y','x'], object.umask_full)
         object.dsav['umask'].attrs['name'] = 'Mask at grid side + 1/2 dx (u-grid)'
 
     #Vmask
     if object.save_vmask:
-        object.dsav['vmask'] = (['y','x'], object.vmask)
+        object.dsav['vmask'] = (['y','x'], object.vmask_full)
         object.dsav['vmask'].attrs['name'] = 'Mask at grid side + 1/2 dy (v-grid)'
 
     #Mask
     if object.save_mask:
-        object.dsav['mask']  = (['y','x'], object.mask)
+        object.dsav['mask']  = (['y','x'], object.mask_full)
         object.dsav['mask'].attrs['name'] = 'Mask at grid center (t-grid)'
         object.dsav['mask'].attrs['values'] = '0: open ocean. 1 and 2: grounded ice or bare rock. 3: ice shelf and cavity'
         
     #Ice shelf draft zb
     if object.save_zb:
-        object.dsav['zb'] = (['y','x'], object.zb)
+        object.dsav['zb'] = (['y','x'], object.zb_full)
         object.dsav['zb'].attrs['name'] = 'Ice shelf draft depth'
         object.dsav['zb'].attrs['units'] = 'm'    
 
@@ -614,14 +634,56 @@ def prepare_output(object):
     object.dsav.attrs['model_version'] = object.modelversion
     object.dsav.attrs['time_start'] = object.tstart
 
+    ############################
+    #BMB output file for ice sheet model
+    if object.save_BMB:
+        object.x_bmb = object.x_full.copy()
+        object.y_bmb = object.y_full.copy()
+        #Extend x and y
+        for n in range(object.BMBborder):
+            object.x_bmb = np.append(object.x_bmb[0]-object.dx,object.x_bmb)
+            object.x_bmb = np.append(object.x_bmb,object.x_bmb[-1]+object.dx)
+            object.y_bmb = np.append(object.y_bmb[0]-object.dy,object.y_bmb)
+            object.y_bmb = np.append(object.y_bmb,object.y_bmb[-1]+object.dy)
+
+        #Create dataset
+        object.dsbmb = xr.Dataset()
+        object.dsbmb = object.dsbmb.assign_coords({'x':object.x_bmb,'y':object.y_bmb})
+
+        object.BMBav = np.zeros((len(object.y_bmb),len(object.x_bmb)))
+        object.dsbmb['BMB']     = (['y','x'], object.BMBav)
+
+        object.BMBextav = np.zeros((len(object.y_bmb),len(object.x_bmb)))
+        object.dsbmb['BMBext']     = (['y','x'], object.BMBextav)
+
+        #Create mask including grounded grid cells along grounding line
+        #object.BMBmask = object.tmask+object.grd
+
+    ############################
     #For storing restart file
     object.dsre = xr.Dataset()
-    object.dsre = object.dsav.assign_coords({'x':object.x,'y':object.y,'n':np.array([0,1,2])})
-    object.dsre['tmask'] = (['y','x'], object.tmask)
-    object.dsre['umask'] = (['y','x'], object.umask)
-    object.dsre['vmask'] = (['y','x'], object.vmask)
-    object.dsre['mask']  = (['y','x'], object.mask)
-    object.dsre['zb'] = (['y','x'], object.zb)
+    object.dsre = object.dsre.assign_coords({'x':object.x_full,'y':object.y_full,'n':np.array([0,1,2])})
+    object.dsre['mask']  = (['y','x'], object.mask_full)
+    object.dsre['zb']    = (['y','x'], object.zb_full)
+    object.dsre['tmask'] = (['y','x'], object.tmask_full)
+    object.dsre['umask'] = (['y','x'], object.umask_full)
+    object.dsre['vmask'] = (['y','x'], object.vmask_full)
+
+    object.Ure = np.zeros((3,object.ny_full,object.nx_full))
+    object.dsre['U']     = (['n','y','x'], object.Ure)
+
+    object.Vre = np.zeros((3,object.ny_full,object.nx_full))
+    object.dsre['V']     = (['n','y','x'], object.Vre)
+
+    object.Dre = np.zeros((3,object.ny_full,object.nx_full))
+    object.dsre['D']     = (['n','y','x'], object.Dre)
+
+    object.Tre = np.zeros((3,object.ny_full,object.nx_full))
+    object.dsre['T']     = (['n','y','x'], object.Tre)
+
+    object.Sre = np.zeros((3,object.ny_full,object.nx_full))
+    object.dsre['S']     = (['n','y','x'], object.Sre)
+
     #Bedrock not currently used, but may be used in the future, so saving it as well
     if object.save_B:
         object.dsre['B'] = (['y','x'], object.B)

@@ -232,3 +232,29 @@ def compute_average_NN(object_variable, mask):
         nn_average[i,:,:] = div0_NN(nn_total,weight)
 
     return nn_average
+
+def compute_average_NN_2D(object_variable, mask):
+    """
+    Compute the average of nearest neighbouring cells for 2D variables
+    
+    object_variable: variable for which the NN average is to be computed, for example: object.T
+    mask: mask that corresponds to object_variable, either object.tmask, object.umask, or object.vmask
+
+    """
+
+    # Create nn_average array to store average nearest neighbour values
+    nn_average = object_variable * 0
+
+    # Only take values from cells within shelf mask
+    vari = np.where(mask==1, object_variable, 0)
+
+    # Take the sum of the values in neighbouring cells for nt = 1 
+    nn_total = np.roll(vari,-1,axis=0)+ np.roll(vari,1,axis=0) + np.roll(vari,-1,axis=1) + np.roll(vari,1,axis=1)
+
+    # Compute the weight using the mask (the weight is the number of neighbouring cells which contain values within the shelf mask)
+    weight = np.roll(mask,-1, axis=0)+ np.roll(mask,1, axis=0) + np.roll(mask,-1, axis=1) + np.roll(mask,1, axis=1)
+
+    # Divide sum of neighbours by the weight and fill nn_average array
+    nn_average = div0_NN(nn_total,weight)
+
+    return nn_average

@@ -12,7 +12,7 @@ def read_geom(object):
         if len(ds.dims) >2:
             if object.maskoption == "ISOMIP":
                 ds = ds.isel(t=object.geomyear)
-            elif object.maskoption == "UFEMISM":
+            elif object.maskoption in ["UFEMISM","IMAUICE"]:
                 ds = ds.isel(time=object.geomyear)
             object.print2log(f'selecting geometry time index {object.geomyear}')
 
@@ -39,35 +39,44 @@ def read_geom(object):
             ds = add_lonlat(object,ds,object.projection)
 
         #Read variables
-        object.x    = ds.x.values
-        object.y    = ds.y.values
+        object.dx = object.dx.values
+        object.dy = object.dy.values
+        object.x_full    = ds.x.values
+        object.y_full    = ds.y.values
+        object.xu_full   = object.x_full + 0.5*object.dx
+        object.yv_full   = object.y_full + 0.5*object.dy
 
+        object.nx_full = len(object.x_full)
+        object.ny_full = len(object.y_full)
+        
         #Try to read draft
         gotdraft = False
         for v in ['draft','Hib','zb','lowerSurface']:
             if v in ds.variables:
-                object.zb = ds[v].values
+                object.zb_full = ds[v].values
                 gotdraft = True
                 object.print2log(f"Got ice shelf draft from '{v}'")
-       
-        #If this failed, try to get draft from thickness and surface
-        if gotdraft == False:
+
+        #Get ice thickness to compute mask and, if needed, draft
+        if gotdraft == False or object.maskoption in ["UFEMISM","IMAUICE"]:
             gotthick = False
-            gotsurf  = False
             #Get thickness
             for v in ['thickness','Hi']:
                 if v in ds.variables:
                     object.H = ds[v].values
                     gotthick = True
-            #Get thickness
+
+        #If reading draft failed, try to get draft from thickness and surface
+        if gotdraft == False:
+            gotsurf  = False
+            #Get surface
             for v in ['surface','Hs']:
                 if v in ds.variables:
                     object.zs = ds[v].values
                     gotsurf = True
-
             if gotthick and gotsurf:
                 #Extract draft
-                object.zb = object.zs-object.H
+                object.zb_full = object.zs-object.H
                 gotdraft = True
                 object.print2log(f"Got ice shelf draft from thickness and surface")
             else:
@@ -75,29 +84,49 @@ def read_geom(object):
                 print(f"Need either draft ('draft', 'Hb','zb',or 'lowerSurface') or thickness ('thickness' or 'Hi') and surface ('surface' or 'Hs')")
                 sys.exit()
 
-        #Try to read bed
-        if object.save_B:
+        #Try to read bed if requested for saving or needed to compute mask
+        if object.save_B or object.maskoption in ["UFEMISM","IMAUICE"]:
             gotbed = False
             for v in ['bed','Hb','bedrockTopography']:
                 if v in ds.variables:
                     object.B = ds[v].values
                     gotbed = True
             if gotbed == False:
+                if object.maskoption in ["UFEMISM","IMAUICE"]:
+                    print(f"INPUT ERROR: Could not find Bed in input file, needed to compute mask. Check variable names")
+                    sys.exit()
                 object.save_B = False
                 object.print2log("Warning: no Bed included in input file, so omitted from output")
 
         #Read mask and convert to BedMachine standard (0: ocean, 1 and/or 2: grounded, 3: ice shelf)
         if object.maskoption == "BM":
-            object.mask = ds.mask.values
-        elif object.maskoption == "UFEMISM":
-            object.mask = 0.*object.zb
-            object.mask = np.where(ds.Hi.values>0,1,0)
-            object.mask = np.where(np.logical_and(object.mask==1,ds.Hib.values>ds.Hb.values+.1),3,object.mask)
+            object.mask_full = ds.mask.values
+        elif object.maskoption in ["UFEMISM","IMAUICE"]:
+            object.mask_full = np.where(object.H>0,1,0)
+            object.mask_full = np.where(np.logical_and(object.mask_full==1,object.zb_full>object.B+.1),3,object.mask_full)
         elif object.maskoption == "ISOMIP":
-            object.mask = ds.groundedMask.values
-            object.mask = np.where(ds.floatingMask,3,object.mask)
+            object.mask_full = ds.groundedMask.values
+            object.mask_full = np.where(ds.floatingMask,3,object.mask_full)
 
         ds.close()
+
+        #Cut out minimal region
+        if object.cutdomain:
+            cut_domain(object)
+        else:
+            object.mask = object.mask_full.copy()
+            object.zb   = object.zb_full.copy()
+            object.x    = object.x_full.copy()
+            object.y    = object.y_full.copy()
+            object.imin = 0
+            object.jmin = 0
+            object.imax = object.nx_full-1
+            object.jmax = object.ny_full-1
+            object.nx   = len(object.x)
+            object.ny   = len(object.y)
+
+        #Add boundaries here to prevent effects of periodic boundary conditions
+        add_border(object)            
 
         #Apply calving threshold
         draftlim = -object.rhoi/object.rho0*object.calvthresh
@@ -121,6 +150,56 @@ def read_geom(object):
 
     return
 
+def cut_domain(object):
+    """Determine boundaries around ice shelf and shrink domain for computation"""
+
+    #Get imin, imax, jmin, jmax
+    tmask = np.where(object.mask_full==3,1,0)
+    tmaskx = np.sum(tmask,axis=0)
+    sargsx = np.argwhere(tmaskx>0)
+    object.imin = np.maximum(0,sargsx[0][0]-1)
+    object.imax = np.minimum(object.nx_full-1,sargsx[-1][0]+1)
+    tmasky = np.sum(tmask,axis=1)
+    sargsy = np.argwhere(tmasky>0)
+    object.jmin = np.maximum(0,sargsy[0][0]-1)
+    object.jmax = np.minimum(object.ny_full-1,sargsy[-1][0]+1)
+
+    #Cut out region
+    object.mask = object.mask_full[object.jmin:object.jmax+1,object.imin:object.imax+1]
+    object.zb   = object.zb_full[object.jmin:object.jmax+1,object.imin:object.imax+1]
+
+    object.x    = object.x_full[object.imin:object.imax+1]
+    object.y    = object.y_full[object.jmin:object.jmax+1]
+
+    object.nx = len(object.x)
+    object.ny = len(object.y)
+
+    #Print reduced size
+    reducedsize = 100*(1-(object.nx*object.ny)/(object.nx_full*object.ny_full))
+    object.print2log(f"Finished cutting domain. Reduced size by {reducedsize:.0f} percent")
+
+    return
+
+def add_border(object):
+    """Add border along all sides of 1 grid cell of specified mask value"""
+
+    #Add north
+    object.mask = np.append(object.mask,object.borderN+np.zeros((1,object.nx)),axis=0)
+    object.zb   = np.append(object.zb,np.zeros((1,object.nx)),axis=0)
+
+    #Add south
+    object.mask = np.append(object.borderS+np.zeros((1,object.nx)),object.mask,axis=0)
+    object.zb   = np.append(np.zeros((1,object.nx)),object.zb,axis=0)
+
+    #Add east
+    object.mask = np.append(object.mask,object.borderE+np.zeros((object.ny+2,1)),axis=1)
+    object.zb   = np.append(object.zb,np.zeros((object.ny+2,1)),axis=1)
+
+    #Add west
+    object.mask = np.append(object.borderW+np.zeros((object.ny+2,1)),object.mask,axis=1)
+    object.zb   = np.append(np.zeros((object.ny+2,1)),object.zb,axis=1)
+
+    return
 
 def apply_coarsen(object,ds):
     """Coarsen grid resolution by a factor given by object.coarsen"""

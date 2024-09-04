@@ -8,27 +8,27 @@ def savefields(object):
 
     #Accumulate value each timestep
     if object.save_Ut:
-        object.Uav += im(object.U[1,:,:]) #U on tgrid
+        object.Uav[object.jmin:object.jmax+1,object.imin:object.imax+1] += im(object.U[1,1:-1,1:-1]) #U on tgrid
     if object.save_Uu:
-        object.Uuav += object.U[1,:,:]    #U on ugrid
+        object.Uuav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.U[1,1:-1,1:-1]    #U on ugrid
     if object.save_Vt:
-        object.Vav += jm(object.V[1,:,:]) #V on tgrid
+        object.Vav[object.jmin:object.jmax+1,object.imin:object.imax+1] += jm(object.V[1,1:-1,1:-1]) #V on tgrid
     if object.save_Vv:
-        object.Vvav += object.V[1,:,:]    #V on vgrid
+        object.Vvav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.V[1,1:-1,1:-1]    #V on vgrid
     if object.save_D:
-        object.Dav += object.D[1,:,:]
+        object.Dav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.D[1,1:-1,1:-1]
     if object.save_T:
-        object.Tav += object.T[1,:,:]
+        object.Tav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.T[1,1:-1,1:-1]
     if object.save_S:
-        object.Sav += object.S[1,:,:]
+        object.Sav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.S[1,1:-1,1:-1]
     if object.save_melt:
-        object.meltav += object.melt
+        object.meltav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.melt[1:-1,1:-1]
     if object.save_entr:
-        object.entrav += object.entr
+        object.entrav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.entr[1:-1,1:-1]
     if object.save_ent2:
-        object.ent2av += object.ent2
+        object.ent2av[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.ent2[1:-1,1:-1]
     if object.save_detr:
-        object.detrav += object.detr    
+        object.detrav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.detr[1:-1,1:-1]
     
     #Counter for the number of timesteps added
     object.count += 1
@@ -39,32 +39,32 @@ def savefields(object):
         #Divide accumulated values by number of time steps and apply mask
         #Added to dsav data set
         if object.save_Ut:
-            object.dsav['Ut'][:] = object.Uav/object.count * np.where(object.tmask,1,np.nan)
+            object.dsav['Ut'][:] = object.Uav/object.count * np.where(object.tmask_full,1,np.nan)
         if object.save_Uu:
-            object.dsav['Uu'][:] = object.Uuav/object.count * np.where(object.umask,1,np.nan)
+            object.dsav['Uu'][:] = object.Uuav/object.count * np.where(object.umask_full,1,np.nan)
         if object.save_Vt:
-            object.dsav['Vt'][:] = object.Vav/object.count * np.where(object.tmask,1,np.nan)
+            object.dsav['Vt'][:] = object.Vav/object.count * np.where(object.tmask_full,1,np.nan)
         if object.save_Vv:
-            object.dsav['Vv'][:] = object.Vvav/object.count * np.where(object.vmask,1,np.nan)
+            object.dsav['Vv'][:] = object.Vvav/object.count * np.where(object.vmask_full,1,np.nan)
         if object.save_D:
-            object.dsav['D'][:] = object.Dav/object.count * np.where(object.tmask,1,np.nan)
+            object.dsav['D'][:] = object.Dav/object.count * np.where(object.tmask_full,1,np.nan)
         if object.save_T:
-            object.dsav['T'][:] = object.Tav/object.count * np.where(object.tmask,1,np.nan)
+            object.dsav['T'][:] = object.Tav/object.count * np.where(object.tmask_full,1,np.nan)
         if object.save_S:
-            object.dsav['S'][:] = object.Sav/object.count * np.where(object.tmask,1,np.nan)
+            object.dsav['S'][:] = object.Sav/object.count * np.where(object.tmask_full,1,np.nan)
 
         #Scale fluxes from m/s to m/yr
         if object.save_melt:
-            object.dsav['melt'][:] = object.meltav * 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
+            object.dsav['melt'][:] = object.meltav * 3600*24*365.25/object.count * np.where(object.tmask_full,1,np.nan)
         if object.save_entr:
-            object.dsav['entr'][:] = object.entrav * 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
+            object.dsav['entr'][:] = object.entrav * 3600*24*365.25/object.count * np.where(object.tmask_full,1,np.nan)
         if object.save_ent2:
-            object.dsav['ent2'][:] = object.ent2av * 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
+            object.dsav['ent2'][:] = object.ent2av * 3600*24*365.25/object.count * np.where(object.tmask_full,1,np.nan)
         if object.save_detr:
-            object.dsav['detr'][:] = object.detrav * 3600*24*365.25/object.count * np.where(object.tmask,1,np.nan)
+            object.dsav['detr'][:] = object.detrav * 3600*24*365.25/object.count * np.where(object.tmask_full,1,np.nan)
 
         #Bulk values
-        object.dsav['mav']  = 3600*24*365.25*(object.meltav*object.dx*object.dy).sum()/(object.tmask*object.dx*object.dy).sum()
+        object.dsav['mav']  = 3600*24*365.25*(object.meltav*object.dx*object.dy).sum()/(object.tmask_full*object.dx*object.dy).sum()
         object.dsav['mmax'] = 3600*24*365.25*object.meltav.max()            
 
         object.dsav.attrs['time_end'] = object.time[object.t]
@@ -78,6 +78,26 @@ def savefields(object):
         object.print2log(f'-------------------------------------------------------------------------------------')
         object.print2log(f"{object.time[object.t]:8.0f} days || Average fields saved as {filename}")
         object.print2log(f'-------------------------------------------------------------------------------------')
+
+        if object.save_BMB:
+
+            #Convert to m.i.e./yr 
+            BMBn = -3600*24*365.24/object.count *object.rhofw/object.rhoi * object.meltav[object.jmin:object.jmax+1,object.imin:object.imax+1]
+
+            #Extrapolate below grounded ice
+            BMBext = object.grd[1:-1,1:-1]*compute_average_NN_2D(BMBn,object.tmask[1:-1,1:-1])+object.tmask[1:-1,1:-1]*BMBn
+            BMBext = np.where(np.isnan(BMBext),0,BMBext)
+
+            object.dsbmb['BMB'][object.jmin+object.BMBborder:object.jmax+1+object.BMBborder,object.imin+object.BMBborder:object.imax+1+object.BMBborder] = BMBn
+            object.dsbmb['BMBext'][object.jmin+object.BMBborder:object.jmax+1+object.BMBborder,object.imin+object.BMBborder:object.imax+1+object.BMBborder] = BMBext
+
+            object.dsbmb.attrs['time_end'] = object.time[object.t]
+
+            object.dsbmb.to_netcdf(os.path.join(object.rundir,object.BMBfilename))
+
+            object.print2log(f"{object.time[object.t]:8.0f} days || Updated BMB in {object.BMBfilename}")
+            object.print2log(f'-------------------------------------------------------------------------------------')
+
 
         #Set all fields used for accumulation back to zero
         object.count = 0
@@ -106,17 +126,20 @@ def savefields(object):
         
         #Start time for next time-average 
         object.dsav.attrs['time_start'] = object.time[object.t]
+
+        if object.save_BMB:
+            object.dsbmb.attrs['time_start'] = object.time[object.t]
         
 def saverestart(object):
     if object.t in np.arange(object.restint,object.nt+object.restint,object.restint):
         """Output restart file"""
 
         #Save full fields necessary to start a run from restart file
-        object.dsre['U'] = (['n','y','x'], object.U)
-        object.dsre['V'] = (['n','y','x'], object.V)
-        object.dsre['D'] = (['n','y','x'], object.D)
-        object.dsre['T'] = (['n','y','x'], object.T)
-        object.dsre['S'] = (['n','y','x'], object.S)
+        object.dsre['U'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.U[:,1:-1,1:-1]
+        object.dsre['V'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.V[:,1:-1,1:-1]
+        object.dsre['D'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.D[:,1:-1,1:-1]
+        object.dsre['T'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.T[:,1:-1,1:-1]
+        object.dsre['S'][:,object.jmin:object.jmax+1,object.imin:object.imax+1] = object.S[:,1:-1,1:-1]
         object.dsre.attrs['time'] = object.time[object.t]
 
         #Name of the restartfile
@@ -124,6 +147,7 @@ def saverestart(object):
 
         #Save restartfile
         object.dsre.to_netcdf(object.restartfile)
+        object.dsre.to_netcdf(os.path.join(object.rundir,f"restart_latest.nc"))
 
         object.print2log(f'-------------------------------------------------------------------------------------')
         object.print2log(f"{object.time[object.t]:8.0f} days || Restart file saved as {object.restartfile}")

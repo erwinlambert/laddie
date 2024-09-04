@@ -1,6 +1,6 @@
 [Run]
 name = "PIG"   # Run name
-days = 1        # [days] run duration
+days = 2        # [days] run duration
 
 [Time]
 dt = 72        # [s] timestep
@@ -10,20 +10,30 @@ diagday = 0.01   # [days] interval to spit out diagnostics
 
 [Geometry]
 filename = "./input/PIG_bm3.nc"  # File containing geometry input
-maskoption = "BM"                # Choice for mask definition, choose from 'BM', 'UFEMISM', and 'ISOMIP'
+maskoption = "BM"                # Choice for mask definition, choose from 'BM', 'UFEMISM', 'IMAUICE', and 'ISOMIP'
 #filename = "./input/Ocean1_input_geom_v1.01.nc"
 #maskoption = "ISOMIP"
-#filename = "./input/ufe_bmbinv_amu_dot_relax000.nc"
+#filename = "./input/main_output_ANT_grid.nc"
 #maskoption = "UFEMISM"
+#filename = "./input/help_fields_ANT.nc"
+#maskoption = "IMAUICE"
 
 #geomyear = 0      			# Time index of geometry input
 #lonlat = true              # Include longitude latitude in output files
 #projection = "epsg:3031"   # Projection to use for computing longitude, latitude; only required if lonlat = true
 #coarsen = 1                # Factor to coarsen geometry. 1 uses clean input (no effect)
-calvthresh = 100            # [m] Thickness threshold for calving. 0 uses clean input (no effect)
+calvthresh = 0            # [m] Thickness threshold for calving. 0 uses clean input (no effect)
 removebergs = true          # Remove icebergs
-correctisf = false          # Remove ice shelf grids sticking out
-fillisolated = false        # Fill isolated ice shelf points, change to grounded
+correctisf = true          # Remove ice shelf grids sticking out
+fillisolated = true        # Fill isolated ice shelf points, change to grounded
+
+cutdomain = true           # Cut out minimal domain around ice shelf for computation
+
+[BMB]
+save_BMB    = true          # Whether to save latest BMB in a separate file
+bordercells = 0             # Number of grid cells to add around domain in BMB output file
+filename = "output_BMB.nc"  # Filename to save latest BMB output
+create_readyfile = true     # Create a dummy file to signal that the run is finished
 
 [Forcing]
 option = "isomip" # Available options: 'file', 'tanh', 'linear', 'linear2', 'isomip'
@@ -41,15 +51,21 @@ convop    = 1         # [0,1,2]     Option for convection when stratification is
 boundop   = 1         # [1,2]     Option for dealing with ice shelf front inflow. 1: zero gradient in D, T, and S. 2: no inflow
 usegamtfix = false    #             Use fixed gamma_T rather than computing it. Should be false, only included for ISOMIP+ experiments
 
+border_N  = 1         # Boundary condition North: 0 (open ocean) or 1 (closed)
+border_S  = 1         # Boundary condition South: 0 (open ocean) or 1 (closed)
+border_E  = 1         # Boundary condition East : 0 (open ocean) or 1 (closed)
+border_W  = 1         # Boundary condition West : 0 (open ocean) or 1 (closed)
+
 [Directories]
 results = "./output/"  # Main results directory in which rundirs are placed
+forcenewdir = false
 
 [Filenames]
 logfile = "log.txt" # Log file
+restartfile = "./output/IMA/restart_000006.nc"  # Restartfile
 
 [Initialisation]
 fromrestart = false    # Try starting from an existing restart file
-restartfile = ""       #"./results/restart/CrossDots_0.5_tanh_Tdeep0.4_ztcl-500_001.nc"  # Restartfile
 Dinit = 10.0           # [m]         Initial uniform thickness D if not from restart
 dTinit = 0.0          # [degC] Initial uniform difference from Ta
 dSinit = -0.1         # [psu]  Initial uniform difference from Sa
@@ -108,3 +124,4 @@ convtime  = 10000      # [s]         Used for convop = 2 | Restoring time scale 
 
 [Output]
 #Choose variables to save
+save_B    = false
