@@ -126,18 +126,20 @@ def update_ambientfields(object):
     """Compute Ta and Sa from Tz and Sz at depth of mixed layer (zb - D)"""
 
     #Find index of z-array at base of layer for each grid point
-    #Monotonic with step 1m in z:
-    idx = np.maximum(0,np.minimum(np.int_(-object.zmin-1),np.int_(-object.zmin+(object.zb-object.D[1,:,:]))))
+    idx = -object.z[0] + (object.zb-object.D[1,:,:])/object.dz #Exact index on zgrid
+    idx0 = np.maximum(0,np.minimum(len(object.z)-1,np.int_(idx))) #Integer index before exact index
+    idx1 = np.maximum(0,np.minimum(len(object.z)-1,np.int_(idx+1))) #Integer index after exact index
+    w1 = idx-idx0 #Weight of integer index after exact index
 
     #Get ambient Ta and Sa based on forcing profiles
     if len(object.Tz.shape)==1:
-        #1D forcing profiles
-        object.Ta = object.Tz[idx]
-        object.Sa = object.Sz[idx]
+        #1D forcing profiles, linearly interpolated on z grid
+        object.Ta = w1*object.Tz[idx1] + (1-w1)*object.Tz[idx0]
+        object.Sa = w1*object.Sz[idx1] + (1-w1)*object.Sz[idx0]
     elif len(object.Tz.shape)==3:
-        #3D forcing fields
-        object.Ta = object.Tz[idx,object.Tax1,object.Tax2]
-        object.Sa = object.Sz[idx,object.Tax1,object.Tax2]
+        #3D forcing fields, linearly interpolated on z grid
+        object.Ta = w1*object.Tz[idx1,object.Tax1,object.Tax2]+(1-w1)*object.Tz[idx0,object.Tax1,object.Tax2]
+        object.Sa = w1*object.Sz[idx1,object.Tax1,object.Tax2]+(1-w1)*object.Sz[idx0,object.Tax1,object.Tax2]
     
     return
 
