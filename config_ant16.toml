@@ -1,22 +1,16 @@
 [Run]
-name = "ASE_2"   # Run name
-days = 20        # [days] run duration
+name = "lant16_spinup0b"   # Run name
+days = 360        # [days] run duration
 
 [Time]
-dt = 180        # [s] timestep
+dt = 1800        # [s] timestep
 restday = 10    # [days] interval to save restartfile
 saveday = 10    # [days] interval to save model output
-diagday = 0.01   # [days] interval to spit out diagnostics
+diagday = 1   # [days] interval to spit out diagnostics
 
 [Geometry]
-#filename = "./input/PIG_bm3.nc"  # File containing geometry input
-#maskoption = "BM"                # Choice for mask definition, choose from 'BM', 'UFEMISM', 'IMAUICE', and 'ISOMIP'
-#filename = "./input/Ocean1_input_geom_v1.01.nc"
-#maskoption = "ISOMIP"
-filename = "./input/main_output_ANT_grid.nc"
+filename = "/hpcperm/nld8942/output/ufemism/ant16_spinup0/main_output_ANT_grid.nc"
 maskoption = "UFEMISM"
-#filename = "./input/help_fields_ANT.nc"
-#maskoption = "IMAUICE"
 
 geomyear = -1      	# Time index of geometry input
 #lonlat = true              # Include longitude latitude in output files
@@ -31,7 +25,7 @@ cutdomain = true           # Cut out minimal domain around ice shelf for computa
 
 [BMB]
 save_BMB    = true          # Whether to save latest BMB in a separate file
-bordercells = 1             # Number of grid cells to add around domain in BMB output file
+bordercells = 0             # Number of grid cells to add around domain in BMB output file
 filename = "output_BMB.nc"  # Filename to save latest BMB output
 create_readyfile = true     # Create a dummy file to signal that the run is finished
 
@@ -40,7 +34,7 @@ option = "tanh" # Available options: 'file', 'tanh', 'linear', 'linear2', 'isomi
 z0    = -500    # [m] Reference depth used in 'tanh' and 'linear', 'isomip', and 'linear2'
 S0    = 34.0    # [psu] Surface salinity used in 'tanh'
 S1    = 35.0    # [psu] Salinity at depth z0 used in 'linear', 'linear2'
-T1    = 1.0     # [degC] Temperature at depth used in 'tanh'
+T1    = -1.0     # [degC] Temperature at depth used in 'tanh'
 z1    = 250     # [m] Depth scale used in 'tanh'
 drho0 = 0.01    # [kg/m3 /m2] Scaling factor for quadratic density profile 
 isomipcond = "warm" # ISOMIP condition, either 'warm' or 'cold'
@@ -57,7 +51,7 @@ border_E  = 1         # Boundary condition East : 0 (open ocean) or 1 (closed)
 border_W  = 1         # Boundary condition West : 0 (open ocean) or 1 (closed)
 
 [Directories]
-results = "./output/"  # Main results directory in which rundirs are placed
+results = "/scratch/nld8942/"  # Main results directory in which rundirs are placed
 forcenewdir = false
 
 [Filenames]
@@ -83,8 +77,8 @@ gamTfix   = 0.00018    # []          Turbulent exchange coefficient. Used only i
 #Tuning
 Cd        = 2.5e-3    # []          drag coefficient
 Cdtop     = 1.1e-3    # []          Drag coefficient in Ustar
-Ah        = 25        # [m^2/s]     Laplacian viscosity
-Kh        = 25        # [m^2/s]     Diffusivity
+Ah        = 200       # [m^2/s]     Laplacian viscosity
+Kh        = 200       # [m^2/s]     Diffusivity
 entpar    = "Gaspar"  #             Entrainment parameterisation, either 'Gaspar' or 'Holland'
 mu        = 2.5       # []          Parameter in Gaspar entrainment. Gaspar: 0.5; Gladish: 2.5
 #cl        = 0.01775   # []          Parameter in Holland entrainment. 
