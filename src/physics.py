@@ -169,8 +169,8 @@ def update_convection(object):
         object.drho = np.maximum(object.drho,object.mindrho/object.rho0)
     elif object.convop == 1:        
         #Apply instantaneous convection
-        object.T[1,:,:] = np.where(object.drho<0,object.Ta,object.T[1,:,:]) #Convective heating unlimited by available heat underneath layer. May overstimate convective melt
-        object.S[1,:,:] = np.where(object.drho<0,object.Sa,object.S[1,:,:])
+        object.T[1,:,:] = np.where(object.drho<object.mindrho/object.rho0,object.Ta,object.T[1,:,:]) #Convective heating unlimited by available heat underneath layer. May overstimate convective melt
+        object.S[1,:,:] = np.where(object.drho<object.mindrho/object.rho0,object.Sa-object.mindrho/(object.rho0*object.beta),object.S[1,:,:])
         #Recompute density difference
         update_density(object)
 
