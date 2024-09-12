@@ -103,9 +103,10 @@ def read_geom(object):
         if object.maskoption == "BM":
             object.mask_full = ds.mask.values
         elif object.maskoption in ["UFEMISM","IMAUICE"]:
-            object.mask_full = np.where(object.H>0,1,0)
+            object.mask_full = np.where(object.H>0,1,0) #Separate ice-covered by ice free
+            object.mask_full = np.where(np.logical_and(object.mask_full==0,object.B>0),2,object.mask_full) #Define ice-free land. Remaining zeros are ocean
             buff = .1 #.1
-            object.mask_full = np.where(np.logical_and(object.mask_full==1,object.zb_full>object.B+buff),3,object.mask_full)
+            object.mask_full = np.where(np.logical_and(object.mask_full*object.B<0,object.zb_full>object.B+buff),3,object.mask_full) #Define ice shelves
         elif object.maskoption == "ISOMIP":
             object.mask_full = ds.groundedMask.values
             object.mask_full = np.where(ds.floatingMask,3,object.mask_full)
