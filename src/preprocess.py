@@ -174,7 +174,7 @@ def read_config(object):
     object.spy      = tryread(object,"Numerics","spy",int,(0,1e20),default=31536000)
     object.dpm      = tryread(object,"Numerics","dpm",list,default=[31,28,31,30,31,30,31,31,30,31,30,31])
 
-    if object.convop == 0:
+    if object.convop in [0,1]:
         object.mindrho  = tryread(object,"Convection","mindrho",float,(0,1e20))
     object.convtime     = tryread(object,"Convection","convtime",float,(0,1e20),default=1000)
 
