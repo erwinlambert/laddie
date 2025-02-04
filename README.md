@@ -1,6 +1,9 @@
 This is the LADDIE model, a 2D numerical model to simulate basal melt rates of Antarctic ice shelves.
 
 ---
+For questions / discussions with other users: join our new forum https://theghub.org/groups/laddie
+
+---
 To run the model:
 `python3 runladdie.py config.toml`
 ---
