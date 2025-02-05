@@ -97,7 +97,15 @@ def savefields(object):
 
             object.print2log(f"{object.time[object.t]:8.0f} days || Updated BMB in {object.BMBfilename}")
             object.print2log(f'-------------------------------------------------------------------------------------')
+            
+            #Check if you need to export a file with BMB and BMBext on the UFE main grid (needed when running laddie only for ROI)
+            if object.save_BMB_to_full_UFE_domain == True:
+                bmb_UFE_domain = object.dsbmb.interp(x=object.UFE_x, y=object.UFE_y, method="linear")
+                bmb_UFE_domain.to_netcdf(os.path.join(object.rundir,object.BMB_filename_UFE_domain))
 
+                object.print2log(f"{object.time[object.t]:8.0f} days || Updated BMB_UFE in {object.BMB_filename_UFE_domain}")
+                object.print2log(f'-------------------------------------------------------------------------------------')
+            
 
         #Set all fields used for accumulation back to zero
         object.count = 0
