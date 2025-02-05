@@ -65,6 +65,8 @@ def read_geom(object):
                 if v in ds.variables:
                     object.H = ds[v].values
                     gotthick = True
+                    if gotdraft == True:
+                        object.H_full = object.H
 
         #If reading draft failed, try to get draft from thickness and surface
         if gotdraft == False:
