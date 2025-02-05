@@ -88,12 +88,18 @@ def read_config(object):
     object.cutdomain      = tryread(object,"Geometry","cutdomain",bool,default=True)
 
     #BMB
-    object.save_BMB   = tryread(object,"BMB","save_BMB",bool,default=False)
+    object.save_BMB           = tryread(object,"BMB","save_BMB",bool,default=False)
     if object.save_BMB:
         object.BMBborder      = tryread(object,"BMB","bordercells",int,(0,10),default=0)
         object.BMBfilename    = tryread(object,"BMB","filename",str,checkfile=False,default="output_BMB.nc")
     object.create_readyfile   = tryread(object,"BMB","create_readyfile",bool,default=False)
-
+    
+    #BMB UFE grid
+    object.save_BMB_to_full_UFE_domain = tryread(object,"BMB","save_BMB_to_full_UFE_domain",bool,default=False)
+    if object.save_BMB_to_full_UFE_domain:
+        object.UFE_grid_filename       = tryread(object,"BMB","UFE_grid_filename",str,checkfile=True,default="UFE_grid_file.nc")
+        object.BMB_filename_UFE_domain = tryread(object,"BMB","BMB_filename_UFE_domain",str,checkfile=False,default="BMB_latest_v00.nc")
+    
     #Forcing
     object.forcop         = tryread(object,"Forcing","option",str,["tanh","linear","linear2","isomip","file"])
     #Read forcing-specific parameters
@@ -658,6 +664,13 @@ def prepare_output(object):
 
         #Create mask including grounded grid cells along grounding line
         #object.BMBmask = object.tmask+object.grd
+
+    # BMB output file for UFE on main grid instead of ROI
+    if object.save_BMB_to_full_UFE_domain:
+        UFEds = xr.open_dataset(object.UFE_grid_filename)
+        object.UFE_x = UFEds.x
+        object.UFE_y = UFEds.y
+        UFEds.close()
 
     ############################
     #For storing restart file
