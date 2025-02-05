@@ -104,7 +104,9 @@ def read_config(object):
     object.forcop         = tryread(object,"Forcing","option",str,["tanh","linear","linear2","isomip","file"])
     #Read forcing-specific parameters
     if object.forcop == "file": 
-        object.forcfile   = tryread(object,"Forcing","filename",str,checkfile=True)
+        object.forcfile   = tryread(object,"Forcing","filename",str,checkfile=False,default='')
+        object.forcfile_T = tryread(object,"Forcing","filename_T",str,checkfile=False,default='')
+        object.forcfile_S = tryread(object,"Forcing","filename_S",str,checkfile=False,default='')
     if object.forcop == "tanh":
         object.z1         = tryread(object,"Forcing","z1",float,(0,5000))
         object.drho0      = tryread(object,"Forcing","drho0",float,(0,100))
@@ -178,7 +180,7 @@ def read_config(object):
     object.spy      = tryread(object,"Numerics","spy",int,(0,1e20),default=31536000)
     object.dpm      = tryread(object,"Numerics","dpm",list,default=[31,28,31,30,31,30,31,31,30,31,30,31])
 
-    if object.convop == 0:
+    if object.convop in [0,1]:
         object.mindrho  = tryread(object,"Convection","mindrho",float,(0,1e20))
     object.convtime     = tryread(object,"Convection","convtime",float,(0,1e20),default=1000)
 

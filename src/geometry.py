@@ -77,6 +77,7 @@ def read_geom(object):
             if gotthick and gotsurf:
                 #Extract draft
                 object.zb_full = object.zs-object.H
+                object.H_full = object.H
                 gotdraft = True
                 object.print2log(f"Got ice shelf draft from thickness and surface")
             else:
@@ -102,8 +103,10 @@ def read_geom(object):
         if object.maskoption == "BM":
             object.mask_full = ds.mask.values
         elif object.maskoption in ["UFEMISM","IMAUICE"]:
-            object.mask_full = np.where(object.H>0,1,0)
-            object.mask_full = np.where(np.logical_and(object.mask_full==1,object.zb_full>object.B+.1),3,object.mask_full)
+            object.mask_full = np.where(object.H>0,1,0) #Separate ice-covered by ice free
+            object.mask_full = np.where(np.logical_and(object.mask_full==0,object.B>0),2,object.mask_full) #Define ice-free land. Remaining zeros are ocean
+            buff = .1 #.1
+            object.mask_full = np.where(np.logical_and(object.mask_full*object.B<0,object.zb_full>object.B+buff),3,object.mask_full) #Define ice shelves
         elif object.maskoption == "ISOMIP":
             object.mask_full = ds.groundedMask.values
             object.mask_full = np.where(ds.floatingMask,3,object.mask_full)
@@ -129,11 +132,17 @@ def read_geom(object):
         add_border(object)            
 
         #Apply calving threshold
-        draftlim = -object.rhoi/object.rho0*object.calvthresh
-        ncalv = sum(sum(np.logical_and(object.mask==3,object.zb>draftlim)))
-        object.mask = np.where(np.logical_and(object.mask==3,object.zb>draftlim),0,object.mask)
-        object.print2log(f"Removed {ncalv} grid points with thickness below {object.calvthresh} m")
-       
+        if object.calvthresh>0:
+            try:
+                ncalv = sum(sum(np.logical_and(object.mask==3,object.H<object.calvthresh)))
+                object.mask = np.where(np.logical_and(object.mask==3,object.H<object.calvthresh),0,object.mask)
+                object.print2log(f"Removed {ncalv} grid points with ice thickness below than {object.calvthresh} m")
+            except:
+                draftlim = -object.rhoi/object.rho0*object.calvthresh
+                ncalv = sum(sum(np.logical_and(object.mask==3,object.zb>draftlim)))
+                object.mask = np.where(np.logical_and(object.mask==3,object.zb>draftlim),0,object.mask)
+                object.print2log(f"Removed {ncalv} grid points with draft shallower than {draftlim} m")
+
         #Remove icebergs
         if object.removebergs:
             remove_icebergs(object)
@@ -167,6 +176,7 @@ def cut_domain(object):
     #Cut out region
     object.mask = object.mask_full[object.jmin:object.jmax+1,object.imin:object.imax+1]
     object.zb   = object.zb_full[object.jmin:object.jmax+1,object.imin:object.imax+1]
+    object.H    = object.H_full[object.jmin:object.jmax+1,object.imin:object.imax+1]
 
     object.x    = object.x_full[object.imin:object.imax+1]
     object.y    = object.y_full[object.jmin:object.jmax+1]
@@ -186,18 +196,26 @@ def add_border(object):
     #Add north
     object.mask = np.append(object.mask,object.borderN+np.zeros((1,object.nx)),axis=0)
     object.zb   = np.append(object.zb,np.zeros((1,object.nx)),axis=0)
+    object.H    = np.append(object.H,np.zeros((1,object.nx)),axis=0)
+    object.y    = np.append(object.y,object.y[-1]+object.dy)
 
     #Add south
     object.mask = np.append(object.borderS+np.zeros((1,object.nx)),object.mask,axis=0)
     object.zb   = np.append(np.zeros((1,object.nx)),object.zb,axis=0)
+    object.H   = np.append(np.zeros((1,object.nx)),object.H,axis=0)
+    object.y    = np.append(object.y[0]-object.dy,object.y)
 
     #Add east
     object.mask = np.append(object.mask,object.borderE+np.zeros((object.ny+2,1)),axis=1)
     object.zb   = np.append(object.zb,np.zeros((object.ny+2,1)),axis=1)
+    object.H   = np.append(object.H,np.zeros((object.ny+2,1)),axis=1)
+    object.x    = np.append(object.x,object.x[-1]+object.dx)
 
     #Add west
     object.mask = np.append(object.borderW+np.zeros((object.ny+2,1)),object.mask,axis=1)
     object.zb   = np.append(np.zeros((object.ny+2,1)),object.zb,axis=1)
+    object.H   = np.append(np.zeros((object.ny+2,1)),object.H,axis=1)
+    object.x    = np.append(object.x[0]-object.dx,object.x)
 
     return
 

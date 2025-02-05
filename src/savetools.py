@@ -81,8 +81,8 @@ def savefields(object):
 
         if object.save_BMB:
 
-            #Convert to kg/m2/s
-            BMBn = -object.rhofw / object.count * object.meltav[object.jmin:object.jmax+1,object.imin:object.imax+1]
+            #Convert to m.i.e./yr 
+            BMBn = -3600*24*365.24/object.count *object.rhofw/object.rhoi * object.meltav[object.jmin:object.jmax+1,object.imin:object.imax+1]
 
             #Extrapolate below grounded ice
             BMBext = object.grd[1:-1,1:-1]*compute_average_NN_2D(BMBn,object.tmask[1:-1,1:-1])+object.tmask[1:-1,1:-1]*BMBn
@@ -139,7 +139,7 @@ def savefields(object):
             object.dsbmb.attrs['time_start'] = object.time[object.t]
         
 def saverestart(object):
-    if object.t in np.arange(object.restint,object.nt+object.restint,object.restint):
+    if object.t in np.arange(0,object.nt+object.restint,object.restint):
         """Output restart file"""
 
         #Save full fields necessary to start a run from restart file
@@ -170,7 +170,7 @@ def printdiags(object):
     """Print diagnostics to log file"""
 
     #Check whether current time step overlaps with required interval for printing diagnostics
-    if object.t in np.arange(object.diagint,object.nt+object.diagint,object.diagint):
+    if object.t in np.arange(0,object.nt+object.diagint,object.diagint):
 
         #Maximum thickness [m]
         d_Dmax = (object.D[1,:,:]*object.tmask).max()
