@@ -109,6 +109,14 @@ def read_geom(object):
             object.mask_full = np.where(np.logical_and(object.mask_full==0,object.B>0),2,object.mask_full) #Define ice-free land. Remaining zeros are ocean
             buff = .1 #.1
             object.mask_full = np.where(np.logical_and(object.mask_full*object.B<0,object.zb_full>object.B+buff),3,object.mask_full) #Define ice shelves
+            if object.readmaskROI == True:
+                #Model melt rates only for ice shelves within the UFEMISM region of interest (ROI)  
+                try: 
+                    #Read mask_ROI from input and set mask for all other grid cells to zero (ocean)
+                    mask_ROI = ds['mask_ROI'].values
+                    object.mask_full = np.where(mask_ROI==0, 2, object.mask_full)
+                except:
+                    object.print2log('Warning: no "mask_ROI" in input file, so melt rates are modelled for all ice shelves in the domain.')
         elif object.maskoption == "ISOMIP":
             object.mask_full = ds.groundedMask.values
             object.mask_full = np.where(ds.floatingMask,3,object.mask_full)

@@ -86,6 +86,7 @@ def read_config(object):
     object.correctisf     = tryread(object,"Geometry","correctisf",bool,default=False)
     object.fillisolated   = tryread(object,"Geometry","fillisolated",bool,default=False)
     object.cutdomain      = tryread(object,"Geometry","cutdomain",bool,default=True)
+    object.readmaskROI    = tryread(object,"Geometry","readmaskROI",bool,default=False)
 
     #BMB
     object.save_BMB           = tryread(object,"BMB","save_BMB",bool,default=False)
