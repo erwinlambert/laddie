@@ -114,7 +114,7 @@ def read_geom(object):
                 try: 
                     #Read mask_ROI from input and set mask for all other grid cells to zero (ocean)
                     mask_ROI = ds['mask_ROI'].values
-                    object.mask_full = np.where(mask_ROI==0, 0, object.mask_full)
+                    object.mask_full = np.where(mask_ROI==0, 2, object.mask_full)
                 except:
                     object.print2log('Warning: no "mask_ROI" in input file, so melt rates are modelled for all ice shelves in the domain.')
         elif object.maskoption == "ISOMIP":
