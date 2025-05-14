@@ -61,7 +61,7 @@ def read_geom(object):
         if gotdraft == False or object.maskoption in ["UFEMISM","IMAUICE"]:
             gotthick = False
             #Get thickness
-            for v in ['thickness','Hi']:
+            for v in ['thickness','Hi','ice_thickness']:
                 if v in ds.variables:
                     object.H = ds[v].values
                     gotthick = True
@@ -72,7 +72,7 @@ def read_geom(object):
         if gotdraft == False:
             gotsurf  = False
             #Get surface
-            for v in ['surface','Hs']:
+            for v in ['surface','Hs','surface_topography']:
                 if v in ds.variables:
                     object.zs = ds[v].values
                     gotsurf = True
