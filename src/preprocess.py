@@ -198,6 +198,9 @@ def read_config(object):
     object.save_entr  = tryread(object,"Output","save_entr",bool,default=False)
     object.save_ent2  = tryread(object,"Output","save_ent2",bool,default=False)
     object.save_detr  = tryread(object,"Output","save_detr",bool,default=False)
+    object.save_Tbase = tryread(object,"Output","save_Tbase",bool,default=False)
+    object.save_Tamb  = tryread(object,"Output","save_Tamb",bool,default=False)
+    object.save_gammaT  = tryread(object,"Output","save_gammaT",bool,default=False)
 
     object.save_mask  = tryread(object,"Output","save_mask",bool,default=True)
     object.save_tmask = tryread(object,"Output","save_tmask",bool,default=False)
@@ -604,6 +607,27 @@ def prepare_output(object):
         object.dsav['detr'] = (['y','x'], object.detrav.astype('float64'))
         object.dsav['detr'].attrs['name'] = 'Detrainment rate'
         object.dsav['detr'].attrs['units'] = 'm/yr'
+
+    #Tbase
+    if object.save_Tbase:
+        object.Tbaseav = np.zeros((object.ny_full,object.nx_full))
+        object.dsav['Tbase'] = (['y','x'], object.detrav.astype('float64'))
+        object.dsav['Tbase'].attrs['name'] = 'Temperature at ice base'
+        object.dsav['Tbase'].attrs['units'] = 'degC'
+
+    #Tamb
+    if object.save_Tamb:
+        object.Tambav = np.zeros((object.ny_full,object.nx_full))
+        object.dsav['Tamb'] = (['y','x'], object.detrav.astype('float64'))
+        object.dsav['Tamb'].attrs['name'] = 'Temperature at layer base'
+        object.dsav['Tamb'].attrs['units'] = 'degC'
+
+    #gammaT
+    if object.save_gammaT:
+        object.gammaTav = np.zeros((object.ny_full,object.nx_full))
+        object.dsav['gammaT'] = (['y','x'], object.detrav.astype('float64'))
+        object.dsav['gammaT'].attrs['name'] = 'turbulent heat exchange velocity'
+        object.dsav['gammaT'].attrs['units'] = 'm/s'
 
     #Tmask
     if object.save_tmask:
