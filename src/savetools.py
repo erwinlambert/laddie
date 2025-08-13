@@ -34,7 +34,7 @@ def savefields(object):
     if object.save_Tamb:
         object.Tambav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.Ta[1:-1,1:-1]
     if object.save_gammaT:
-        object.gammaTav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.gammaT[1:-1,1:-1]
+        object.gammaTav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.gamT[1:-1,1:-1]
     
     #Counter for the number of timesteps added
     object.count += 1
