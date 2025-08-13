@@ -611,21 +611,21 @@ def prepare_output(object):
     #Tbase
     if object.save_Tbase:
         object.Tbaseav = np.zeros((object.ny_full,object.nx_full))
-        object.dsav['Tbase'] = (['y','x'], object.detrav.astype('float64'))
+        object.dsav['Tbase'] = (['y','x'], object.Tbaseav.astype('float64'))
         object.dsav['Tbase'].attrs['name'] = 'Temperature at ice base'
         object.dsav['Tbase'].attrs['units'] = 'degC'
 
     #Tamb
     if object.save_Tamb:
         object.Tambav = np.zeros((object.ny_full,object.nx_full))
-        object.dsav['Tamb'] = (['y','x'], object.detrav.astype('float64'))
+        object.dsav['Tamb'] = (['y','x'], object.Tambav.astype('float64'))
         object.dsav['Tamb'].attrs['name'] = 'Temperature at layer base'
         object.dsav['Tamb'].attrs['units'] = 'degC'
 
     #gammaT
     if object.save_gammaT:
         object.gammaTav = np.zeros((object.ny_full,object.nx_full))
-        object.dsav['gammaT'] = (['y','x'], object.detrav.astype('float64'))
+        object.dsav['gammaT'] = (['y','x'], object.gammaTav.astype('float64'))
         object.dsav['gammaT'].attrs['name'] = 'turbulent heat exchange velocity'
         object.dsav['gammaT'].attrs['units'] = 'm/s'
 
