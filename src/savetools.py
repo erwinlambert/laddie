@@ -74,7 +74,7 @@ def savefields(object):
         if object.save_Tamb:
             object.dsav['Tamb'][:] = object.Tambav/object.count * np.where(object.tmask_full,1,np.nan)
         if object.save_gammaT:
-            object.dsav['gammaT'][:] = object.gammaT/object.count * np.where(object.tmask_full,1,np.nan)
+            object.dsav['gammaT'][:] = object.gammaTav/object.count * np.where(object.tmask_full,1,np.nan)
 
 
         #Bulk values
