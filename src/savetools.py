@@ -29,6 +29,12 @@ def savefields(object):
         object.ent2av[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.ent2[1:-1,1:-1]
     if object.save_detr:
         object.detrav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.detr[1:-1,1:-1]
+    if object.save_Tbase:
+        object.Tbaseav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.Tb[1:-1,1:-1]
+    if object.save_Tamb:
+        object.Tambav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.Ta[1:-1,1:-1]
+    if object.save_gammaT:
+        object.gammaTav[object.jmin:object.jmax+1,object.imin:object.imax+1] += object.gammaT[1:-1,1:-1]
     
     #Counter for the number of timesteps added
     object.count += 1
@@ -62,6 +68,14 @@ def savefields(object):
             object.dsav['ent2'][:] = object.ent2av * 3600*24*365.25/object.count * np.where(object.tmask_full,1,np.nan)
         if object.save_detr:
             object.dsav['detr'][:] = object.detrav * 3600*24*365.25/object.count * np.where(object.tmask_full,1,np.nan)
+
+        if object.save_Tbase:
+            object.dsav['Tbase'][:] = object.Tbaseav/object.count * np.where(object.tmask_full,1,np.nan)
+        if object.save_Tamb:
+            object.dsav['Tamb'][:] = object.Tambav/object.count * np.where(object.tmask_full,1,np.nan)
+        if object.save_gammaT:
+            object.dsav['gammaT'][:] = object.gammaT/object.count * np.where(object.tmask_full,1,np.nan)
+
 
         #Bulk values
         object.dsav['mav']  = 3600*24*365.25*(object.meltav*object.dx*object.dy).sum()/(object.tmask_full*object.dx*object.dy).sum()
@@ -131,6 +145,12 @@ def savefields(object):
             object.ent2av *= 0
         if object.save_detr:
             object.detrav *= 0        
+        if object.save_Tbase:
+            object.Tbaseav *= 0        
+        if object.save_Tamb:
+            object.Tambav *= 0        
+        if object.save_gammaT:
+            object.gammaTav *= 0        
         
         #Start time for next time-average 
         object.dsav.attrs['time_start'] = object.time[object.t]
